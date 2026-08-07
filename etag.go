@@ -2,7 +2,6 @@ package etag
 
 import (
 	"bufio"
-	"encoding/binary"
 	"hash/fnv"
 	"net"
 	"net/http"
@@ -98,11 +97,7 @@ func defaultHashFunc(data []byte) string {
 		))
 	}
 
-	var buf [hashUint64Bytes]byte
-
-	binary.BigEndian.PutUint64(buf[:], h.Sum64())
-
-	return hexEncode(buf[:])
+	return hexEncodeUint64(h.Sum64())
 }
 
 // Validate checks the ETagConfig for invalid values.
