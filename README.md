@@ -72,11 +72,11 @@ handler := etag.ETag(cfg)(myHandler)
 
 Errors from the ETag writer are classified using `go-error-family`:
 
-| Code | Family | Retryable | When |
-| --- | --- | --- | --- |
-| `http.etag_write_failed` | Transient | Yes | Write failure during streaming or overflow |
-| `http.hijack_unsupported` | Infrastructure | No | ResponseWriter doesn't implement `http.Hijacker` |
-| `http.hijack_failed` | Transient | Yes | Underlying `Hijack()` call fails |
+| Code                      | Family         | Retryable | When                                             |
+| ------------------------- | -------------- | --------- | ------------------------------------------------ |
+| `http.etag_write_failed`  | Transient      | Yes       | Write failure during streaming or overflow       |
+| `http.hijack_unsupported` | Infrastructure | No        | ResponseWriter doesn't implement `http.Hijacker` |
+| `http.hijack_failed`      | Transient      | Yes       | Underlying `Hijack()` call fails                 |
 
 Call `etag.RegisterErrorClassifications()` once at startup to enable classification.
 

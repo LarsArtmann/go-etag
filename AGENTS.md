@@ -74,14 +74,14 @@ golangci-lint fmt          # Format (gofumpt + golines@120 + gci)
 
 Single flat package: `etag`. One external dependency: `github.com/larsartmann/go-error-family`. Go 1.26+.
 
-| File | Exports | Purpose |
-| --- | --- | --- |
-| `etag.go` | `ETagConfig`, `DefaultETagConfig()`, `ETag()`, `Validate()` | ETag generation (FNV-64a) + RFC 7232 weak-comparison `If-None-Match` 304 middleware |
-| `wrapper.go` | (unexported `responseWrapper`) | Shared ResponseWriter wrapper: buffers WriteHeader, delegates Hijack/Flush |
-| `middleware.go` | `Middleware` | Type alias for `func(http.Handler) http.Handler` |
-| `errors.go` | `ErrCodeETagWriteFailed`, `ErrCodeHijackUnsupported`, `ErrCodeHijackFailed`, `RegisterErrorClassifications()` | Error codes + stdlib sentinel registration + message templates |
-| `hex.go` | (unexported `hexDigitsLower`) | Shared lowercase hex lookup table for ETag encoding |
-| `doc.go` | (package doc only) | Package-level GoDoc documentation |
+| File            | Exports                                                                                                       | Purpose                                                                             |
+| --------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `etag.go`       | `ETagConfig`, `DefaultETagConfig()`, `ETag()`, `Validate()`                                                   | ETag generation (FNV-64a) + RFC 7232 weak-comparison `If-None-Match` 304 middleware |
+| `wrapper.go`    | (unexported `responseWrapper`)                                                                                | Shared ResponseWriter wrapper: buffers WriteHeader, delegates Hijack/Flush          |
+| `middleware.go` | `Middleware`                                                                                                  | Type alias for `func(http.Handler) http.Handler`                                    |
+| `errors.go`     | `ErrCodeETagWriteFailed`, `ErrCodeHijackUnsupported`, `ErrCodeHijackFailed`, `RegisterErrorClassifications()` | Error codes + stdlib sentinel registration + message templates                      |
+| `hex.go`        | (unexported `hexDigitsLower`)                                                                                 | Shared lowercase hex lookup table for ETag encoding                                 |
+| `doc.go`        | (package doc only)                                                                                            | Package-level GoDoc documentation                                                   |
 
 **Middleware pattern:** `ETag()` returns `func(http.Handler) http.Handler` (aliased as `Middleware`).
 
@@ -89,11 +89,11 @@ Single flat package: `etag`. One external dependency: `github.com/larsartmann/go
 
 Errors from `etagWriter` are classified using `go-error-family`:
 
-| Source | Error Code | Family | Retryable | When |
-| --- | --- | --- | --- | --- |
-| `Write` | `http.etag_write_failed` | Transient | Yes | Streaming or overflow write failure |
-| `Hijack` | `http.hijack_unsupported` | Infrastructure | No | Underlying writer doesn't implement Hijacker |
-| `Hijack` | `http.hijack_failed` | Transient | Yes | Underlying Hijack call fails |
+| Source   | Error Code                | Family         | Retryable | When                                         |
+| -------- | ------------------------- | -------------- | --------- | -------------------------------------------- |
+| `Write`  | `http.etag_write_failed`  | Transient      | Yes       | Streaming or overflow write failure          |
+| `Hijack` | `http.hijack_unsupported` | Infrastructure | No        | Underlying writer doesn't implement Hijacker |
+| `Hijack` | `http.hijack_failed`      | Transient      | Yes       | Underlying Hijack call fails                 |
 
 ## Non-Obvious Behaviors
 
