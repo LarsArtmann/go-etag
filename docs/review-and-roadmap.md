@@ -6,15 +6,15 @@ _Point-in-time audit of go-etag against RFC 7232, conducted 2026-08-07. All P0�
 
 ## Baseline (post-overhaul, verified 2026-08-07)
 
-| Check                 | Result                              |
-| --------------------- | ----------------------------------- |
-| `go test -race ./...` | PASS (63 tests, 92.1% coverage)     |
-| `go vet ./...`        | clean                               |
-| `golangci-lint run`   | 0 issues                            |
-| `golangci-lint fmt`   | clean                               |
-| Fuzz `FuzzETag` (30s) | 14.8M executions, **0 crashes**     |
-| Dependencies          | 1 (`go-error-family`)               |
-| LOC (Go)              | ~1400 across 10 files               |
+| Check                 | Result                          |
+| --------------------- | ------------------------------- |
+| `go test -race ./...` | PASS (63 tests, 92.1% coverage) |
+| `go vet ./...`        | clean                           |
+| `golangci-lint run`   | 0 issues                        |
+| `golangci-lint fmt`   | clean                           |
+| Fuzz `FuzzETag` (30s) | 14.8M executions, **0 crashes** |
+| Dependencies          | 1 (`go-error-family`)           |
+| LOC (Go)              | ~1400 across 10 files           |
 
 The foundation is well-built: clean flat-package structure, strong lint culture, dedicated `ETag` type with RFC 7232 §2.3.2 strong and weak comparison functions, quote-aware list parsing, graceful overflow/hijack/flush handling, honest strong/weak validator defaults.
 
@@ -43,24 +43,24 @@ The foundation is well-built: clean flat-package structure, strong lint culture,
 
 ### Bugs (RFC violations) — all fixed
 
-| ID  | Description                          | Severity | Fix location                |
-| --- | ------------------------------------ | -------- | --------------------------- |
-| B1  | Zero-value config unbounded buffering | P0       | `newETagWriter` clamps `MaxBufferSize <= 0` to default |
+| ID  | Description                           | Severity | Fix location                                                |
+| --- | ------------------------------------- | -------- | ----------------------------------------------------------- |
+| B1  | Zero-value config unbounded buffering | P0       | `newETagWriter` clamps `MaxBufferSize <= 0` to default      |
 | B2  | HEAD forwards message body            | P0       | `flush` sets `Content-Length` and skips body write for HEAD |
-| B3  | 304 leaks `Content-Length`            | P1       | `flush` deletes `Content-Length` before writing 304 |
+| B3  | 304 leaks `Content-Length`            | P1       | `flush` deletes `Content-Length` before writing 304         |
 
 ### Design improvements — all shipped
 
-| ID  | Description                          | Severity | What changed                                              |
-| --- | ------------------------------------ | -------- | -------------------------------------------------------- |
-| D1  | Overwrites handler-set ETags         | P1       | `SkipIfPresent bool` config field respects handler ETags |
-| D2  | FNV-64a claims "strong" dishonestly  | P2       | `Strength` enum with documented collision tradeoff       |
-| D3  | `HashFunc` locked to 64-bit          | P2       | Signature changed to `func([]byte) string` (opaque value) |
-| D4  | `errors.go` classifies unrelated sentinels | P2  | Trimmed to `ErrNotSupported`, `ErrAbortHandler` only     |
-| D5  | `wroteHeader`/`headerWritten` confusing | P3     | Renamed to `headerBuffered`/`headerCommitted`            |
-| D6  | No per-route skip predicate          | P3       | `Skip func(*http.Request) bool` config field             |
-| D7  | No `If-Match` / 412 support          | P3       | `MatchesIfMatch` helper with strong comparison           |
-| D8  | Dead code and lint nits              | P3       | Removed dead helper, simplified `newTestRequest`         |
+| ID  | Description                                | Severity | What changed                                              |
+| --- | ------------------------------------------ | -------- | --------------------------------------------------------- |
+| D1  | Overwrites handler-set ETags               | P1       | `SkipIfPresent bool` config field respects handler ETags  |
+| D2  | FNV-64a claims "strong" dishonestly        | P2       | `Strength` enum with documented collision tradeoff        |
+| D3  | `HashFunc` locked to 64-bit                | P2       | Signature changed to `func([]byte) string` (opaque value) |
+| D4  | `errors.go` classifies unrelated sentinels | P2       | Trimmed to `ErrNotSupported`, `ErrAbortHandler` only      |
+| D5  | `wroteHeader`/`headerWritten` confusing    | P3       | Renamed to `headerBuffered`/`headerCommitted`             |
+| D6  | No per-route skip predicate                | P3       | `Skip func(*http.Request) bool` config field              |
+| D7  | No `If-Match` / 412 support                | P3       | `MatchesIfMatch` helper with strong comparison            |
+| D8  | Dead code and lint nits                    | P3       | Removed dead helper, simplified `newTestRequest`          |
 
 ### Foundational refactor
 
@@ -70,15 +70,15 @@ The foundation is well-built: clean flat-package structure, strong lint culture,
 
 ## File layout
 
-| File                | Purpose                                                       |
-| ------------------- | ------------------------------------------------------------- |
-| `entity_tag.go`     | `ETag` type, `Strength` enum, comparison methods, parsers     |
-| `etag.go`           | Middleware, `ETagConfig`, `etagWriter`                        |
-| `wrapper.go`        | `responseWrapper` (shared ResponseWriter wrapping)           |
-| `errors.go`         | Error codes + `go-error-family` classification               |
-| `hex.go`            | Zero-alloc hex encoding for FNV-64a                           |
-| `middleware.go`     | `Middleware` type alias                                       |
-| `doc.go`            | Package-level documentation                                   |
+| File            | Purpose                                                   |
+| --------------- | --------------------------------------------------------- |
+| `entity_tag.go` | `ETag` type, `Strength` enum, comparison methods, parsers |
+| `etag.go`       | Middleware, `ETagConfig`, `etagWriter`                    |
+| `wrapper.go`    | `responseWrapper` (shared ResponseWriter wrapping)        |
+| `errors.go`     | Error codes + `go-error-family` classification            |
+| `hex.go`        | Zero-alloc hex encoding for FNV-64a                       |
+| `middleware.go` | `Middleware` type alias                                   |
+| `doc.go`        | Package-level documentation                               |
 
 ---
 
