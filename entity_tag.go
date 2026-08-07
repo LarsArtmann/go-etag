@@ -154,6 +154,18 @@ func ParseETagList(header string) []ETag {
 	return tags
 }
 
+// matchesAnyTag reports whether tag matches any entity-tag in headerValue using
+// the supplied comparator. The wildcard "*" matches every tag.
+func matchesAnyTag(tag ETag, headerValue string, comparator func(ETag, ETag) bool) bool {
+	if strings.TrimSpace(headerValue) == wildcard {
+		return true
+	}
+
+	return slices.ContainsFunc(ParseETagList(headerValue), func(e ETag) bool {
+		return comparator(tag, e)
+	})
+}
+
 // MatchesIfNoneMatch reports whether tag matches the If-None-Match header
 // value using the RFC 7232 §2.3.2 weak comparison function. The header value
 // may be "*" (wildcard, matches any existing representation) or a
@@ -161,11 +173,7 @@ func ParseETagList(header string) []ETag {
 //
 // This is the comparison function used by the middleware for cache validation.
 func MatchesIfNoneMatch(tag ETag, headerValue string) bool {
-	if strings.TrimSpace(headerValue) == wildcard {
-		return true
-	}
-
-	return slices.ContainsFunc(ParseETagList(headerValue), tag.WeakEqual)
+	return matchesAnyTag(tag, headerValue, ETag.WeakEqual)
 }
 
 // MatchesIfMatch reports whether tag matches the If-Match header value using
@@ -176,11 +184,7 @@ func MatchesIfNoneMatch(tag ETag, headerValue string) bool {
 // Applications should call this in their handlers to evaluate If-Match
 // preconditions for unsafe methods (PUT, POST, DELETE) to prevent lost updates.
 func MatchesIfMatch(tag ETag, headerValue string) bool {
-	if strings.TrimSpace(headerValue) == wildcard {
-		return true
-	}
-
-	return slices.ContainsFunc(ParseETagList(headerValue), tag.StrongEqual)
+	return matchesAnyTag(tag, headerValue, ETag.StrongEqual)
 }
 
 // splitRawETags splits a comma-separated list of entity-tags, respecting

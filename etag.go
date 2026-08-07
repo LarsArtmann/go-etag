@@ -265,6 +265,8 @@ func (w *etagWriter) flush(req *http.Request) {
 		w.Header().Set(headerContentLength, strconv.Itoa(len(w.body)))
 	}
 
+	w.markFlushed()
+
 	w.writeHeaderToUnderlying()
 
 	if req.Method == http.MethodHead {
@@ -339,7 +341,7 @@ func (w *etagWriter) Flush() {
 		return
 	}
 
-	w.flushed = true
+	w.markFlushed()
 
 	w.writeHeaderToUnderlying()
 
@@ -359,7 +361,16 @@ func (w *etagWriter) Flush() {
 }
 
 func (w *etagWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	w.flushed = true
+	w.markFlushed()
+
+	w.writeHeaderToUnderlying()
 
 	return w.responseWrapper.Hijack()
+}
+
+// markFlushed transitions the writer into streaming mode by setting the
+// flushed flag. The buffered status header is committed separately via
+// writeHeaderToUnderlying.
+func (w *etagWriter) markFlushed() {
+	w.flushed = true
 }

@@ -131,3 +131,22 @@ func assertETagEmpty(t *testing.T, rec *httptest.ResponseRecorder, msg string) {
 		t.Errorf("ETag = %q, want empty %s", got, msg)
 	}
 }
+
+// serveGetWithIfNoneMatch wraps the default ETag middleware around a body
+// handler, issues a GET request with the given If-None-Match header value,
+// serves it, and returns the recorder. Used by the If-None-Match cache
+// validation tests to factor out the identical request scaffolding.
+func serveGetWithIfNoneMatch(t *testing.T, ifNoneMatch string) *httptest.ResponseRecorder {
+	t.Helper()
+
+	handler := New(DefaultETagConfig())(newWriteStatusHandler(http.StatusOK, "hello world"))
+
+	req := newTestRequest(http.MethodGet)
+	req.Header.Set(headerIfNoneMatch, ifNoneMatch)
+
+	rec := newRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	return rec
+}
