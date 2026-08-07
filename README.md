@@ -24,6 +24,8 @@ HTTP ETag middleware for Go — generates entity-tag headers from response body 
 go get github.com/larsartmann/go-etag
 ```
 
+> **Upgrading from v0.1?** See the [migration guide](docs/migration/v0.2.md) for breaking changes (`ETag()` → `New()`, `Weak bool` → `Strength`, `HashFunc` signature).
+
 ## Quick Start
 
 ```go

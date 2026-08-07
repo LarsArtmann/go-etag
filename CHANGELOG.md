@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - RFC 7230 §3.3 compliance: HEAD responses now set Content-Length without sending a body
 - RFC 7232 §4.1 compliance: 304 responses now strip Content-Length
 - BDD-style spec suite (`etag_bdd_test.go`) mapping RFC 7232 sections to behavioral expectations
+- Fuzz tests for `ParseETag` and `ParseETagList` verifying no panics and round-trip integrity on arbitrary input
+- Migration guide at [`docs/migration/v0.2.md`](docs/migration/v0.2.md)
 
 ### Changed
 
@@ -27,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Zero-value `ETagConfig{}` now clamps `MaxBufferSize` to 1 MB (previously caused unbounded buffering)
 - `wrapper.go` internal fields renamed: `wroteHeader` → `headerBuffered`, `headerWritten` → `headerCommitted`
 - `errors.go` `RegisterErrorClassifications` trimmed to only sentinels this library returns (`ErrNotSupported`, `ErrAbortHandler`)
+- Hex encoding rewritten from `strings.Builder` to stack-allocated array (`hexEncodeUint64`) for cleaner zero-intermediate code path
 
 ### Fixed
 
