@@ -2,43 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Added
-
-- Dedicated `ETag` value type with `Strength` enum (`Strong`/`Weak`) encoding RFC 7232 §2.1 validator semantics directly in the type system
-- `StrongEqual` and `WeakEqual` methods implementing both RFC 7232 §2.3.2 comparison functions
-- `ParseETag` and `ParseETagList` for parsing entity-tags from wire format
-- `MatchesIfNoneMatch` (weak comparison) and `MatchesIfMatch` (strong comparison) exported helpers for conditional-request evaluation
-- `SkipIfPresent` config field to respect handler-set ETags instead of overwriting them
-- `Skip` config predicate to exclude specific routes from ETag processing
-- `HashFunc` now accepts `func([]byte) string` for arbitrary opaque-tag values (not just uint64 hashes)
-- RFC 7230 §3.3 compliance: HEAD responses now set Content-Length without sending a body
-- RFC 7232 §4.1 compliance: 304 responses now strip Content-Length
-- BDD-style spec suite (`etag_bdd_test.go`) mapping RFC 7232 sections to behavioral expectations
-- Fuzz tests for `ParseETag` and `ParseETagList` verifying no panics and round-trip integrity on arbitrary input
-- Migration guide at [`docs/migration/v0.2.md`](docs/migration/v0.2.md)
-
-### Changed
-
-- **Breaking:** middleware constructor renamed from `ETag()` to `New()`
-- **Breaking:** `ETagConfig.Weak bool` replaced with `ETagConfig.Strength Strength`
-- **Breaking:** `ETagConfig.HashFunc func([]byte) uint64` changed to `func([]byte) string`
-- Zero-value `ETagConfig{}` now clamps `MaxBufferSize` to 1 MB (previously caused unbounded buffering)
-- `wrapper.go` internal fields renamed: `wroteHeader` → `headerBuffered`, `headerWritten` → `headerCommitted`
-- `errors.go` `RegisterErrorClassifications` trimmed to only sentinels this library returns (`ErrNotSupported`, `ErrAbortHandler`)
-- Hex encoding rewritten from `strings.Builder` to stack-allocated array (`hexEncodeUint64`) for cleaner zero-intermediate code path
-
-### Fixed
-
-- Zero-value `ETagConfig{}` no longer causes unbounded memory buffering (B1)
-- HEAD requests no longer send a response body (B2, RFC 7230 §3.3)
-- 304 responses no longer leak `Content-Length` header (B3, RFC 7232 §4.1)
-
-## [0.1.0] - 2026-01-01
+## [0.1.0] - 2026-08-07
 
 ### Added
 
-- Initial release
+- RFC 7232 HTTP ETag middleware that buffers GET/HEAD response bodies, computes entity-tags, and handles `If-None-Match` conditional requests with `304 Not Modified` responses.
+- Dedicated `ETag` value type with `Strength` enum (`Strong`/`Weak`) encoding RFC 7232 §2.1 validator semantics directly in the type system.
+- `StrongEqual` and `WeakEqual` methods implementing both RFC 7232 §2.3.2 comparison functions.
+- `ParseETag` and `ParseETagList` for parsing entity-tags from wire format (quote-aware, handles escaped quotes and commas inside quotes).
+- `MatchesIfNoneMatch` (weak comparison) and `MatchesIfMatch` (strong comparison) exported helpers for manual conditional-request evaluation.
+- `SkipIfPresent` config field to respect handler-set ETags instead of overwriting them.
+- `Skip` config predicate to exclude specific routes from ETag processing (SSE, large downloads, streaming).
+- `HashFunc` accepts `func([]byte) string` for arbitrary opaque-tag values (not just uint64 hashes); defaults to FNV-64a.
+- RFC 7230 §3.3 compliance: HEAD responses set `Content-Length` without sending a body.
+- RFC 7232 §4.1 compliance: 304 responses strip `Content-Length`.
+- Classified errors via `go-error-family` for retry-aware observability with `OnError` callback hook.
+- BDD-style spec suite (`etag_bdd_test.go`) mapping RFC 7232 sections to behavioral expectations.
+- Fuzz tests for `ParseETag` and `ParseETagList` verifying no panics and round-trip integrity on arbitrary input.
+
+[Unreleased]: https://github.com/larsartmann/go-etag/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/larsartmann/go-etag/releases/tag/v0.1.0

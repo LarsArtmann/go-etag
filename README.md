@@ -255,8 +255,6 @@ The middleware adds sub-microsecond overhead per request. For a typical API retu
 go get github.com/larsartmann/go-etag
 ```
 
-> **Upgrading from v0.1?** See the [migration guide](docs/migration/v0.2.md) for breaking changes (`ETag()` to `New()`, `Weak bool` to `Strength`, `HashFunc` signature).
-
 ## License
 
 MIT
