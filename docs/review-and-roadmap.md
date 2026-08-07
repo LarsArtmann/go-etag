@@ -6,14 +6,14 @@ _Point-in-time audit of go-etag against RFC 7232. Findings, design proposals, an
 
 ## Baseline (verified 2026-08-07)
 
-| Check | Result |
-|-------|--------|
-| `go test -race ./...` | PASS |
-| `go vet ./...` | clean |
-| `golangci-lint run` | 1 trivial nit (`unparam`) |
+| Check                 | Result                          |
+| --------------------- | ------------------------------- |
+| `go test -race ./...` | PASS                            |
+| `go vet ./...`        | clean                           |
+| `golangci-lint run`   | 1 trivial nit (`unparam`)       |
 | Fuzz `FuzzETag` (30s) | 14.8M executions, **0 crashes** |
-| Dependencies | 1 (`go-error-family`) |
-| LOC (Go) | ~1400 across 8 files |
+| Dependencies          | 1 (`go-error-family`)           |
+| LOC (Go)              | ~1400 across 8 files            |
 
 The foundation is well-built: clean flat-package structure, strong lint culture, correct RFC 7232 §2.3.2 weak comparison, quote-aware list parsing, graceful overflow/hijack/flush handling, zero-allocation hex encoding.
 
@@ -64,7 +64,7 @@ if maxBufferSize <= 0 {
 
 **Problem:** A non-304 `HEAD` request runs the same body-write tail as `GET`, sending the body bytes to the client. RFC 7230 §3.3: a HEAD response **MUST NOT** have a message body.
 
-**Fix:** For `HEAD`, set `Content-Length` from the buffered length *before* committing the header, then skip the `Write`:
+**Fix:** For `HEAD`, set `Content-Length` from the buffered length _before_ committing the header, then skip the `Write`:
 
 ```go
 if req.Method == http.MethodHead {
@@ -145,19 +145,19 @@ w.ResponseWriter.WriteHeader(http.StatusNotModified)
 
 ## Proposal: Dedicated `ETag` type [foundational]
 
-The current `string`-everywhere design is **structurally blocking a spec feature**: RFC 7232 §2.3.2 defines **two** comparison functions, but `stripWeakPrefix(a) == stripWeakPrefix(b)` can only express weak comparison. **Strong comparison is impossible** — yet it's *required* for `If-Match` → 412.
+The current `string`-everywhere design is **structurally blocking a spec feature**: RFC 7232 §2.3.2 defines **two** comparison functions, but `stripWeakPrefix(a) == stripWeakPrefix(b)` can only express weak comparison. **Strong comparison is impossible** — yet it's _required_ for `If-Match` → 412.
 
 A dedicated type makes both comparisons first-class, named methods that map 1:1 to the spec.
 
 ### What it buys
 
-| Today (`string`) | With `ETag` type |
-|---|---|
-| `stripWeakPrefix(etag)` scattered | `e.IsWeak()` — one place |
-| `etagInList(list, etag)` (weak only) | `e.WeakEqual(o)` *and* `e.StrongEqual(o)` |
-| `computeETag() string` — any string allowed | `NewETag(opaque)` — ABNF-validated at construction |
-| `Weak bool` in config (smell) | `Strength` enum (`Strong`/`Weak`) — spec vocabulary |
-| `parseETagList → []string` | `→ []ETag` — can't confuse a header fragment with a tag |
+| Today (`string`)                            | With `ETag` type                                        |
+| ------------------------------------------- | ------------------------------------------------------- |
+| `stripWeakPrefix(etag)` scattered           | `e.IsWeak()` — one place                                |
+| `etagInList(list, etag)` (weak only)        | `e.WeakEqual(o)` _and_ `e.StrongEqual(o)`               |
+| `computeETag() string` — any string allowed | `NewETag(opaque)` — ABNF-validated at construction      |
+| `Weak bool` in config (smell)               | `Strength` enum (`Strong`/`Weak`) — spec vocabulary     |
+| `parseETagList → []string`                  | `→ []ETag` — can't confuse a header fragment with a tag |
 
 ### Proposed API
 
@@ -204,34 +204,34 @@ func ParseETagList(header string) ([]ETag, error)      // comma-separated, quote
 
 ### File split
 
-| File | Purpose |
-|------|---------|
+| File            | Purpose                                                   |
+| --------------- | --------------------------------------------------------- |
 | `entity_tag.go` | `ETag` type, `Strength` enum, comparison methods, parsers |
-| `etag.go` | Middleware, `ETagConfig`, `etagWriter` |
-| `wrapper.go` | `responseWrapper` (unchanged) |
-| `errors.go` | Error codes + classification |
-| `hex.go` | Hex encoding (unchanged) |
-| `middleware.go` | `Middleware` type alias (unchanged) |
+| `etag.go`       | Middleware, `ETagConfig`, `etagWriter`                    |
+| `wrapper.go`    | `responseWrapper` (unchanged)                             |
+| `errors.go`     | Error codes + classification                              |
+| `hex.go`        | Hex encoding (unchanged)                                  |
+| `middleware.go` | `Middleware` type alias (unchanged)                       |
 
 ---
 
 ## Prioritized roadmap (Pareto order)
 
-| Priority | Item | Effort | Impact |
-|----------|------|--------|--------|
-| **P0** | B1 — Zero-value config unbounded buffering | XS | 🔴 Memory DoS fix |
-| **P0** | B2 — HEAD forwards message body | XS | 🔴 RFC compliance |
-| **P1** | B3 — 304 leaks Content-Length | XS | 🟠 RFC compliance |
-| **P1** | D8 — Dead code + lint cleanup | XS | 🟢 Hygiene |
-| **P1** | D5 — Rename `wroteHeader`/`headerWritten` | S | 🟢 Readability |
-| **P1** | D1 — `SkipIfPresent` config | S | 🟠 Don't harm users |
-| **P2** | ETag type extraction (proposal above) | M | 🟠 Foundation for D2/D3/D7 |
-| **P2** | D4 — Trim `errors.go` scope | XS | 🟢 Clarity |
-| **P2** | D3 — Flexible `HashFunc` signature | S | 🟠 Extensibility |
-| **P2** | D2 — Honest strong/weak hash defaults | S | 🟠 Correctness |
-| **P3** | D6 — `Skip` predicate | XS | 🟢 Flexibility |
-| **P3** | D7 — `If-Match` / 412 support | M | 🟢 Feature (needs ETag type) |
-| **P3** | BDD specs (Ginkgo) mapping RFC sections | M | 🟢 Spec confidence |
+| Priority | Item                                       | Effort | Impact                       |
+| -------- | ------------------------------------------ | ------ | ---------------------------- |
+| **P0**   | B1 — Zero-value config unbounded buffering | XS     | 🔴 Memory DoS fix            |
+| **P0**   | B2 — HEAD forwards message body            | XS     | 🔴 RFC compliance            |
+| **P1**   | B3 — 304 leaks Content-Length              | XS     | 🟠 RFC compliance            |
+| **P1**   | D8 — Dead code + lint cleanup              | XS     | 🟢 Hygiene                   |
+| **P1**   | D5 — Rename `wroteHeader`/`headerWritten`  | S      | 🟢 Readability               |
+| **P1**   | D1 — `SkipIfPresent` config                | S      | 🟠 Don't harm users          |
+| **P2**   | ETag type extraction (proposal above)      | M      | 🟠 Foundation for D2/D3/D7   |
+| **P2**   | D4 — Trim `errors.go` scope                | XS     | 🟢 Clarity                   |
+| **P2**   | D3 — Flexible `HashFunc` signature         | S      | 🟠 Extensibility             |
+| **P2**   | D2 — Honest strong/weak hash defaults      | S      | 🟠 Correctness               |
+| **P3**   | D6 — `Skip` predicate                      | XS     | 🟢 Flexibility               |
+| **P3**   | D7 — `If-Match` / 412 support              | M      | 🟢 Feature (needs ETag type) |
+| **P3**   | BDD specs (Ginkgo) mapping RFC sections    | M      | 🟢 Spec confidence           |
 
 ### Execution order rationale
 

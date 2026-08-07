@@ -31,12 +31,12 @@ already provides every capability such an interface would promise.
 `ErrInvalidConfig` is `errorfamily.NewRejection(...)` with a stable code.
 Callers have full structured access today:
 
-| Need | Already provided by |
-|------|---------------------|
+| Need                          | Already provided by                                         |
+| ----------------------------- | ----------------------------------------------------------- |
 | "Is this a validation error?" | `errors.Is(err, ErrInvalidConfig)` or `family == Rejection` |
-| "Which field/value failed?" | `.ErrorContext()["max_buffer_size"]` |
-| "Is it retryable?" | `Rejection` family → no |
-| "Full structured type" | `errors.AsType[*errorfamily.Error](err)` |
+| "Which field/value failed?"   | `.ErrorContext()["max_buffer_size"]`                        |
+| "Is it retryable?"            | `Rejection` family → no                                     |
+| "Full structured type"        | `errors.AsType[*errorfamily.Error](err)`                    |
 
 A `ValidationError` interface would be a **third redundant taxonomy** on top of
 code + family.
@@ -50,17 +50,17 @@ is premature generalization.
 
 ### 3. The name carries the anemic-model smell
 
-`ValidationError` says "an error about validation" without saying *what* is
+`ValidationError` says "an error about validation" without saying _what_ is
 invalid. `ErrInvalidConfig` / `http.etag_config_invalid` is precise. Worse,
 adding `Field() string` / `Value() any` methods to make the interface
 non-ceremonial would reinvent what the context map already carries — and it
-breaks down the moment *multiple* fields are invalid (which field does
+breaks down the moment _multiple_ fields are invalid (which field does
 `Field()` return?).
 
 ### 4. The `error` return signature is deliberately weak
 
 `Validate()` returns `error`, not `*errorfamily.Error`, because the `ireturn`
-linter forbids concrete return types. The *concrete runtime type* is strongly
+linter forbids concrete return types. The _concrete runtime type_ is strongly
 typed (`*errorfamily.Error`), satisfying the type-awareness audit. Introducing
 a marker interface purely to "strengthen" the signature would be solving a lint
 concern with architecture — backwards.
@@ -70,7 +70,7 @@ concern with architecture — backwards.
 Revisit this decision **only if all of these become true**:
 
 1. The config grows many independently-validatable fields, **and**
-2. Callers need to branch on *which field failed* in a way `ErrorContext()`
+2. Callers need to branch on _which field failed_ in a way `ErrorContext()`
    keys cannot express (e.g. compile-time exhaustiveness), **and**
 3. The branching logic is common enough to justify a shared contract.
 

@@ -89,13 +89,13 @@ Single flat package: `etag`. One external dependency: `github.com/larsartmann/go
 
 Errors from `etagWriter` are classified using `go-error-family`:
 
-| Source   | Error Code                   | Family         | Retryable | When                                             |
-| -------- | ---------------------------- | -------------- | --------- | ------------------------------------------------ |
-| `Write`  | `http.etag_write_failed`     | Transient      | Yes       | Streaming, overflow, or flush write failure      |
-| `Hijack` | `http.hijack_unsupported`    | Infrastructure | No        | Underlying writer doesn't implement Hijacker     |
-| `Hijack` | `http.hijack_failed`         | Transient      | Yes       | Underlying Hijack call fails                     |
-| `Validate` | `http.etag_config_invalid` | Rejection      | No        | ETagConfig field value is invalid (e.g. <= 0)    |
-| `hash.Write` | `http.etag_hash_write_failed` | Orchestration | No    | Hash.Write returned an error (contract violation) |
+| Source       | Error Code                    | Family         | Retryable | When                                              |
+| ------------ | ----------------------------- | -------------- | --------- | ------------------------------------------------- |
+| `Write`      | `http.etag_write_failed`      | Transient      | Yes       | Streaming, overflow, or flush write failure       |
+| `Hijack`     | `http.hijack_unsupported`     | Infrastructure | No        | Underlying writer doesn't implement Hijacker      |
+| `Hijack`     | `http.hijack_failed`          | Transient      | Yes       | Underlying Hijack call fails                      |
+| `Validate`   | `http.etag_config_invalid`    | Rejection      | No        | ETagConfig field value is invalid (e.g. <= 0)     |
+| `hash.Write` | `http.etag_hash_write_failed` | Orchestration  | No        | Hash.Write returned an error (contract violation) |
 
 All errors are `*errorfamily.Error` — classified, contextual, retryable-aware.
 `ErrInvalidConfig` is the package-level sentinel for `Validate`; `errors.Is` matches by code+family.

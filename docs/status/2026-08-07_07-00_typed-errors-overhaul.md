@@ -16,22 +16,22 @@ Starting state: 8 violations (7 ERROR, 1 WARNING). The `erraudit` tool flagged i
 
 ### Audit Violations Resolved (8/8 → 0)
 
-| # | Violation | Location | Fix |
-|---|-----------|----------|-----|
-| 1 | Ignored `h.Write` error | `etag.go:57` | Check error; panic with `Orchestration` error (`ErrCodeHashWriteFailed`) — hash.Hash contract violation is a bug |
-| 2 | Ignored `ResponseWriter.Write` error | `etag.go:178` (flush path) | New `ETagConfig.OnError` callback receives classified `*errorfamily.Error` |
-| 3 | Ignored `ResponseWriter.Write` error | `etag.go:326` (Flush path) | Same `OnError` callback |
-| 4 | `errors.New` used | `etag.go:62` | Replaced with `ErrInvalidConfig` sentinel via `errorfamily.NewRejection` |
-| 5 | `fmt.Errorf` used | `etag.go:67` | Replaced with `ErrInvalidConfig.WithContextf("max_buffer_size", ...)` |
-| 6 | Generic `error` return | `etag.go:65` (`Validate`) | Now returns concrete `*errorfamily.Error` with code, family, context |
-| 7 | Hijack context loss | `wrapper.go:58` | Added `.WithContextf("writer_type", "%T", w)` |
-| 8 | Hijack context loss | `wrapper.go:67` | Added `.WithContextf("writer_type", "%T", w)` |
+| #   | Violation                            | Location                   | Fix                                                                                                              |
+| --- | ------------------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| 1   | Ignored `h.Write` error              | `etag.go:57`               | Check error; panic with `Orchestration` error (`ErrCodeHashWriteFailed`) — hash.Hash contract violation is a bug |
+| 2   | Ignored `ResponseWriter.Write` error | `etag.go:178` (flush path) | New `ETagConfig.OnError` callback receives classified `*errorfamily.Error`                                       |
+| 3   | Ignored `ResponseWriter.Write` error | `etag.go:326` (Flush path) | Same `OnError` callback                                                                                          |
+| 4   | `errors.New` used                    | `etag.go:62`               | Replaced with `ErrInvalidConfig` sentinel via `errorfamily.NewRejection`                                         |
+| 5   | `fmt.Errorf` used                    | `etag.go:67`               | Replaced with `ErrInvalidConfig.WithContextf("max_buffer_size", ...)`                                            |
+| 6   | Generic `error` return               | `etag.go:65` (`Validate`)  | Now returns concrete `*errorfamily.Error` with code, family, context                                             |
+| 7   | Hijack context loss                  | `wrapper.go:58`            | Added `.WithContextf("writer_type", "%T", w)`                                                                    |
+| 8   | Hijack context loss                  | `wrapper.go:67`            | Added `.WithContextf("writer_type", "%T", w)`                                                                    |
 
 ### New Error Codes Added
 
-| Code | Family | When |
-|------|--------|------|
-| `http.etag_config_invalid` | Rejection | ETagConfig field value invalid |
+| Code                          | Family        | When                                           |
+| ----------------------------- | ------------- | ---------------------------------------------- |
+| `http.etag_config_invalid`    | Rejection     | ETagConfig field value invalid                 |
 | `http.etag_hash_write_failed` | Orchestration | hash.Write returned error (contract violation) |
 
 Both have message templates registered in `registerAllErrorTemplates()`.
