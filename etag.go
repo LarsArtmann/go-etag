@@ -3,8 +3,6 @@ package etag
 import (
 	"bufio"
 	"encoding/binary"
-	"errors"
-	"fmt"
 	"hash/fnv"
 	"net"
 	"net/http"
@@ -37,6 +35,13 @@ type ETagConfig struct {
 	// for practical body counts). Provide a custom function for
 	// application-specific hashing needs.
 	HashFunc func([]byte) uint64
+	// OnError is called when a write to the underlying ResponseWriter fails
+	// after the response header has been committed and the error cannot be
+	// surfaced to the client or returned from Write. This covers the flush
+	// path in flush() and Flush() where the HTTP response is already
+	// in-flight. If nil, such errors are silently dropped (matching net/http
+	// default behavior).
+	OnError func(*errorfamily.Error)
 }
 
 // DefaultETagConfig returns an ETagConfig with sensible defaults.
@@ -45,26 +50,38 @@ func DefaultETagConfig() ETagConfig {
 		Weak:          false,
 		MaxBufferSize: defaultETagMaxBufferSize,
 		HashFunc:      defaultETagHash,
+		OnError:       nil,
 	}
 }
 
 // defaultETagHash computes FNV-64a of data. FNV-64a is a non-cryptographic
 // hash with a 64-bit output, making accidental collisions astronomically
 // unlikely for practical response-body counts (birthday bound: ~4 billion).
+// defaultETagHash computes FNV-64a of data. FNV-64a is a non-cryptographic
+// hash with a 64-bit output, making accidental collisions astronomically
+// unlikely for practical response-body counts (birthday bound: ~4 billion).
+// The hash.Hash contract guarantees Write never returns an error; if it
+// does, that signals a broken implementation and we panic with a classified
+// Orchestration error.
 func defaultETagHash(data []byte) uint64 {
 	h := fnv.New64a()
 
-	_, _ = h.Write(data)
+	_, err := h.Write(data)
+	if err != nil {
+		panic(errorfamily.NewOrchestration(
+			ErrCodeHashWriteFailed,
+			"fnv hash.Write returned an error, violating the hash.Hash contract that Write never fails",
+		))
+	}
 
 	return h.Sum64()
 }
 
-var errNonPositiveMaxBufferSize = errors.New("ETagConfig.MaxBufferSize must be positive")
-
 // Validate checks the ETagConfig for invalid values.
+// Returns a *errorfamily.Error classified as Rejection on failure.
 func (c ETagConfig) Validate() error {
 	if c.MaxBufferSize <= 0 {
-		return fmt.Errorf("%w: got %d", errNonPositiveMaxBufferSize, c.MaxBufferSize)
+		return ErrInvalidConfig.WithContextf("max_buffer_size", "%d", c.MaxBufferSize)
 	}
 
 	return nil
@@ -97,6 +114,7 @@ type etagWriter struct {
 	flushed       bool
 	maxBufferSize int
 	hashFunc      func([]byte) uint64
+	onError       func(*errorfamily.Error)
 }
 
 func newETagWriter(resp http.ResponseWriter, cfg ETagConfig) *etagWriter {
@@ -112,6 +130,20 @@ func newETagWriter(resp http.ResponseWriter, cfg ETagConfig) *etagWriter {
 		flushed:         false,
 		maxBufferSize:   cfg.MaxBufferSize,
 		hashFunc:        hashFunc,
+		onError:         cfg.OnError,
+	}
+}
+
+// reportWriteErr wraps a post-commit write failure as a classified
+// *errorfamily.Error and forwards it to the OnError callback if configured.
+// The HTTP response is already in-flight, so the error cannot be surfaced
+// to the client or returned from Write; this hook exists for observability
+// (logging, metrics, tracing).
+func (w *etagWriter) reportWriteErr(err error, message string) {
+	classified := errorfamily.WrapTransient(err, ErrCodeETagWriteFailed, message)
+
+	if w.onError != nil {
+		w.onError(classified)
 	}
 }
 
@@ -173,9 +205,12 @@ func (w *etagWriter) flush(req *http.Request) {
 
 	// Post-header-commit body writes are fundamentally unreportable: the
 	// handler has returned and the HTTP response is already in-flight.
-	// Any write failure here cannot be surfaced to the client or caller.
+	// The error is classified and forwarded to OnError for observability.
 	if len(w.body) > 0 {
-		_, _ = w.ResponseWriter.Write(w.body)
+		_, err := w.ResponseWriter.Write(w.body)
+		if err != nil {
+			w.reportWriteErr(err, "etag flush body write failed")
+		}
 	}
 }
 
@@ -321,9 +356,12 @@ func (w *etagWriter) Flush() {
 
 	// Post-header-commit body writes are fundamentally unreportable: the
 	// handler has returned and the HTTP response is already in-flight.
-	// Any write failure here cannot be surfaced to the client or caller.
+	// The error is classified and forwarded to OnError for observability.
 	if len(w.body) > 0 {
-		_, _ = w.ResponseWriter.Write(w.body)
+		_, err := w.ResponseWriter.Write(w.body)
+		if err != nil {
+			w.reportWriteErr(err, "etag flush body write failed")
+		}
 
 		w.body = w.body[:0]
 	}

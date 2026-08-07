@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	errorfamily "github.com/larsartmann/go-error-family"
 )
 
 func TestETag_GeneratesStrongETag(t *testing.T) {
@@ -425,8 +427,8 @@ func TestETagConfig_Validate_ZeroMaxBufferSize(t *testing.T) {
 		t.Fatal("Validate() error = nil, want error for zero MaxBufferSize")
 	}
 
-	if !errors.Is(err, errNonPositiveMaxBufferSize) {
-		t.Errorf("Validate() error = %v, want errNonPositiveMaxBufferSize", err)
+	if !errors.Is(err, ErrInvalidConfig) {
+		t.Errorf("Validate() error = %v, want ErrInvalidConfig", err)
 	}
 }
 
@@ -440,8 +442,8 @@ func TestETagConfig_Validate_NegativeMaxBufferSize(t *testing.T) {
 		t.Fatal("Validate() error = nil, want error for negative MaxBufferSize")
 	}
 
-	if !errors.Is(err, errNonPositiveMaxBufferSize) {
-		t.Errorf("Validate() error = %v, want errNonPositiveMaxBufferSize", err)
+	if !errors.Is(err, ErrInvalidConfig) {
+		t.Errorf("Validate() error = %v, want ErrInvalidConfig", err)
 	}
 }
 
@@ -711,4 +713,125 @@ func TestETag_IfNoneMatch_EscapedQuoteEndToEnd(t *testing.T) {
 
 	assertStatus(t, rec, http.StatusOK)
 	assertBody(t, rec, "hello world")
+}
+
+// TestETagConfig_Validate_ReturnsTypedError verifies that Validate returns a
+// *errorfamily.Error with the correct code, family, and context.
+func TestETagConfig_Validate_ReturnsTypedError(t *testing.T) {
+	t.Parallel()
+
+	cfg := ETagConfig{MaxBufferSize: -5}
+
+	err := cfg.Validate()
+	if err == nil {
+		t.Fatal("Validate() error = nil, want typed error")
+	}
+
+	classified, ok := errors.AsType[*errorfamily.Error](err)
+	if !ok {
+		t.Fatalf("Validate() error is %T, want *errorfamily.Error", err)
+	}
+
+	if classified.Code() != ErrCodeInvalidConfig {
+		t.Errorf("error code = %q, want %q", classified.Code(), ErrCodeInvalidConfig)
+	}
+
+	if classified.ErrorFamily() != errorfamily.Rejection {
+		t.Errorf("error family = %s, want %s", classified.ErrorFamily(), errorfamily.Rejection)
+	}
+
+	ctx := classified.ErrorContext()
+
+	if got := ctx["max_buffer_size"]; got != "-5" {
+		t.Errorf("context max_buffer_size = %q, want %q", got, "-5")
+	}
+}
+
+// TestETag_OnError_CalledOnFlushWriteFailure verifies that the OnError
+// callback receives a classified *errorfamily.Error when a write to the
+// underlying ResponseWriter fails during the flush path (post-commit body write).
+func TestETag_OnError_CalledOnFlushWriteFailure(t *testing.T) {
+	t.Parallel()
+
+	var capturedErr *errorfamily.Error
+
+	cfg := DefaultETagConfig()
+	cfg.OnError = func(err *errorfamily.Error) {
+		capturedErr = err
+	}
+
+	handler := ETag(cfg)(newWriteStatusHandler(http.StatusOK, "hello world"))
+
+	req := newTestRequest(http.MethodGet, "/", "")
+	rec := &failingResponseRecorder{ResponseRecorder: httptest.NewRecorder()}
+
+	handler.ServeHTTP(rec, req)
+
+	if capturedErr == nil {
+		t.Fatal("OnError was not called, want it called for flush write failure")
+	}
+
+	if capturedErr.Code() != ErrCodeETagWriteFailed {
+		t.Errorf("OnError error code = %q, want %q", capturedErr.Code(), ErrCodeETagWriteFailed)
+	}
+
+	if capturedErr.ErrorFamily() != errorfamily.Transient {
+		t.Errorf("OnError error family = %s, want %s", capturedErr.ErrorFamily(), errorfamily.Transient)
+	}
+}
+
+// TestETag_OnError_CalledOnExplicitFlushWriteFailure verifies that the
+// OnError callback fires when a write fails during an explicit Flush call
+// (the http.Flusher interface path) after the response header is committed.
+func TestETag_OnError_CalledOnExplicitFlushWriteFailure(t *testing.T) {
+	t.Parallel()
+
+	var capturedErr *errorfamily.Error
+
+	cfg := ETagConfig{
+		MaxBufferSize: defaultETagMaxBufferSize,
+		HashFunc:      defaultETagHash,
+		OnError: func(err *errorfamily.Error) {
+			capturedErr = err
+		},
+	}
+
+	handler := ETag(cfg)(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("buffered data"))
+
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			t.Fatal("ResponseWriter does not implement http.Flusher")
+		}
+
+		flusher.Flush()
+	}))
+
+	req := newTestRequest(http.MethodGet, "/", "")
+	rec := &failingResponseRecorder{ResponseRecorder: httptest.NewRecorder()}
+
+	handler.ServeHTTP(rec, req)
+
+	if capturedErr == nil {
+		t.Fatal("OnError was not called, want it called for Flush write failure")
+	}
+
+	if capturedErr.Code() != ErrCodeETagWriteFailed {
+		t.Errorf("OnError error code = %q, want %q", capturedErr.Code(), ErrCodeETagWriteFailed)
+	}
+}
+
+// TestETag_OnError_NilCallback verifies that a nil OnError callback does not
+// panic when a write failure occurs during the flush path.
+func TestETag_OnError_NilCallback(t *testing.T) {
+	t.Parallel()
+
+	cfg := DefaultETagConfig()
+
+	handler := ETag(cfg)(newWriteStatusHandler(http.StatusOK, "hello world"))
+
+	req := newTestRequest(http.MethodGet, "/", "")
+	rec := &failingResponseRecorder{ResponseRecorder: httptest.NewRecorder()}
+
+	handler.ServeHTTP(rec, req)
 }

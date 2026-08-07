@@ -89,11 +89,18 @@ Single flat package: `etag`. One external dependency: `github.com/larsartmann/go
 
 Errors from `etagWriter` are classified using `go-error-family`:
 
-| Source   | Error Code                | Family         | Retryable | When                                         |
-| -------- | ------------------------- | -------------- | --------- | -------------------------------------------- |
-| `Write`  | `http.etag_write_failed`  | Transient      | Yes       | Streaming or overflow write failure          |
-| `Hijack` | `http.hijack_unsupported` | Infrastructure | No        | Underlying writer doesn't implement Hijacker |
-| `Hijack` | `http.hijack_failed`      | Transient      | Yes       | Underlying Hijack call fails                 |
+| Source   | Error Code                   | Family         | Retryable | When                                             |
+| -------- | ---------------------------- | -------------- | --------- | ------------------------------------------------ |
+| `Write`  | `http.etag_write_failed`     | Transient      | Yes       | Streaming, overflow, or flush write failure      |
+| `Hijack` | `http.hijack_unsupported`    | Infrastructure | No        | Underlying writer doesn't implement Hijacker     |
+| `Hijack` | `http.hijack_failed`         | Transient      | Yes       | Underlying Hijack call fails                     |
+| `Validate` | `http.etag_config_invalid` | Rejection      | No        | ETagConfig field value is invalid (e.g. <= 0)    |
+| `hash.Write` | `http.etag_hash_write_failed` | Orchestration | No    | Hash.Write returned an error (contract violation) |
+
+All errors are `*errorfamily.Error` — classified, contextual, retryable-aware.
+`ErrInvalidConfig` is the package-level sentinel for `Validate`; `errors.Is` matches by code+family.
+Hijack errors include `writer_type` context via `WithContextf`.
+Flush-path write errors are forwarded to `ETagConfig.OnError` (a `func(*errorfamily.Error)`) for observability, since they cannot be surfaced to the client or returned from `Write`.
 
 ## Non-Obvious Behaviors
 
@@ -102,6 +109,9 @@ Errors from `etagWriter` are classified using `go-error-family`:
 - **`ETag` always overwrites handler-set ETags** — there is no `SkipIfPresent` config.
 - **Buffer overflow disables ETag** — responses exceeding `MaxBufferSize` are streamed without ETag.
 - **Hijack/Flush switches to streaming mode** — after either call, the middleware writes through without buffering.
+- **`OnError` callback receives post-commit write failures** — when a write fails after the response header is committed (flush path), the error cannot be surfaced to the client or returned from `Write`. If `ETagConfig.OnError` is set, it receives a classified `*errorfamily.Error` (code `http.etag_write_failed`, family Transient) for logging/metrics/tracing. If nil, errors are silently dropped (matching net/http default behavior).
+- **`Validate` returns a typed `*errorfamily.Error`** — classified as Rejection with code `http.etag_config_invalid`. `errors.Is(err, ErrInvalidConfig)` matches. Context includes `max_buffer_size`.
+- **Hash.Write errors panic with a classified Orchestration error** — the `hash.Hash` contract guarantees Write never fails; if it does, the hash implementation is broken and we panic with `http.etag_hash_write_failed`.
 
 ## Testing Conventions
 

@@ -21,11 +21,31 @@ const (
 	// ErrCodeHijackFailed is returned when the underlying Hijack call fails.
 	// Classified as Transient (retryable).
 	ErrCodeHijackFailed = "http.hijack_failed"
+
+	// ErrCodeInvalidConfig is returned when ETagConfig validation fails.
+	// Classified as Rejection (bad input, not retryable).
+	ErrCodeInvalidConfig = "http.etag_config_invalid"
+
+	// ErrCodeHashWriteFailed is returned when the hash function fails to
+	// accept data, violating the hash.Hash contract. Classified as
+	// Orchestration (internal contract violation, not retryable).
+	ErrCodeHashWriteFailed = "http.etag_hash_write_failed"
+)
+
+// ErrInvalidConfig is the sentinel error returned by Validate when
+// ETagConfig has an invalid field value. The concrete error returned by
+// Validate is a clone of this sentinel with context (e.g. the offending
+// field value), so errors.Is(err, ErrInvalidConfig) matches by code and family.
+var ErrInvalidConfig = errorfamily.NewRejection(
+	ErrCodeInvalidConfig,
+	"ETagConfig has an invalid field value",
 )
 
 const (
 	msgRetryMaySucceed           = "This is a Transient error — retrying may succeed."
 	msgInfrastructureUnsupported = "This is an Infrastructure error — the runtime environment does not support this operation."
+	msgCheckYourConfig           = "Check your ETagConfig values and try again."
+	msgReportAsBug               = "This is likely a bug. Please report it if the problem persists."
 )
 
 func registerErrorTemplate(code, what, why, fix, wayOut string) {
@@ -76,5 +96,21 @@ func registerAllErrorTemplates() {
 		"The underlying Hijack() call returned an error.",
 		"Check if the connection is still active and not already hijacked.",
 		msgRetryMaySucceed,
+	)
+
+	registerErrorTemplate(
+		ErrCodeInvalidConfig,
+		"ETag configuration is invalid",
+		"One or more fields of ETagConfig have invalid values.",
+		"Review the ETagConfig field values and ensure MaxBufferSize is positive.",
+		msgCheckYourConfig,
+	)
+
+	registerErrorTemplate(
+		ErrCodeHashWriteFailed,
+		"Hash function failed to accept data",
+		"The hash.Write call returned an error, which violates the hash.Hash contract that Write never fails.",
+		"This indicates a bug in the hash implementation. Report it to the library author.",
+		msgReportAsBug,
 	)
 }
