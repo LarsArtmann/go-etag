@@ -124,13 +124,13 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 
 Errors from the ETag writer are classified using `go-error-family`:
 
-| Code                      | Family         | Retryable | When                                             |
-| ------------------------- | -------------- | --------- | ------------------------------------------------ |
-| `http.etag_write_failed`  | Transient      | Yes       | Write failure during streaming or overflow       |
-| `http.hijack_unsupported` | Infrastructure | No        | ResponseWriter doesn't implement `http.Hijacker` |
-| `http.hijack_failed`      | Transient      | Yes       | Underlying `Hijack()` call fails                 |
-| `http.etag_config_invalid`| Rejection      | No        | `ETagConfig` validation failure                  |
-| `http.etag_hash_write_failed` | Orchestration | No     | Hash function contract violation (bug)           |
+| Code                          | Family         | Retryable | When                                             |
+| ----------------------------- | -------------- | --------- | ------------------------------------------------ |
+| `http.etag_write_failed`      | Transient      | Yes       | Write failure during streaming or overflow       |
+| `http.hijack_unsupported`     | Infrastructure | No        | ResponseWriter doesn't implement `http.Hijacker` |
+| `http.hijack_failed`          | Transient      | Yes       | Underlying `Hijack()` call fails                 |
+| `http.etag_config_invalid`    | Rejection      | No        | `ETagConfig` validation failure                  |
+| `http.etag_hash_write_failed` | Orchestration  | No        | Hash function contract violation (bug)           |
 
 Call `etag.RegisterErrorClassifications()` once at startup to enable classification.
 

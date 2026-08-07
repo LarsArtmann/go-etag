@@ -8,7 +8,7 @@
 
 ### `exhaustruct` — Every Struct Field Must Be Set
 
-When creating any struct literal, you must populate **every field**. In test files this is relaxed.
+When creating any struct literal, you must populate **every field**. Use `//nolint:exhaustruct` only for intentional zero-value returns (e.g. `ETag{}` for "no tag"). In test files this is relaxed.
 
 ### `err113` — No Inline `errors.New()`
 
@@ -74,16 +74,38 @@ golangci-lint fmt          # Format (gofumpt + golines@120 + gci)
 
 Single flat package: `etag`. One external dependency: `github.com/larsartmann/go-error-family`. Go 1.26+.
 
-| File            | Exports                                                                                                       | Purpose                                                                             |
-| --------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `etag.go`       | `ETagConfig`, `DefaultETagConfig()`, `ETag()`, `Validate()`                                                   | ETag generation (FNV-64a) + RFC 7232 weak-comparison `If-None-Match` 304 middleware |
-| `wrapper.go`    | (unexported `responseWrapper`)                                                                                | Shared ResponseWriter wrapper: buffers WriteHeader, delegates Hijack/Flush          |
-| `middleware.go` | `Middleware`                                                                                                  | Type alias for `func(http.Handler) http.Handler`                                    |
-| `errors.go`     | `ErrCodeETagWriteFailed`, `ErrCodeHijackUnsupported`, `ErrCodeHijackFailed`, `RegisterErrorClassifications()` | Error codes + stdlib sentinel registration + message templates                      |
-| `hex.go`        | (unexported `hexDigitsLower`)                                                                                 | Shared lowercase hex lookup table for ETag encoding                                 |
-| `doc.go`        | (package doc only)                                                                                            | Package-level GoDoc documentation                                                   |
+| File            | Exports                                                                                                                                                                             | Purpose                                                                                            |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `entity_tag.go` | `ETag`, `Strength`, `Strong`, `Weak`, `NewETag`, `ParseETag`, `ParseETagList`, `MatchesIfNoneMatch`, `MatchesIfMatch`                                                               | RFC 7232 §2.3 entity-tag domain type: opaque value + strength, strong/weak comparison, ABNF parser |
+| `etag.go`       | `ETagConfig`, `DefaultETagConfig()`, `Validate()`, `New()`                                                                                                                          | ETag middleware: FNV-64a generation, If-None-Match 304, buffer overflow, Hijack/Flush streaming    |
+| `wrapper.go`    | (unexported `responseWrapper`)                                                                                                                                                      | Shared ResponseWriter wrapper: buffers WriteHeader, delegates Hijack/Flush                         |
+| `middleware.go` | `Middleware`                                                                                                                                                                        | Type alias for `func(http.Handler) http.Handler`                                                   |
+| `errors.go`     | `ErrCodeETagWriteFailed`, `ErrCodeHijackUnsupported`, `ErrCodeHijackFailed`, `ErrCodeInvalidConfig`, `ErrCodeHashWriteFailed`, `ErrInvalidConfig`, `RegisterErrorClassifications()` | Error codes + stdlib sentinel registration + message templates                                     |
+| `hex.go`        | (unexported `hexEncode`, `hexDigitsLower`)                                                                                                                                          | Shared lowercase hex encoding for ETag generation                                                  |
+| `doc.go`        | (package doc only)                                                                                                                                                                  | Package-level GoDoc documentation                                                                  |
 
-**Middleware pattern:** `ETag()` returns `func(http.Handler) http.Handler` (aliased as `Middleware`).
+**Middleware pattern:** `New()` returns `func(http.Handler) http.Handler` (aliased as `Middleware`).
+
+## API Design
+
+### ETag Type (RFC 7232 §2.3)
+
+The `ETag` struct holds an opaque string and a `Strength` (Strong/Weak). It provides:
+
+- `String()` — wire format (`"opaque"` or `W/"opaque"`)
+- `StrongEqual(o ETag) bool` — §2.3.2 strong comparison (both must be strong)
+- `WeakEqual(o ETag) bool` — §2.3.2 weak comparison (ignores strength)
+- `ParseETag(s string) (ETag, bool)` — parse one entity-tag from wire format
+- `ParseETagList(header string) []ETag` — parse comma-separated list
+- `MatchesIfNoneMatch(tag, header) bool` — weak comparison helper (used internally)
+- `MatchesIfMatch(tag, header) bool` — strong comparison helper (for application code)
+
+### Config
+
+`ETagConfig` has fields: `Strength`, `MaxBufferSize`, `HashFunc` (returns string), `SkipIfPresent`, `Skip`, `OnError`.
+
+- Zero-value `ETagConfig{}` is safe: MaxBufferSize clamped to default (1 MB).
+- `HashFunc func([]byte) string` returns opaque-tag content (not a uint64).
 
 ## Error Classification
 
@@ -104,19 +126,24 @@ Flush-path write errors are forwarded to `ETagConfig.OnError` (a `func(*errorfam
 
 ## Non-Obvious Behaviors
 
-- **`ETag` uses FNV-64a by default** — the `HashFunc func([]byte) uint64` field on `ETagConfig` allows replacing the hash algorithm.
+- **The middleware constructor is `New(cfg ETagConfig)`** — not `ETag()`. `ETag` is the domain type.
+- **`HashFunc` returns a string** — the opaque-tag content, not a uint64. The middleware wraps it with quotes and optional `W/`.
+- **Zero-value config is safe** — MaxBufferSize <= 0 is clamped to 1 MB in `newETagWriter`.
+- **HEAD responses have no body** — RFC 7230 §3.3. Content-Length is set from the buffered body size.
+- **304 strips Content-Length** — RFC 7232 §4.1.
+- **`SkipIfPresent` defaults to false** — set to true to respect handler-set ETags.
+- **`Skip` predicate** — exclude specific routes from ETag processing.
+- **`MatchesIfMatch` is an exported helper** — applications call it in their handlers for unsafe-method lost-update prevention.
 - **`ETag` `If-None-Match` uses RFC 7232 §2.3.2 weak comparison** — `W/"abc"` and `"abc"` are treated as equivalent.
-- **`ETag` always overwrites handler-set ETags** — there is no `SkipIfPresent` config.
 - **Buffer overflow disables ETag** — responses exceeding `MaxBufferSize` are streamed without ETag.
 - **Hijack/Flush switches to streaming mode** — after either call, the middleware writes through without buffering.
-- **`OnError` callback receives post-commit write failures** — when a write fails after the response header is committed (flush path), the error cannot be surfaced to the client or returned from `Write`. If `ETagConfig.OnError` is set, it receives a classified `*errorfamily.Error` (code `http.etag_write_failed`, family Transient) for logging/metrics/tracing. If nil, errors are silently dropped (matching net/http default behavior).
-- **`Validate` returns a typed `*errorfamily.Error`** — classified as Rejection with code `http.etag_config_invalid`. `errors.Is(err, ErrInvalidConfig)` matches. Context includes `max_buffer_size`.
 - **Hash.Write errors panic with a classified Orchestration error** — the `hash.Hash` contract guarantees Write never fails; if it does, the hash implementation is broken and we panic with `http.etag_hash_write_failed`.
 
 ## Testing Conventions
 
 - **Same package** (`package etag`) — tests can access unexported symbols
 - **Plain `testing`** — no assertion libraries
-- **`t.Errorf`** for non-fatal, `t.Fatalf` for fatal assertions
+- **BDD-style specs** in `etag_bdd_test.go` — Describe/Context/It pattern using `t.Run`
+- **`t.Errorf`** for non-fatal, **`t.Fatalf`** for fatal assertions
 - **`httptest.NewRecorder()`** + `httptest.NewRequest()` for HTTP doubles
 - **Shared test helpers** in `testutil_test.go`
