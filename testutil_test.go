@@ -2,7 +2,6 @@ package etag
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"errors"
 	"net"
@@ -15,6 +14,7 @@ import (
 func newWriteStatusHandler(status int, body string) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(status)
+
 		_, _ = w.Write([]byte(body))
 	})
 }
@@ -23,18 +23,14 @@ func newWriteStatusHandler(status int, body string) http.HandlerFunc {
 func newWriteBodyHandler(body []byte) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
+
 		_, _ = w.Write(body)
 	})
 }
 
 // newTestRequest creates an httptest.Request with context and Origin header set.
-func newTestRequest(method, path, origin string) *http.Request {
-	req := httptest.NewRequestWithContext(context.Background(), method, path, nil)
-	if origin != "" {
-		req.Header.Set("Origin", origin)
-	}
-
-	return req
+func newTestRequest(method string) *http.Request {
+	return httptest.NewRequestWithContext(context.Background(), method, "/", nil)
 }
 
 // newRecorder creates a new httptest.ResponseRecorder.
@@ -47,6 +43,7 @@ func newRecorder() *httptest.ResponseRecorder {
 func newFlushHandler() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
+
 		_, _ = w.Write([]byte("partial"))
 
 		if f, ok := w.(http.Flusher); ok {
@@ -116,6 +113,15 @@ func assertBodyEmpty(t *testing.T, rec *httptest.ResponseRecorder, msg string) {
 	}
 }
 
+// assertETag checks that a response recorder has the expected ETag header.
+func assertETag(t *testing.T, rec *httptest.ResponseRecorder, want string) {
+	t.Helper()
+
+	if got := rec.Header().Get(headerETag); got != want {
+		t.Errorf("ETag = %q, want %q", got, want)
+	}
+}
+
 // assertETagEmpty checks that a response recorder has no ETag header,
 // formatted with msg to clarify the test intent (e.g. "for POST").
 func assertETagEmpty(t *testing.T, rec *httptest.ResponseRecorder, msg string) {
@@ -123,14 +129,5 @@ func assertETagEmpty(t *testing.T, rec *httptest.ResponseRecorder, msg string) {
 
 	if got := rec.Header().Get(headerETag); got != "" {
 		t.Errorf("ETag = %q, want empty %s", got, msg)
-	}
-}
-
-// assertBodyContains checks that a response recorder body contains substr.
-func assertBodyContains(t *testing.T, rec *httptest.ResponseRecorder, substr string) {
-	t.Helper()
-
-	if !bytes.Contains(rec.Body.Bytes(), []byte(substr)) {
-		t.Errorf("body does not contain %q, got %q", substr, rec.Body.String())
 	}
 }

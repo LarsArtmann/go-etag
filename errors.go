@@ -57,17 +57,14 @@ func registerErrorTemplate(code, what, why, fix, wayOut string) {
 	})
 }
 
-// RegisterErrorClassifications maps stdlib HTTP sentinel errors to their
-// behavioral families and registers error message templates for all etag
-// error codes. Call once during program startup to enable classification
-// of third-party HTTP errors via errorfamily.Classify.
+// RegisterErrorClassifications maps stdlib HTTP sentinel errors relevant to
+// response-writing middleware to their behavioral families, and registers
+// error message templates for all etag error codes. Call once during program
+// startup to enable classification of HTTP errors via errorfamily.Classify.
 func RegisterErrorClassifications() {
 	errorfamily.RegisterClassifications(map[error]errorfamily.Family{
-		http.ErrNotSupported:    errorfamily.Infrastructure,
-		http.ErrAbortHandler:    errorfamily.Transient,
-		http.ErrNoCookie:        errorfamily.Transient,
-		http.ErrNoLocation:      errorfamily.Transient,
-		http.ErrSkipAltProtocol: errorfamily.Infrastructure,
+		http.ErrNotSupported: errorfamily.Infrastructure,
+		http.ErrAbortHandler: errorfamily.Transient,
 	})
 
 	registerAllErrorTemplates()

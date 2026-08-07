@@ -14,31 +14,31 @@ import (
 type responseWrapper struct {
 	http.ResponseWriter
 
-	status        int
-	wroteHeader   bool
-	headerWritten bool
+	status          int
+	headerBuffered  bool // handler called WriteHeader; status captured but not yet committed
+	headerCommitted bool // status written to the underlying ResponseWriter
 }
 
 func newResponseWrapper(resp http.ResponseWriter) responseWrapper {
 	return responseWrapper{
-		ResponseWriter: resp,
-		status:         0,
-		wroteHeader:    false,
-		headerWritten:  false,
+		ResponseWriter:  resp,
+		status:          0,
+		headerBuffered:  false,
+		headerCommitted: false,
 	}
 }
 
 func (w *responseWrapper) WriteHeader(code int) {
-	if !w.wroteHeader {
+	if !w.headerBuffered {
 		w.status = code
-		w.wroteHeader = true
+		w.headerBuffered = true
 	}
 }
 
 func (w *responseWrapper) writeHeaderToUnderlying() {
-	if w.wroteHeader && !w.headerWritten {
+	if w.headerBuffered && !w.headerCommitted {
 		w.ResponseWriter.WriteHeader(w.status)
-		w.headerWritten = true
+		w.headerCommitted = true
 	}
 }
 
@@ -47,7 +47,7 @@ func (w *responseWrapper) writeHeaderToUnderlying() {
 // wrapper types to honor Go's net/http contract: the first Write implicitly
 // sends 200 if WriteHeader was not called.
 func (w *responseWrapper) writeDefaultOK() {
-	if !w.wroteHeader {
+	if !w.headerBuffered {
 		w.WriteHeader(http.StatusOK)
 	}
 }

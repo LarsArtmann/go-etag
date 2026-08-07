@@ -6,64 +6,88 @@ import (
 	"hash/fnv"
 	"net"
 	"net/http"
+	"strconv"
 	"strings"
 
 	errorfamily "github.com/larsartmann/go-error-family"
 )
 
 const (
-	headerETag        = "ETag"
-	headerIfNoneMatch = "If-None-Match"
+	headerContentLength = "Content-Length"
+	headerETag          = "ETag"
+	headerIfNoneMatch   = "If-None-Match"
 )
 
 const (
-	hashUint64Bytes          = 8
-	hashUint64HexSize        = 16
-	etagWeakLen              = hashUint64HexSize + 4 // W/"" + hex + "
-	etagStrongLen            = hashUint64HexSize + 2 // "" + hex + "
-	defaultETagMaxBufferSize = 1024 * 1024           // 1 MB
+	hashUint64Bytes      = 8
+	hashUint64HexChars   = hashUint64Bytes * 2 // 16 hex chars for a uint64
+	defaultMaxBufferSize = 1024 * 1024         // 1 MB
 )
 
-// ETagConfig holds configuration for ETag generation.
+// ETagConfig holds configuration for ETag generation and conditional request
+// handling.
 type ETagConfig struct {
-	Weak bool
-	// MaxBufferSize is the maximum bytes buffered for ETag computation
-	// before abandoning ETag generation and streaming the response.
+	// Strength controls whether generated entity-tags are strong or weak
+	// validators per RFC 7232 §2.1. The default ([Strong]) is appropriate for
+	// the built-in FNV-64a hash. Use [Weak] if your hash function may produce
+	// the same value for semantically equivalent but byte-different
+	// representations.
+	Strength Strength
+
+	// MaxBufferSize is the maximum bytes buffered for ETag computation before
+	// abandoning ETag generation and streaming the response without an ETag.
+	// Defaults to 1 MB. A non-positive value is clamped to the default.
 	MaxBufferSize int
-	// HashFunc computes a 64-bit hash of the response body for ETag
-	// generation. If nil, FNV-64a is used (fast, 64-bit, collision-resistant
-	// for practical body counts). Provide a custom function for
-	// application-specific hashing needs.
-	HashFunc func([]byte) uint64
+
+	// HashFunc computes the opaque-tag value from the response body. If nil,
+	// FNV-64a is used (fast, 64-bit, collision-resistant for practical body
+	// counts). The returned string is the unquoted opaque content; the
+	// middleware wraps it with quotes and the optional weakness indicator.
+	HashFunc func([]byte) string
+
+	// SkipIfPresent controls whether the middleware respects an ETag header
+	// already set by the handler. When true, the handler's ETag is used for
+	// If-None-Match comparison and is not overwritten. This is recommended
+	// when handlers provide their own strong validators (e.g. database
+	// revision numbers). When false (default), the middleware always
+	// overwrites the ETag with a body-content hash.
+	SkipIfPresent bool
+
+	// Skip, if non-nil, is called before processing each request. If it
+	// returns true, the request is passed through without buffering or ETag
+	// generation. Use this to exclude endpoints that are unsuitable for ETag
+	// buffering (large file downloads, streaming responses, SSE, etc.).
+	Skip func(*http.Request) bool
+
 	// OnError is called when a write to the underlying ResponseWriter fails
 	// after the response header has been committed and the error cannot be
-	// surfaced to the client or returned from Write. This covers the flush
-	// path in flush() and Flush() where the HTTP response is already
-	// in-flight. If nil, such errors are silently dropped (matching net/http
-	// default behavior).
+	// surfaced to the client or returned from Write. If nil, such errors are
+	// silently dropped (matching net/http default behavior).
 	OnError func(*errorfamily.Error)
 }
 
-// DefaultETagConfig returns an ETagConfig with sensible defaults.
+// DefaultETagConfig returns an ETagConfig with sensible defaults: strong
+// ETags via FNV-64a, 1 MB buffer, no skip predicate.
 func DefaultETagConfig() ETagConfig {
 	return ETagConfig{
-		Weak:          false,
-		MaxBufferSize: defaultETagMaxBufferSize,
-		HashFunc:      defaultETagHash,
+		Strength:      Strong,
+		MaxBufferSize: defaultMaxBufferSize,
+		HashFunc:      defaultHashFunc,
+		SkipIfPresent: false,
+		Skip:          nil,
 		OnError:       nil,
 	}
 }
 
-// defaultETagHash computes FNV-64a of data. FNV-64a is a non-cryptographic
-// hash with a 64-bit output, making accidental collisions astronomically
-// unlikely for practical response-body counts (birthday bound: ~4 billion).
-// defaultETagHash computes FNV-64a of data. FNV-64a is a non-cryptographic
-// hash with a 64-bit output, making accidental collisions astronomically
-// unlikely for practical response-body counts (birthday bound: ~4 billion).
-// The hash.Hash contract guarantees Write never returns an error; if it
-// does, that signals a broken implementation and we panic with a classified
+// defaultHashFunc computes FNV-64a of data and returns the lowercase hex
+// encoding. FNV-64a is a non-cryptographic hash with a 64-bit output, making
+// accidental collisions astronomically unlikely for practical response-body
+// counts (birthday bound: ~4 billion).
+//
+// The hash.Hash contract guarantees Write never returns an error; if it does,
+// that signals a broken implementation and we panic with a classified
 // Orchestration error.
-func defaultETagHash(data []byte) uint64 {
+func defaultHashFunc(data []byte) string {
 	h := fnv.New64a()
 
 	_, err := h.Write(data)
@@ -74,7 +98,11 @@ func defaultETagHash(data []byte) uint64 {
 		))
 	}
 
-	return h.Sum64()
+	var buf [hashUint64Bytes]byte
+
+	binary.BigEndian.PutUint64(buf[:], h.Sum64())
+
+	return hexEncode(buf[:])
 }
 
 // Validate checks the ETagConfig for invalid values.
@@ -84,12 +112,24 @@ func (c ETagConfig) Validate() error {
 		return ErrInvalidConfig.WithContextf("max_buffer_size", "%d", c.MaxBufferSize)
 	}
 
+	if !c.Strength.valid() {
+		return ErrInvalidConfig.WithContextf("strength", "%d", c.Strength)
+	}
+
 	return nil
 }
 
-// ETag returns middleware that generates ETag headers based on response body
+// New returns middleware that generates ETag headers based on response body
 // content and handles If-None-Match conditional requests with 304 Not Modified.
-func ETag(cfg ETagConfig) Middleware {
+//
+// For GET and HEAD requests, the middleware buffers the response body,
+// computes an ETag, and compares it against the If-None-Match header using
+// RFC 7232 §2.3.2 weak comparison. On match, it returns 304 Not Modified with
+// no body. On mismatch, it writes the buffered body with the ETag header.
+//
+// Responses exceeding MaxBufferSize are streamed without an ETag. Hijack and
+// Flush calls switch to streaming mode immediately.
+func New(cfg ETagConfig) Middleware {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 			if req.Method != http.MethodGet && req.Method != http.MethodHead {
@@ -98,10 +138,16 @@ func ETag(cfg ETagConfig) Middleware {
 				return
 			}
 
-			ew := newETagWriter(resp, cfg)
-			next.ServeHTTP(ew, req)
+			if cfg.Skip != nil && cfg.Skip(req) {
+				next.ServeHTTP(resp, req)
 
-			ew.flush(req)
+				return
+			}
+
+			writer := newETagWriter(resp, cfg)
+			next.ServeHTTP(writer, req)
+
+			writer.flush(req)
 		})
 	}
 }
@@ -110,26 +156,36 @@ type etagWriter struct {
 	responseWrapper
 
 	body          []byte
-	weak          bool
+	strength      Strength
 	flushed       bool
 	maxBufferSize int
-	hashFunc      func([]byte) uint64
+	hashFunc      func([]byte) string
+	skipIfPresent bool
 	onError       func(*errorfamily.Error)
 }
 
 func newETagWriter(resp http.ResponseWriter, cfg ETagConfig) *etagWriter {
 	hashFunc := cfg.HashFunc
 	if hashFunc == nil {
-		hashFunc = defaultETagHash
+		hashFunc = defaultHashFunc
+	}
+
+	// A non-positive MaxBufferSize would disable the overflow guard in Write,
+	// causing unbounded buffering. Clamp to the default so a zero-value
+	// ETagConfig is safe even when the caller skips Validate.
+	maxBufferSize := cfg.MaxBufferSize
+	if maxBufferSize <= 0 {
+		maxBufferSize = defaultMaxBufferSize
 	}
 
 	return &etagWriter{
 		responseWrapper: newResponseWrapper(resp),
 		body:            nil,
-		weak:            cfg.Weak,
+		strength:        cfg.Strength,
 		flushed:         false,
-		maxBufferSize:   cfg.MaxBufferSize,
+		maxBufferSize:   maxBufferSize,
 		hashFunc:        hashFunc,
+		skipIfPresent:   cfg.SkipIfPresent,
 		onError:         cfg.OnError,
 	}
 }
@@ -188,20 +244,32 @@ func (w *etagWriter) flush(req *http.Request) {
 		return
 	}
 
-	etag := w.computeETag()
+	tag := w.resolveETag()
 
-	if etag != "" {
-		w.Header().Set(headerETag, etag)
-
-		if w.matchesIfNoneMatch(req, etag) && w.isCacheableStatus() {
+	if tag.IsValid() {
+		if w.shouldReturnNotModified(req, tag) {
+			// RFC 7232 §4.1: a 304 response carries no message body, so drop
+			// any body-length metadata the handler may have attached.
+			w.Header().Del(headerContentLength)
 			w.ResponseWriter.WriteHeader(http.StatusNotModified)
-			w.headerWritten = true
+			w.headerCommitted = true
 
 			return
 		}
 	}
 
+	// RFC 7230 §3.3: HEAD responses MUST NOT include a message body. The
+	// buffered bytes still let us advertise an accurate Content-Length so a
+	// client can size the representation without transferring it.
+	if req.Method == http.MethodHead {
+		w.Header().Set(headerContentLength, strconv.Itoa(len(w.body)))
+	}
+
 	w.writeHeaderToUnderlying()
+
+	if req.Method == http.MethodHead {
+		return
+	}
 
 	// Post-header-commit body writes are fundamentally unreportable: the
 	// handler has returned and the HTTP response is already in-flight.
@@ -214,129 +282,50 @@ func (w *etagWriter) flush(req *http.Request) {
 	}
 }
 
-func (w *etagWriter) computeETag() string {
-	if len(w.body) == 0 && !w.wroteHeader {
-		return ""
-	}
-
-	hash := w.hashFunc(w.body)
-
-	var buf [hashUint64Bytes]byte
-	binary.BigEndian.PutUint64(buf[:], hash)
-
-	if w.weak {
-		var etag [etagWeakLen]byte
-
-		etag[0] = 'W'
-		etag[1] = '/'
-		etag[2] = '"'
-
-		encodeHex(etag[3:], buf[:])
-
-		etag[etagWeakLen-1] = '"'
-
-		return string(etag[:])
-	}
-
-	var etag [etagStrongLen]byte
-
-	etag[0] = '"'
-
-	encodeHex(etag[1:], buf[:])
-
-	etag[etagStrongLen-1] = '"'
-
-	return string(etag[:])
-}
-
-// encodeHex writes the hex encoding of src into dst. dst must have length >= 2*len(src).
-func encodeHex(dst, src []byte) {
-	for i, b := range src {
-		dst[i*2] = hexDigitsLower[b>>4]
-		dst[i*2+1] = hexDigitsLower[b&0x0f]
-	}
-}
-
-func (w *etagWriter) matchesIfNoneMatch(req *http.Request, etag string) bool {
-	// RFC 9110 §5.2: multiple instances of a header field with the same name
-	// are combined by appending each value in order, separated by comma.
-	inm := strings.Join(req.Header.Values(headerIfNoneMatch), ", ")
-	if inm == "*" {
-		return true
-	}
-
-	return etagInList(inm, etag)
-}
-
-// parseETagList splits a comma-separated list of entity-tags, respecting
-// commas inside quoted opaque-tags per RFC 7232 §2.3 (etagc permits any
-// VCHAR except DQUOTE, which includes comma). Backslash escapes inside
-// quoted-strings are honored so that an escaped DQUOTE does not toggle
-// the quote state.
-func parseETagList(list string) []string {
-	var tags []string
-
-	start := 0
-
-	inQuotes := false
-
-	escaped := false
-
-	for i := range list {
-		if escaped {
-			escaped = false
-
-			continue
-		}
-
-		if list[i] == '\\' && inQuotes {
-			escaped = true
-
-			continue
-		}
-
-		if list[i] == '"' {
-			inQuotes = !inQuotes
-		}
-
-		if list[i] == ',' && !inQuotes {
-			tag := strings.TrimSpace(list[start:i])
-			if tag != "" {
-				tags = append(tags, tag)
+// resolveETag determines which ETag to use for this response. If
+// SkipIfPresent is configured and the handler already set a valid ETag
+// header, that value is respected. Otherwise, a new ETag is computed from
+// the buffered body and set on the response header.
+func (w *etagWriter) resolveETag() ETag {
+	if w.skipIfPresent {
+		existing := w.Header().Get(headerETag)
+		if existing != "" {
+			if tag, ok := ParseETag(existing); ok {
+				return tag
 			}
-
-			start = i + 1
 		}
 	}
 
-	tag := strings.TrimSpace(list[start:])
+	tag := w.computeETag()
 
-	if tag != "" {
-		tags = append(tags, tag)
+	if tag.IsValid() {
+		w.Header().Set(headerETag, tag.String())
 	}
 
-	return tags
+	return tag
 }
 
-// etagInList reports whether etag appears in a comma-separated list using
-// the weak comparison function (RFC 7232 §2.3.2): the weakness indicator
-// (W/ prefix) is ignored when comparing opaque-tags.
-func etagInList(list, etag string) bool {
-	target := stripWeakPrefix(etag)
-
-	for _, tag := range parseETagList(list) {
-		if stripWeakPrefix(tag) == target {
-			return true
-		}
+func (w *etagWriter) shouldReturnNotModified(req *http.Request, tag ETag) bool {
+	if !w.isCacheableStatus() {
+		return false
 	}
 
-	return false
+	inm := strings.Join(req.Header.Values(headerIfNoneMatch), ", ")
+	if inm == "" {
+		return false
+	}
+
+	return MatchesIfNoneMatch(tag, inm)
 }
 
-// stripWeakPrefix removes the optional W/ weakness indicator from an
-// entity-tag, leaving the quoted opaque-tag for comparison.
-func stripWeakPrefix(etag string) string {
-	return strings.TrimPrefix(etag, "W/")
+func (w *etagWriter) computeETag() ETag {
+	if len(w.body) == 0 && !w.headerBuffered {
+		return ETag{} //nolint:exhaustruct // zero value signals no ETag
+	}
+
+	opaque := w.hashFunc(w.body)
+
+	return NewETag(opaque, w.strength)
 }
 
 func (w *etagWriter) isCacheableStatus() bool {

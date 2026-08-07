@@ -6,9 +6,10 @@ import (
 	"net/http/httptest"
 )
 
-func ExampleETag() {
-	cfg := DefaultETagConfig()
-	handler := ETag(cfg)(newWriteStatusHandler(http.StatusOK, "hello world"))
+func ExampleNew() {
+	handler := New(DefaultETagConfig())(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("hello world"))
+	}))
 
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 
@@ -18,4 +19,19 @@ func ExampleETag() {
 	fmt.Println(rec.Header().Get("ETag") != "")
 
 	// Output: true
+}
+
+func ExampleETag() {
+	tag := NewETag("abc123", Strong)
+
+	fmt.Println(tag)
+	fmt.Println(tag.IsWeak())
+
+	weak := NewETag("abc123", Weak)
+	fmt.Println(weak)
+
+	// Output:
+	// "abc123"
+	// false
+	// W/"abc123"
 }
