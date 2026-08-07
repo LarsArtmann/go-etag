@@ -71,8 +71,48 @@ func (r *hijackRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	return nil, nil, nil
 }
 
+// failingHijackRecorder is an httptest.ResponseRecorder that implements
+// http.Hijacker but always returns an error from Hijack, exercising the
+// "hijack failed" error path in hijackDelegate.
+type failingHijackRecorder struct {
+	*httptest.ResponseRecorder
+}
+
+func newFailingHijackRecorder() *failingHijackRecorder {
+	return &failingHijackRecorder{ResponseRecorder: httptest.NewRecorder()}
+}
+
+func (*failingHijackRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	return nil, nil, errMockHijackFailed
+}
+
+// nonHijackableRecorder is a minimal http.ResponseWriter that does NOT
+// implement http.Hijacker, exercising the "hijack unsupported" error path.
+type nonHijackableRecorder struct {
+	header http.Header
+	status int
+	body   []byte
+}
+
+func newNonHijackableRecorder() *nonHijackableRecorder {
+	return &nonHijackableRecorder{header: http.Header{}}
+}
+
+func (r *nonHijackableRecorder) Header() http.Header { return r.header }
+
+func (r *nonHijackableRecorder) WriteHeader(code int) { r.status = code }
+
+func (r *nonHijackableRecorder) Write(b []byte) (int, error) {
+	r.body = append(r.body, b...)
+
+	return len(b), nil
+}
+
 // errMockWriteFailed is the sentinel returned by failingResponseRecorder.Write.
 var errMockWriteFailed = errors.New("mock write failed")
+
+// errMockHijackFailed is the sentinel returned by failingHijackRecorder.Hijack.
+var errMockHijackFailed = errors.New("mock hijack failed")
 
 // failingResponseRecorder is an httptest.ResponseRecorder whose Write always
 // fails, exercising the streaming-write and overflow-write error branches

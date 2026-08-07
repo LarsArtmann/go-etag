@@ -222,6 +222,67 @@ func TestSplitRawETags_EscapedQuotes(t *testing.T) {
 	}
 }
 
+func TestSplitRawETags_EdgeCases(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		input string
+		count int
+		want0 string
+	}{
+		{name: "trailing comma", input: `"a", "b",`, count: 2, want0: `"a"`},
+		{name: "leading comma", input: `, "a", "b"`, count: 2, want0: `"a"`},
+		{name: "empty entries", input: `"a",, "b"`, count: 2, want0: `"a"`},
+		{name: "whitespace between commas", input: `"a",   , "b"`, count: 2, want0: `"a"`},
+		{name: "single tag no comma", input: `"only"`, count: 1, want0: `"only"`},
+		{name: "only commas", input: `,,,`, count: 0},
+		{name: "only whitespace", input: `   `, count: 0},
+		{name: "comma in opaque tag", input: `"a,b,c"`, count: 1, want0: `"a,b,c"`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			tags := splitRawETags(tt.input)
+			if len(tags) != tt.count {
+				t.Fatalf("len(tags) = %d, want %d (input=%q)", len(tags), tt.count, tt.input)
+			}
+
+			if tt.count > 0 && tags[0] != tt.want0 {
+				t.Errorf("tags[0] = %q, want %q (input=%q)", tags[0], tt.want0, tt.input)
+			}
+		})
+	}
+}
+
+func TestParseETagList_AllMalformed(t *testing.T) {
+	t.Parallel()
+
+	tags := ParseETagList("garbage, also-not-a-tag, 12345")
+	if tags == nil {
+		t.Fatal("ParseETagList returned nil for all-malformed input")
+	}
+
+	if len(tags) != 0 {
+		t.Errorf("len(tags) = %d, want 0 for all-malformed input", len(tags))
+	}
+}
+
+func TestParseETagList_WhitespaceOnly(t *testing.T) {
+	t.Parallel()
+
+	tags := ParseETagList("   ")
+	if tags == nil {
+		t.Fatal("ParseETagList returned nil for whitespace-only input")
+	}
+
+	if len(tags) != 0 {
+		t.Errorf("len(tags) = %d, want 0", len(tags))
+	}
+}
+
 func TestMatchesIfNoneMatch(t *testing.T) {
 	t.Parallel()
 
@@ -237,7 +298,7 @@ func TestMatchesIfNoneMatch(t *testing.T) {
 		{name: "weak match", headerVal: `W/"abc"`, want: true},
 		{name: "list contains match", headerVal: `"other", "abc", "third"`, want: true},
 		{name: "list contains weak match", headerVal: `"other", W/"abc"`, want: true},
-		{name: "no match", headerVal: `"different"`, want: true == false},
+		{name: "no match", headerVal: `"different"`, want: false},
 		{name: "empty header", headerVal: "", want: false},
 	}
 

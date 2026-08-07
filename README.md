@@ -1,30 +1,27 @@
 # go-etag
 
-HTTP ETag middleware for Go — generates entity-tag headers from response body content and handles `If-None-Match` conditional requests with `304 Not Modified`.
+> RFC 7232 HTTP ETag middleware for Go — automatic entity-tag generation, conditional request handling, and `304 Not Modified` responses.
 
-## Features
+[![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![Coverage](https://img.shields.io/badge/coverage-98.9%25-brightgreen)](#benchmarks)
+[![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+[![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/go-etag.svg)](https://pkg.go.dev/github.com/larsartmann/go-etag)
 
-- **Dedicated `ETag` type** with RFC 7232 §2.3.2 strong and weak comparison methods
-- **FNV-64a hashing** by default (fast, 64-bit, collision-resistant)
-- **RFC 7232 weak comparison** for `If-None-Match` matching (ignores `W/` prefix)
-- **RFC 7230 compliant HEAD** — sends Content-Length without a body
-- **RFC 7232 §4.1 compliant 304** — strips Content-Length, includes ETag
-- **Configurable** hash function (returns arbitrary opaque-tag strings), buffer size, and strength
-- **`SkipIfPresent`** — respects handler-set ETags instead of overwriting them
-- **`Skip` predicate** — exclude specific routes from ETag processing
-- **`MatchesIfMatch`** — exported helper for RFC 7232 §3.1 strong comparison (lost-update prevention)
-- **Buffer overflow handling** — responses exceeding `MaxBufferSize` are streamed without ETag
-- **Hijack/Flush aware** — switches to streaming mode when the handler hijacks or flushes
-- **Classified errors** via [`go-error-family`](https://github.com/larsartmann/go-error-family) for retry decisions
-- **Zero-value safe** — `ETagConfig{}` is clamped to defaults (no unbounded buffering)
+---
 
-## Installation
+## Why?
 
-```bash
-go get github.com/larsartmann/go-etag
-```
+Every HTTP API that serves reusable representations should send `ETag` headers and honor `If-None-Match`. Doing this by hand in every handler is repetitive, error-prone, and easy to get wrong (HEAD bodies, Content-Length on 304, weak vs strong comparison, malformed header parsing).
 
-> **Upgrading from v0.1?** See the [migration guide](docs/migration/v0.2.md) for breaking changes (`ETag()` → `New()`, `Weak bool` → `Strength`, `HashFunc` signature).
+**go-etag** is a single-middleware solution that:
+
+- **Buffers the response body**, computes an ETag, and sets the header automatically.
+- **Handles `If-None-Match`** with RFC 7232 weak comparison, returning `304 Not Modified` when the client's cache is fresh.
+- **Respects handler-set ETags** when `SkipIfPresent` is enabled, so database revision numbers and other strong validators pass through.
+- **Streams gracefully** when the body exceeds `MaxBufferSize` or the handler calls `Hijack`/`Flush`.
+- **Classifies errors** via [`go-error-family`](https://github.com/larsartmann/go-error-family) for retry-aware observability.
+
+Zero configuration required — wrap your handler and go.
 
 ## Quick Start
 
@@ -38,55 +35,87 @@ import (
 )
 
 func main() {
-    handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    mux := http.NewServeMux()
+    mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
         _, _ = w.Write([]byte("hello world"))
     })
 
-    wrapped := etag.New(etag.DefaultETagConfig())(handler)
+    // Wrap the entire mux — every GET/HEAD response gets an ETag.
+    server := &http.Server{
+        Addr:     ":8080",
+        Handler:  etag.New(etag.DefaultETagConfig())(mux),
+    }
 
-    http.Handle("/", wrapped)
-    http.ListenAndServe(":8080", nil)
+    _ = server.ListenAndServe()
 }
 ```
 
+Verify with curl:
+
+```bash
+# First request — server computes and returns the ETag
+curl -v http://localhost:8080/
+# < ETag: "779a65e7023cd2e7"
+
+# Second request — client sends If-None-Match, server returns 304
+curl -v -H 'If-None-Match: "779a65e7023cd2e7"' http://localhost:8080/
+# < HTTP/1.1 304 Not Modified
+# (no body transferred)
+```
+
+## Features
+
+- **Dedicated `ETag` type** with RFC 7232 §2.3.2 strong and weak comparison methods
+- **FNV-64a hashing** by default (fast, 64-bit, collision-resistant for practical body counts)
+- **RFC 7232 weak comparison** for `If-None-Match` (treats `W/"abc"` and `"abc"` as equivalent)
+- **RFC 7230 compliant HEAD** — sets `Content-Length` without sending a body
+- **RFC 7232 §4.1 compliant 304** — strips `Content-Length`, includes `ETag`
+- **`SkipIfPresent`** — respect handler-set ETags instead of overwriting them
+- **`Skip` predicate** — exclude specific routes (SSE, large downloads, streaming)
+- **`MatchesIfMatch`** — exported helper for RFC 7232 §3.1 strong comparison (lost-update prevention)
+- **Buffer overflow handling** — responses exceeding `MaxBufferSize` stream without an ETag
+- **Hijack/Flush aware** — switches to streaming mode when the handler hijacks or flushes
+- **Classified errors** via `go-error-family` for retry decisions
+- **Zero-value safe** — `ETagConfig{}` clamps to defaults (no unbounded buffering)
+- **98.9% test coverage** with table-driven unit tests, fuzz tests, and BDD-style RFC specs
+
 ## The ETag Type
 
-The `etag.ETag` type represents an RFC 7232 entity-tag with explicit strength and both comparison functions:
+The `etag.ETag` type represents an RFC 7232 entity-tag with explicit strength:
 
 ```go
 tag := etag.NewETag("abc123", etag.Strong)
 
-tag.String()        // "abc123" (wire format for headers)
-tag.OpaqueTag()     // abc123 (unquoted content)
+tag.String()        // "abc123"         — wire format for HTTP headers
+tag.OpaqueTag()     // abc123           — unquoted opaque content
 tag.IsWeak()        // false
+tag.IsValid()       // true             — zero-value ETag{} is not valid
 
 weak := etag.NewETag("abc123", etag.Weak)
 weak.String()       // W/"abc123"
 
 // RFC 7232 §2.3.2 comparison functions:
-tag.StrongEqual(weak)  // false (strong requires both strong)
-tag.WeakEqual(weak)    // true  (weak ignores strength)
+tag.StrongEqual(weak)  // false — strong requires both to be strong
+tag.WeakEqual(weak)    // true  — weak ignores strength
 
 // Parsing from header values:
 parsed, ok := etag.ParseETag(`W/"abc123"`)
+tags := etag.ParseETagList(`"a", W/"b", "c"`)
 ```
 
 ## Configuration
 
 ```go
 cfg := etag.ETagConfig{
-    Strength:      etag.Weak,             // Strong (default) or Weak
-    MaxBufferSize: 2 * 1024 * 1024,      // 2 MB buffer before streaming
-    HashFunc:      myCustomHash,          // func([]byte) string (nil = FNV-64a)
-    SkipIfPresent: true,                  // Respect handler-set ETags
-    Skip:          func(r *http.Request) bool {
-        return r.URL.Path == "/stream"    // Skip ETag for specific routes
-    },
-    OnError:       func(e *errorfamily.Error) {
-        log.Printf("etag write error: %v", e)
-    },
+    Strength:      etag.Strong,             // etag.Strong (default) or etag.Weak
+    MaxBufferSize: 1024 * 1024,             // 1 MB buffer before streaming (default)
+    HashFunc:      nil,                     // nil = FNV-64a; or func([]byte) string
+    SkipIfPresent: false,                   // true = respect handler-set ETags
+    Skip:          nil,                     // func(*http.Request) bool — skip routes
+    OnError:       nil,                     // func(*errorfamily.Error) — write-failure hook
 }
 
+// Validate checks for invalid field values. Call at startup.
 if err := cfg.Validate(); err != nil {
     log.Fatal(err)
 }
@@ -94,9 +123,35 @@ if err := cfg.Validate(); err != nil {
 handler := etag.New(cfg)(myHandler)
 ```
 
+| Field           | Type                       | Default          | Description                                                     |
+| --------------- | -------------------------- | ---------------- | --------------------------------------------------------------- |
+| `Strength`      | `Strength`                 | `Strong`         | Strong or weak validator per RFC 7232 §2.1                      |
+| `MaxBufferSize` | `int`                      | `1048576` (1 MB) | Max bytes buffered before abandoning ETag and streaming         |
+| `HashFunc`      | `func([]byte) string`      | FNV-64a          | Computes the opaque-tag value from the body. Nil = FNV-64a      |
+| `SkipIfPresent` | `bool`                     | `false`          | When true, handler-set ETags are respected and not overwritten  |
+| `Skip`          | `func(*http.Request) bool` | `nil`            | When non-nil, requests returning true bypass ETag processing    |
+| `OnError`       | `func(*errorfamily.Error)` | `nil`            | Called when a post-commit write fails (client disconnect, etc.) |
+
+## Strong vs Weak Validators
+
+RFC 7232 §2.1 defines two validator strengths:
+
+| Strength | Wire format  | Guarantees                                       | Use for If-Match? |
+| -------- | ------------ | ------------------------------------------------ | ----------------- |
+| Strong   | `"abc123"`   | Changes whenever the representation data changes | Yes               |
+| Weak     | `W/"abc123"` | May not change for every representation change   | No                |
+
+The default FNV-64a hash produces **strong** validators. Use weak validators when your hash function may produce the same value for semantically equivalent but byte-different representations (e.g., JSON key reordering, whitespace normalization).
+
 ## Conditional Request Helpers
 
-For unsafe methods (PUT, POST, DELETE) where `If-Match` must be evaluated by application code:
+### If-None-Match (automatic)
+
+The middleware handles `If-None-Match` automatically for GET and HEAD using **weak comparison** (RFC 7232 §3.2). You don't need to write any code.
+
+### If-Match (manual, for unsafe methods)
+
+For `PUT`, `POST`, and `DELETE`, evaluate `If-Match` in your handler using **strong comparison** (RFC 7232 §3.1) to prevent lost updates:
 
 ```go
 func updateHandler(w http.ResponseWriter, r *http.Request) {
@@ -113,18 +168,56 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 
 ## How It Works
 
-1. For `GET` and `HEAD` requests, the middleware buffers the response body.
-2. After the handler returns, it computes the ETag from the buffered body.
-3. If `If-None-Match` matches (using RFC 7232 weak comparison), it returns `304 Not Modified`.
-4. Otherwise, it writes the buffered body with the `ETag` header.
-5. For `HEAD` requests, it sets `Content-Length` but does not send a body (RFC 7230 §3.3).
-6. If the body exceeds `MaxBufferSize`, the middleware switches to streaming mode (no ETag).
-7. If the handler calls `Hijack` or `Flush`, the middleware switches to streaming mode immediately.
-8. If `SkipIfPresent` is true and the handler already set an ETag, it is respected.
+```
+Request (GET/HEAD)
+    │
+    ▼
+┌──────────────────┐     Non-GET/HEAD or Skip → pass through (no ETag)
+│  Buffer response │
+│  body in memory  │
+└────────┬─────────┘
+         │
+         ▼  handler returns
+┌──────────────────┐
+│  Compute ETag    │     FNV-64a of buffered body (or custom HashFunc)
+│  from body       │
+└────────┬─────────┘
+         │
+    ┌────┴────┐
+    │ ETag    │
+    │ valid?  │
+    ├─────────┤
+    │ No      │──→ stream body without ETag (overflow / hijack / flush)
+    │ Yes     │
+    └────┬────┘
+         │
+         ▼
+┌──────────────────┐
+│ If-None-Match    │     RFC 7232 weak comparison
+│ matches?         │
+├──────────────────┤
+│ Yes (2xx status) │──→ 304 Not Modified (strip Content-Length, keep ETag)
+│ No               │──→ 200 + body + ETag
+└──────────────────┘
+```
+
+Only `GET` and `HEAD` requests with cacheable status codes (200-299) are eligible for `304`. The middleware never buffers `POST`, `PUT`, or other methods.
+
+## RFC Compliance
+
+| RFC      | Section | Requirement                                    | Status    |
+| -------- | ------- | ---------------------------------------------- | --------- |
+| RFC 7232 | §2.1    | Strong and weak validator types                | Compliant |
+| RFC 7232 | §2.3    | Entity-tag ABNF parsing                        | Compliant |
+| RFC 7232 | §2.3.2  | Strong and weak comparison functions           | Compliant |
+| RFC 7232 | §3.1    | `If-Match` strong comparison helper            | Compliant |
+| RFC 7232 | §3.2    | `If-None-Match` weak comparison (304 handling) | Compliant |
+| RFC 7232 | §4.1    | 304 strips Content-Length, includes ETag       | Compliant |
+| RFC 7230 | §3.3    | HEAD sets Content-Length without a body        | Compliant |
 
 ## Error Classification
 
-Errors from the ETag writer are classified using `go-error-family`:
+Errors from the ETag writer are classified using [`go-error-family`](https://github.com/larsartmann/go-error-family):
 
 | Code                          | Family         | Retryable | When                                             |
 | ----------------------------- | -------------- | --------- | ------------------------------------------------ |
@@ -134,7 +227,35 @@ Errors from the ETag writer are classified using `go-error-family`:
 | `http.etag_config_invalid`    | Rejection      | No        | `ETagConfig` validation failure                  |
 | `http.etag_hash_write_failed` | Orchestration  | No        | Hash function contract violation (bug)           |
 
-Call `etag.RegisterErrorClassifications()` once at startup to enable classification.
+Call `etag.RegisterErrorClassifications()` once at startup to enable classification:
+
+```go
+func main() {
+    etag.RegisterErrorClassifications()
+    // ... start server ...
+}
+```
+
+## Benchmarks
+
+Measured on AMD Ryzen AI MAX+ 395:
+
+| Benchmark                         | ns/op | B/op | allocs/op |
+| --------------------------------- | ----- | ---- | --------- |
+| Full middleware (GET + body)      | 566   | 1192 | 13        |
+| Full middleware (GET + 304 match) | 668   | 1232 | 15        |
+| `MatchesIfNoneMatch` (single tag) | 69    | 40   | 2         |
+| `MatchesIfNoneMatch` (3-tag list) | 182   | 232  | 4         |
+
+The middleware adds sub-microsecond overhead per request. For a typical API returning small JSON payloads, the ETag computation and If-None-Match matching are negligible compared to network I/O.
+
+## Installation
+
+```bash
+go get github.com/larsartmann/go-etag
+```
+
+> **Upgrading from v0.1?** See the [migration guide](docs/migration/v0.2.md) for breaking changes (`ETag()` to `New()`, `Weak bool` to `Strength`, `HashFunc` signature).
 
 ## License
 

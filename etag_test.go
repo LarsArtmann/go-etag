@@ -241,6 +241,74 @@ func TestNew_201Created_IsCacheable(t *testing.T) {
 	}
 }
 
+// Non-cacheable status codes (3xx+) must never return 304, even when
+// If-None-Match matches the body hash. The ETag is still set for client
+// caching, but the full response is always sent.
+func TestNew_NonCacheableStatus_NeverReturns304(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		status int
+	}{
+		{name: "301 Moved Permanently", status: http.StatusMovedPermanently},
+		{name: "302 Found", status: http.StatusFound},
+		{name: "304 Not Modified", status: http.StatusNotModified},
+		{name: "400 Bad Request", status: http.StatusBadRequest},
+		{name: "404 Not Found", status: http.StatusNotFound},
+		{name: "500 Internal Server Error", status: http.StatusInternalServerError},
+		{name: "503 Service Unavailable", status: http.StatusServiceUnavailable},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := New(DefaultETagConfig())(newWriteStatusHandler(tt.status, "hello world"))
+
+			req := newTestRequest(http.MethodGet)
+			req.Header.Set(headerIfNoneMatch, `"779a65e7023cd2e7"`)
+
+			rec := newRecorder()
+			handler.ServeHTTP(rec, req)
+
+			assertStatus(t, rec, tt.status)
+			assertBody(t, rec, "hello world")
+		})
+	}
+}
+
+// Boundary: 299 is the last cacheable status (200-299 range).
+func TestNew_Status299_IsCacheable(t *testing.T) {
+	t.Parallel()
+
+	handler := New(DefaultETagConfig())(newWriteStatusHandler(299, "hello world"))
+
+	req := newTestRequest(http.MethodGet)
+	req.Header.Set(headerIfNoneMatch, `"779a65e7023cd2e7"`)
+
+	rec := newRecorder()
+	handler.ServeHTTP(rec, req)
+
+	assertStatus(t, rec, http.StatusNotModified)
+	assertBodyEmpty(t, rec, "299 is cacheable")
+}
+
+func TestNew_Status300_NotCacheable(t *testing.T) {
+	t.Parallel()
+
+	handler := New(DefaultETagConfig())(newWriteStatusHandler(http.StatusMultipleChoices, "hello world"))
+
+	req := newTestRequest(http.MethodGet)
+	req.Header.Set(headerIfNoneMatch, `"779a65e7023cd2e7"`)
+
+	rec := newRecorder()
+	handler.ServeHTTP(rec, req)
+
+	assertStatus(t, rec, http.StatusMultipleChoices)
+	assertBody(t, rec, "hello world")
+}
+
 // --- Buffer overflow ---
 
 func TestNew_MemoryLimit_DisablesETag(t *testing.T) {
@@ -472,6 +540,45 @@ func TestNew_SkipIfPresent_FallsBackWhenNoHandlerETag(t *testing.T) {
 	assertETag(t, rec, `"779a65e7023cd2e7"`)
 }
 
+func TestNew_SkipIfPresent_MalformedHandlerETag_FallsBack(t *testing.T) {
+	t.Parallel()
+
+	cfg := ETagConfig{SkipIfPresent: true}
+	handler := New(cfg)(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set(headerETag, "not-a-valid-etag")
+		w.WriteHeader(http.StatusOK)
+
+		_, _ = w.Write([]byte("hello world"))
+	}))
+
+	req := newTestRequest(http.MethodGet)
+	rec := newRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	// Malformed handler ETag cannot be parsed, so middleware computes one.
+	assertETag(t, rec, `"779a65e7023cd2e7"`)
+}
+
+func TestNew_SkipIfPresent_EmptyHandlerETag_FallsBack(t *testing.T) {
+	t.Parallel()
+
+	cfg := ETagConfig{SkipIfPresent: true}
+	handler := New(cfg)(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set(headerETag, "")
+		w.WriteHeader(http.StatusOK)
+
+		_, _ = w.Write([]byte("hello world"))
+	}))
+
+	req := newTestRequest(http.MethodGet)
+	rec := newRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	assertETag(t, rec, `"779a65e7023cd2e7"`)
+}
+
 // --- D6: Skip predicate ---
 
 func TestNew_SkipPredicate(t *testing.T) {
@@ -617,10 +724,65 @@ func TestNew_OverflowWriteError(t *testing.T) {
 
 	cfg := ETagConfig{MaxBufferSize: 10}
 
+	var writeErr error
+	handler := New(cfg)(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+
+		_, writeErr = w.Write([]byte(strings.Repeat("x", 100)))
+	}))
+
+	req := newTestRequest(http.MethodGet)
+	rec := &failingResponseRecorder{ResponseRecorder: httptest.NewRecorder()}
+
+	handler.ServeHTTP(rec, req)
+
+	if writeErr == nil {
+		t.Fatal("Write returned nil error for overflow to failing writer")
+	}
+
+	var classified *errorfamily.Error
+	if !errors.As(writeErr, &classified) {
+		t.Fatalf("Write error is %T, want *errorfamily.Error", writeErr)
+	}
+
+	if classified.Code() != ErrCodeETagWriteFailed {
+		t.Errorf("Write error code = %q, want %q", classified.Code(), ErrCodeETagWriteFailed)
+	}
+}
+
+func TestNew_OverflowWriteError_NilOnError_DoesNotPanic(t *testing.T) {
+	t.Parallel()
+
+	cfg := ETagConfig{MaxBufferSize: 10}
+
 	handler := New(cfg)(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 
 		_, _ = w.Write([]byte(strings.Repeat("x", 100)))
+	}))
+
+	req := newTestRequest(http.MethodGet)
+	rec := &failingResponseRecorder{ResponseRecorder: httptest.NewRecorder()}
+
+	handler.ServeHTTP(rec, req)
+}
+
+func TestNew_FlushWriteError_NilOnError_DoesNotPanic(t *testing.T) {
+	t.Parallel()
+
+	handler := New(DefaultETagConfig())(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+
+		_, _ = w.Write([]byte("hello world"))
+
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			t.Fatal("ResponseWriter does not implement http.Flusher")
+		}
+
+		flusher.Flush()
+
+		_, _ = w.Write([]byte("after flush"))
 	}))
 
 	req := newTestRequest(http.MethodGet)
@@ -647,6 +809,65 @@ func TestNew_CustomHashFunc(t *testing.T) {
 	handler.ServeHTTP(rec, req)
 
 	assertETag(t, rec, `"custom-hash"`)
+}
+
+func TestNew_CustomHashFunc_ReceivesBody(t *testing.T) {
+	t.Parallel()
+
+	var receivedBody []byte
+	cfg := ETagConfig{
+		HashFunc: func(b []byte) string {
+			receivedBody = b
+
+			return "from-body"
+		},
+	}
+	handler := New(cfg)(newWriteStatusHandler(http.StatusOK, "the actual body"))
+
+	req := newTestRequest(http.MethodGet)
+	rec := newRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if string(receivedBody) != "the actual body" {
+		t.Errorf("HashFunc received %q, want %q", string(receivedBody), "the actual body")
+	}
+}
+
+func TestNew_EmptyHandler_NoETag(t *testing.T) {
+	t.Parallel()
+
+	// A handler that writes nothing and never calls WriteHeader hits the
+	// computeETag early return for empty body + no buffered header.
+	handler := New(DefaultETagConfig())(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {}))
+
+	req := newTestRequest(http.MethodGet)
+	rec := newRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	assertStatus(t, rec, http.StatusOK)
+	assertETagEmpty(t, rec, "for handler that writes nothing")
+	assertBodyEmpty(t, rec, "for handler that writes nothing")
+}
+
+func TestNew_HandlerWriteHeaderOnly_WithBody(t *testing.T) {
+	t.Parallel()
+
+	// A handler that calls WriteHeader but writes no body should still get
+	// an ETag (the empty body hash).
+	handler := New(DefaultETagConfig())(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := newTestRequest(http.MethodGet)
+	rec := newRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	assertStatus(t, rec, http.StatusOK)
+	// Empty body still produces an ETag (FNV-64a of empty string).
+	assertETag(t, rec, `"cbf29ce484222325"`)
 }
 
 // --- Fuzz ---
