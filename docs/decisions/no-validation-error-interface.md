@@ -1,7 +1,7 @@
 # ADR: No `ValidationError` Interface
 
-**Status:** Accepted  
-**Date:** 2026-08-07  
+**Status:** Accepted\
+**Date:** 2026-08-07\
 **Decider:** Lars Artmann
 
 ---

@@ -1,7 +1,7 @@
 # Status Report — go-etag
 
-**Date:** 2026-08-07 08:48  
-**Session scope:** Full codebase review against RFC 7232 + comprehensive improvement pass  
+**Date:** 2026-08-07 08:48\
+**Session scope:** Full codebase review against RFC 7232 + comprehensive improvement pass\
 **Baseline:** commit `b3313ec` (initial release) → Current: `15114b3` + uncommitted docs
 
 ---

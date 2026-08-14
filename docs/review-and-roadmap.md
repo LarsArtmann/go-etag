@@ -43,24 +43,24 @@ The foundation is well-built: clean flat-package structure, strong lint culture,
 
 ### Bugs (RFC violations) — all fixed
 
-| ID  | Description                           | Severity | Fix location                                                |
-| --- | ------------------------------------- | -------- | ----------------------------------------------------------- |
-| B1  | Zero-value config unbounded buffering | P0       | `newETagWriter` clamps `MaxBufferSize <= 0` to default      |
-| B2  | HEAD forwards message body            | P0       | `flush` sets `Content-Length` and skips body write for HEAD |
-| B3  | 304 leaks `Content-Length`            | P1       | `flush` deletes `Content-Length` before writing 304         |
+| ID | Description                           | Severity | Fix location                                                |
+| -- | ------------------------------------- | -------- | ----------------------------------------------------------- |
+| B1 | Zero-value config unbounded buffering | P0       | `newETagWriter` clamps `MaxBufferSize <= 0` to default      |
+| B2 | HEAD forwards message body            | P0       | `flush` sets `Content-Length` and skips body write for HEAD |
+| B3 | 304 leaks `Content-Length`            | P1       | `flush` deletes `Content-Length` before writing 304         |
 
 ### Design improvements — all shipped
 
-| ID  | Description                                | Severity | What changed                                              |
-| --- | ------------------------------------------ | -------- | --------------------------------------------------------- |
-| D1  | Overwrites handler-set ETags               | P1       | `SkipIfPresent bool` config field respects handler ETags  |
-| D2  | FNV-64a claims "strong" dishonestly        | P2       | `Strength` enum with documented collision tradeoff        |
-| D3  | `HashFunc` locked to 64-bit                | P2       | Signature changed to `func([]byte) string` (opaque value) |
-| D4  | `errors.go` classifies unrelated sentinels | P2       | Trimmed to `ErrNotSupported`, `ErrAbortHandler` only      |
-| D5  | `wroteHeader`/`headerWritten` confusing    | P3       | Renamed to `headerBuffered`/`headerCommitted`             |
-| D6  | No per-route skip predicate                | P3       | `Skip func(*http.Request) bool` config field              |
-| D7  | No `If-Match` / 412 support                | P3       | `MatchesIfMatch` helper with strong comparison            |
-| D8  | Dead code and lint nits                    | P3       | Removed dead helper, simplified `newTestRequest`          |
+| ID | Description                                | Severity | What changed                                              |
+| -- | ------------------------------------------ | -------- | --------------------------------------------------------- |
+| D1 | Overwrites handler-set ETags               | P1       | `SkipIfPresent bool` config field respects handler ETags  |
+| D2 | FNV-64a claims "strong" dishonestly        | P2       | `Strength` enum with documented collision tradeoff        |
+| D3 | `HashFunc` locked to 64-bit                | P2       | Signature changed to `func([]byte) string` (opaque value) |
+| D4 | `errors.go` classifies unrelated sentinels | P2       | Trimmed to `ErrNotSupported`, `ErrAbortHandler` only      |
+| D5 | `wroteHeader`/`headerWritten` confusing    | P3       | Renamed to `headerBuffered`/`headerCommitted`             |
+| D6 | No per-route skip predicate                | P3       | `Skip func(*http.Request) bool` config field              |
+| D7 | No `If-Match` / 412 support                | P3       | `MatchesIfMatch` helper with strong comparison            |
+| D8 | Dead code and lint nits                    | P3       | Removed dead helper, simplified `newTestRequest`          |
 
 ### Foundational refactor
 

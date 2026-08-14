@@ -120,103 +120,103 @@ Nothing is partially done. All items are either complete or not started.
 
 ### P0 — Correctness & Safety
 
-| #   | Task                                                                                                                                                       | Effort |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 1   | Write integration test using `httptest.NewServer` to verify real HTTP behavior (Content-Length, chunked, HEAD body suppression through actual TCP)         | M      |
-| 2   | Generate coverage HTML report (`go test -coverprofile=cover.out -covermode=atomic ./... && go tool cover -html=cover.out`) and identify the uncovered 7.9% | S      |
-| 3   | Add tests for every uncovered branch identified by the coverage report                                                                                     | S-M    |
+| # | Task                                                                                                                                                       | Effort |
+| - | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 1 | Write integration test using `httptest.NewServer` to verify real HTTP behavior (Content-Length, chunked, HEAD body suppression through actual TCP)         | M      |
+| 2 | Generate coverage HTML report (`go test -coverprofile=cover.out -covermode=atomic ./... && go tool cover -html=cover.out`) and identify the uncovered 7.9% | S      |
+| 3 | Add tests for every uncovered branch identified by the coverage report                                                                                     | S-M    |
 
 ### P1 — Performance
 
-| #   | Task                                                                                                                      | Effort |
-| --- | ------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 4   | Pre-compute wire format in `NewETag` to eliminate `ETag.String()` allocation                                              | S      |
-| 5   | Single-pass `ParseETagList` that builds `[]ETag` directly without intermediate `[]string`                                 | S      |
-| 6   | Add isolated benchmarks for `ParseETag`, `ParseETagList`, `StrongEqual`, `WeakEqual`                                      | XS     |
-| 7   | Benchmark with larger bodies (4KB, 64KB, 256KB) to characterize scaling behavior                                          | XS     |
-| 8   | Investigate whether `fnv.New64a()` can be replaced with an inline FNV implementation to avoid the interface call overhead | S      |
+| # | Task                                                                                                                      | Effort |
+| - | ------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 4 | Pre-compute wire format in `NewETag` to eliminate `ETag.String()` allocation                                              | S      |
+| 5 | Single-pass `ParseETagList` that builds `[]ETag` directly without intermediate `[]string`                                 | S      |
+| 6 | Add isolated benchmarks for `ParseETag`, `ParseETagList`, `StrongEqual`, `WeakEqual`                                      | XS     |
+| 7 | Benchmark with larger bodies (4KB, 64KB, 256KB) to characterize scaling behavior                                          | XS     |
+| 8 | Investigate whether `fnv.New64a()` can be replaced with an inline FNV implementation to avoid the interface call overhead | S      |
 
 ### P2 — API & Types
 
-| #   | Task                                                                                                                           | Effort |
-| --- | ------------------------------------------------------------------------------------------------------------------------------ | ------ |
-| 9   | Add `ETag.IsStrong()` method for symmetry with `IsWeak()`                                                                      | XS     |
-| 10  | Consider `ETag.IsEmpty()` or documenting that `!IsValid()` is the zero-value check                                             | XS     |
-| 11  | Add `Strength.String()` method (`"strong"`/`"weak"`) for logging and debugging                                                 | XS     |
-| 12  | Consider whether `MatchesIfMatch` should return `(bool, error)` instead of `bool` to handle parse failures distinctly          | S      |
-| 13  | Evaluate whether `SkipIfPresent` should default to `true` (respect handler ETags by default) vs `false` (overwrite by default) | S      |
+| #  | Task                                                                                                                           | Effort |
+| -- | ------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| 9  | Add `ETag.IsStrong()` method for symmetry with `IsWeak()`                                                                      | XS     |
+| 10 | Consider `ETag.IsEmpty()` or documenting that `!IsValid()` is the zero-value check                                             | XS     |
+| 11 | Add `Strength.String()` method (`"strong"`/`"weak"`) for logging and debugging                                                 | XS     |
+| 12 | Consider whether `MatchesIfMatch` should return `(bool, error)` instead of `bool` to handle parse failures distinctly          | S      |
+| 13 | Evaluate whether `SkipIfPresent` should default to `true` (respect handler ETags by default) vs `false` (overwrite by default) | S      |
 
 ### P3 — Documentation
 
-| #   | Task                                                                                                                               | Effort |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 14  | Add function-level `ExampleNewETag`, `ExampleParseETag`, `ExampleMatchesIfMatch`, `ExampleMatchesIfNoneMatch` in `example_test.go` | S      |
-| 15  | Add a "Performance" section to README with benchmark numbers and allocation expectations                                           | XS     |
-| 16  | Add an "RFC 7232 Compliance Matrix" to README mapping each spec section to implementation status                                   | S      |
-| 17  | Document the collision tradeoff of FNV-64a more prominently (birthday bound table: 1K bodies, 1M bodies, 1B bodies)                | XS     |
-| 18  | Add a `docs/` index or `CHANGELOG` link in README                                                                                  | XS     |
-| 19  | Consider an ADR for the `Strength` enum vs `bool` decision                                                                         | S      |
+| #  | Task                                                                                                                               | Effort |
+| -- | ---------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 14 | Add function-level `ExampleNewETag`, `ExampleParseETag`, `ExampleMatchesIfMatch`, `ExampleMatchesIfNoneMatch` in `example_test.go` | S      |
+| 15 | Add a "Performance" section to README with benchmark numbers and allocation expectations                                           | XS     |
+| 16 | Add an "RFC 7232 Compliance Matrix" to README mapping each spec section to implementation status                                   | S      |
+| 17 | Document the collision tradeoff of FNV-64a more prominently (birthday bound table: 1K bodies, 1M bodies, 1B bodies)                | XS     |
+| 18 | Add a `docs/` index or `CHANGELOG` link in README                                                                                  | XS     |
+| 19 | Consider an ADR for the `Strength` enum vs `bool` decision                                                                         | S      |
 
 ### P4 — Testing
 
-| #   | Task                                                                                                    | Effort |
-| --- | ------------------------------------------------------------------------------------------------------- | ------ |
-| 20  | Add property-based tests (rapid/go-quickcheck style via `testing/quick`) for ETag round-trip properties | M      |
-| 21  | Add tests for concurrent `ServeHTTP` calls on the same middleware instance (thread safety)              | S      |
-| 22  | Add tests for `OnError` callback invocation paths (write failure after header commit)                   | S      |
-| 23  | Add tests for `Flush` → `Write` → `Flush` sequence (streaming after flush)                              | S      |
-| 24  | Add tests for edge-case status codes (204, 206, 301, 302, 403, 404, 500)                                | S      |
-| 25  | Add a test for `MaxBufferSize` boundary (body exactly equals limit)                                     | XS     |
-| 26  | Add tests for `Skip` predicate with various request properties (method, path, headers)                  | XS     |
-| 27  | Add a fuzz test for the middleware with `Skip` and `SkipIfPresent` enabled                              | S      |
+| #  | Task                                                                                                    | Effort |
+| -- | ------------------------------------------------------------------------------------------------------- | ------ |
+| 20 | Add property-based tests (rapid/go-quickcheck style via `testing/quick`) for ETag round-trip properties | M      |
+| 21 | Add tests for concurrent `ServeHTTP` calls on the same middleware instance (thread safety)              | S      |
+| 22 | Add tests for `OnError` callback invocation paths (write failure after header commit)                   | S      |
+| 23 | Add tests for `Flush` → `Write` → `Flush` sequence (streaming after flush)                              | S      |
+| 24 | Add tests for edge-case status codes (204, 206, 301, 302, 403, 404, 500)                                | S      |
+| 25 | Add a test for `MaxBufferSize` boundary (body exactly equals limit)                                     | XS     |
+| 26 | Add tests for `Skip` predicate with various request properties (method, path, headers)                  | XS     |
+| 27 | Add a fuzz test for the middleware with `Skip` and `SkipIfPresent` enabled                              | S      |
 
 ### P5 — Scope & Features
 
-| #   | Task                                                                               | Effort |
-| --- | ---------------------------------------------------------------------------------- | ------ |
-| 28  | Evaluate `If-Modified-Since` / `If-Unmodified-Since` support (RFC 7232 §3.3/§3.4)  | M      |
-| 29  | Evaluate full §6 precedence ordering if scope grows to conditional-request library | L      |
-| 30  | Consider a `WeakETag(opaque string)` convenience constructor                       | XS     |
-| 31  | Consider a `StrongETag(opaque string)` convenience constructor                     | XS     |
-| 32  | Consider exporting `splitRawETags` for users who need raw splitting                | XS     |
+| #  | Task                                                                               | Effort |
+| -- | ---------------------------------------------------------------------------------- | ------ |
+| 28 | Evaluate `If-Modified-Since` / `If-Unmodified-Since` support (RFC 7232 §3.3/§3.4)  | M      |
+| 29 | Evaluate full §6 precedence ordering if scope grows to conditional-request library | L      |
+| 30 | Consider a `WeakETag(opaque string)` convenience constructor                       | XS     |
+| 31 | Consider a `StrongETag(opaque string)` convenience constructor                     | XS     |
+| 32 | Consider exporting `splitRawETags` for users who need raw splitting                | XS     |
 
 ### P6 — Operational / Release
 
-| #   | Task                                                                                               | Effort |
-| --- | -------------------------------------------------------------------------------------------------- | ------ |
-| 33  | Cut `v0.2.0` git tag once open questions are answered                                              | XS     |
-| 34  | Set up CI pipeline (`.github/workflows/ci.yml`) with build, vet, lint, test -race, coverage upload | M      |
-| 35  | Add `toolchain` directive to `go.mod`                                                              | XS     |
-| 36  | Add `golangci-lint` version pinning (`.golangci-lint-version` or CI config)                        | XS     |
-| 37  | Add `codecov.yml` or equivalent coverage gating config                                             | S      |
-| 38  | Set up `goreleaser` config for automated releases                                                  | M      |
+| #  | Task                                                                                               | Effort |
+| -- | -------------------------------------------------------------------------------------------------- | ------ |
+| 33 | Cut `v0.2.0` git tag once open questions are answered                                              | XS     |
+| 34 | Set up CI pipeline (`.github/workflows/ci.yml`) with build, vet, lint, test -race, coverage upload | M      |
+| 35 | Add `toolchain` directive to `go.mod`                                                              | XS     |
+| 36 | Add `golangci-lint` version pinning (`.golangci-lint-version` or CI config)                        | XS     |
+| 37 | Add `codecov.yml` or equivalent coverage gating config                                             | S      |
+| 38 | Set up `goreleaser` config for automated releases                                                  | M      |
 
 ### P7 — Code Quality
 
-| #   | Task                                                                                                                                   | Effort |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 39  | Consider splitting `etag.go` (365 lines) — `etag.go` (middleware) + `config.go` (`ETagConfig`, `DefaultETagConfig`, `Validate`)        | S      |
-| 40  | Evaluate whether `responseWrapper` and `etagWriter` should use composition more explicitly (interface for the wrapper contract)        | S      |
-| 41  | Review whether `writeDefaultOK` should be called in `Write` or whether `flush` should handle it                                        | S      |
-| 42  | Consider whether `etagWriter.Flush` and `etagWriter.flush(req)` naming collision is confusing (exported `Flush` vs unexported `flush`) | XS     |
-| 43  | Review error message consistency (some use "etag writer X", others use "etag X")                                                       | XS     |
+| #  | Task                                                                                                                                   | Effort |
+| -- | -------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 39 | Consider splitting `etag.go` (365 lines) — `etag.go` (middleware) + `config.go` (`ETagConfig`, `DefaultETagConfig`, `Validate`)        | S      |
+| 40 | Evaluate whether `responseWrapper` and `etagWriter` should use composition more explicitly (interface for the wrapper contract)        | S      |
+| 41 | Review whether `writeDefaultOK` should be called in `Write` or whether `flush` should handle it                                        | S      |
+| 42 | Consider whether `etagWriter.Flush` and `etagWriter.flush(req)` naming collision is confusing (exported `Flush` vs unexported `flush`) | XS     |
+| 43 | Review error message consistency (some use "etag writer X", others use "etag X")                                                       | XS     |
 
 ### P8 — Alignment with `go-error-family`
 
-| #   | Task                                                                                                               | Effort |
-| --- | ------------------------------------------------------------------------------------------------------------------ | ------ |
-| 44  | Verify `OnError` callback receives properly classified errors in all failure paths                                 | S      |
-| 45  | Consider whether `ErrInvalidConfig` should carry the field name and value as structured context                    | XS     |
-| 46  | Document which `errorfamily.ErrorFamily` each error code belongs to in the error classification table              | XS     |
-| 47  | Consider whether `defaultHashFunc`'s `NewOrchestration` panic message should include the body length for debugging | XS     |
+| #  | Task                                                                                                               | Effort |
+| -- | ------------------------------------------------------------------------------------------------------------------ | ------ |
+| 44 | Verify `OnError` callback receives properly classified errors in all failure paths                                 | S      |
+| 45 | Consider whether `ErrInvalidConfig` should carry the field name and value as structured context                    | XS     |
+| 46 | Document which `errorfamily.ErrorFamily` each error code belongs to in the error classification table              | XS     |
+| 47 | Consider whether `defaultHashFunc`'s `NewOrchestration` panic message should include the body length for debugging | XS     |
 
 ### P9 — Ecosystem
 
-| #   | Task                                                                                       | Effort |
-| --- | ------------------------------------------------------------------------------------------ | ------ |
-| 48  | Create a comparison table vs other Go ETag libraries (gin-contrib/etag, go-chi/etag, etc.) | S      |
-| 49  | Add the library to awesome-go or similar curated lists                                     | XS     |
-| 50  | Write a blog post or announcement for the v0.2 release                                     | M      |
+| #  | Task                                                                                       | Effort |
+| -- | ------------------------------------------------------------------------------------------ | ------ |
+| 48 | Create a comparison table vs other Go ETag libraries (gin-contrib/etag, go-chi/etag, etc.) | S      |
+| 49 | Add the library to awesome-go or similar curated lists                                     | XS     |
+| 50 | Write a blog post or announcement for the v0.2 release                                     | M      |
 
 ---
 
