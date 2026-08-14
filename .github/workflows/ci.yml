@@ -55,6 +55,7 @@ jobs:
       - uses: golangci/golangci-lint-action@55c2c1448f86e01eaae002a5a3a9624417608d84 # v6
         with:
           version: latest
+          install-mode: goinstall
 
   fuzz:
     name: Fuzz
@@ -67,10 +68,10 @@ jobs:
           go-version-file: go.mod
 
       - name: Fuzz ParseETag
-        run: go test -run=^$ -fuzz=FuzzParseETag -fuzztime=30s ./...
+        run: go test -run=^$ -fuzz=^FuzzParseETag$ -fuzztime=30s ./...
 
       - name: Fuzz ParseETagList
-        run: go test -run=^$ -fuzz=FuzzParseETagList -fuzztime=30s ./...
+        run: go test -run=^$ -fuzz=^FuzzParseETagList$ -fuzztime=30s ./...
 
       - name: Fuzz ETag
-        run: go test -run=^$ -fuzz=FuzzETag -fuzztime=30s ./...
+        run: go test -run=^$ -fuzz=^FuzzETag$ -fuzztime=30s ./...
