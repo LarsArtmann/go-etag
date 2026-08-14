@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Nothing yet.
+
+### Changed
+
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.1.1] - 2026-08-14
+
+### Changed
+
+- `Middleware` is now a type alias (`type Middleware = func(http.Handler) http.Handler`) instead of a distinct named type, making it fully interchangeable with the standard middleware signature without an explicit conversion step. Backwards compatible — existing code compiles unchanged.
+
+### Fixed
+
+- Replaced the proprietary LICENSE with the MIT License.
+
 ## [0.1.0] - 2026-08-07
 
 ### Added
@@ -25,5 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BDD-style spec suite (`etag_bdd_test.go`) mapping RFC 7232 sections to behavioral expectations.
 - Fuzz tests for `ParseETag` and `ParseETagList` verifying no panics and round-trip integrity on arbitrary input.
 
-[Unreleased]: https://github.com/larsartmann/go-etag/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/larsartmann/go-etag/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/larsartmann/go-etag/releases/tag/v0.1.1
 [0.1.0]: https://github.com/larsartmann/go-etag/releases/tag/v0.1.0
