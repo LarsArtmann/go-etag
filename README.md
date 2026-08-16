@@ -126,17 +126,17 @@ if err := cfg.Validate(); err != nil {
 handler := etag.New(cfg)(myHandler)
 ```
 
-| Field              | Type                       | Default          | Description                                                       |
-| ------------------ | -------------------------- | ---------------- | ----------------------------------------------------------------- |
-| `Strength`         | `Strength`                 | `Strong`         | Strong or weak validator per RFC 7232 §2.1                        |
-| `MaxBufferSize`    | `int`                      | `1048576` (1 MB) | Max bytes buffered before abandoning ETag and streaming           |
-| `HashFunc`         | `func([]byte) string`      | FNV-64a          | Computes the opaque-tag value from the body. Nil = FNV-64a        |
-| `SkipIfPresent`    | `bool`                     | `false`          | When true, handler-set ETags are respected and not overwritten    |
-| `Skip`             | `func(*http.Request) bool` | `nil`            | When non-nil, requests returning true bypass ETag processing      |
-| `OnError`          | `func(*errorfamily.Error)` | `nil`            | Called when a post-commit write fails (client disconnect, etc.)   |
-| `OnETagGenerated`  | `func(ETag)`               | `nil`            | Fires each time the middleware computes and sets a new tag        |
-| `On304`            | `func(ETag)`               | `nil`            | Fires after a 304 is committed; the cache-hit signal              |
-| `OnBufferOverflow` | `func(int)`                | `nil`            | Fires once when a response exceeds MaxBufferSize (arg = limit)    |
+| Field              | Type                       | Default          | Description                                                     |
+| ------------------ | -------------------------- | ---------------- | --------------------------------------------------------------- |
+| `Strength`         | `Strength`                 | `Strong`         | Strong or weak validator per RFC 7232 §2.1                      |
+| `MaxBufferSize`    | `int`                      | `1048576` (1 MB) | Max bytes buffered before abandoning ETag and streaming         |
+| `HashFunc`         | `func([]byte) string`      | FNV-64a          | Computes the opaque-tag value from the body. Nil = FNV-64a      |
+| `SkipIfPresent`    | `bool`                     | `false`          | When true, handler-set ETags are respected and not overwritten  |
+| `Skip`             | `func(*http.Request) bool` | `nil`            | When non-nil, requests returning true bypass ETag processing    |
+| `OnError`          | `func(*errorfamily.Error)` | `nil`            | Called when a post-commit write fails (client disconnect, etc.) |
+| `OnETagGenerated`  | `func(ETag)`               | `nil`            | Fires each time the middleware computes and sets a new tag      |
+| `On304`            | `func(ETag)`               | `nil`            | Fires after a 304 is committed; the cache-hit signal            |
+| `OnBufferOverflow` | `func(int)`                | `nil`            | Fires once when a response exceeds MaxBufferSize (arg = limit)  |
 
 ## Observability Hooks
 
