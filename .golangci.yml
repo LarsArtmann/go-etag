@@ -129,7 +129,10 @@ linters:
           allow:
             - $gostd
             - github.com/larsartmann/go-etag
-            - github.com/larsartmann/go-etag/**
+            # Explicit subpackage paths: this depguard build does not glob-match
+            # allow entries, so each in-module package is listed.
+            - github.com/larsartmann/go-etag/server
+            - github.com/larsartmann/go-etag/client
             - github.com/larsartmann/go-error-family
     exhaustruct: {}
     ginkgolinter:

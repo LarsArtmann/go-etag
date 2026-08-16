@@ -1,12 +1,19 @@
-// Package etag provides HTTP ETag middleware that generates entity-tag headers
-// from response body content and handles If-None-Match conditional requests
-// with 304 Not Modified responses.
+// Package etag is a deprecated compatibility shim for the server middleware,
+// which moved to github.com/larsartmann/go-etag/server.
 //
-// The middleware uses FNV-64a by default for fast, collision-resistant entity-tag
-// generation and implements RFC 7232 weak comparison for If-None-Match matching.
+// Migration is a pure import-path swap; the package name stays etag, so no
+// call-site changes are needed:
 //
-// The [ETag] type represents an RFC 7232 §2.3 entity-tag with explicit strength
-// ([Strong] or [Weak]) and provides both strong and weak comparison methods.
-// The [New] function returns middleware that buffers GET and HEAD responses,
-// computes entity-tags, and handles conditional requests.
+//	// Before:
+//	import "github.com/larsartmann/go-etag"
+//
+//	// After:
+//	import "github.com/larsartmann/go-etag/server"
+//
+// A generic client-side conditional-GET transport is available as
+// github.com/larsartmann/go-etag/client (package etagclient).
+//
+// Deprecated: the root package no longer contains implementation code. Import
+// github.com/larsartmann/go-etag/server instead. This shim will be removed in
+// v1.0.0.
 package etag

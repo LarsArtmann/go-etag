@@ -1,11 +1,17 @@
 # go-etag
 
-> RFC 7232 HTTP ETag middleware for Go — automatic entity-tag generation, conditional request handling, and `304 Not Modified` responses.
+> Two-sided RFC 7232 HTTP ETag library for Go — server middleware that generates entity-tags and answers `If-None-Match` with `304 Not Modified`, plus a client transport that caches conditional GETs for any `http.Client`.
 
 [![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![Coverage](https://img.shields.io/badge/coverage-98.9%25-brightgreen)](#benchmarks)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
-[![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/go-etag.svg)](https://pkg.go.dev/github.com/larsartmann/go-etag)
+[![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/go-etag/server.svg)](https://pkg.go.dev/github.com/larsartmann/go-etag/server)
+
+| Package                                            | Purpose                                                                    |
+| ------------------------------------------------- | -------------------------------------------------------------------------- |
+| [`go-etag/server`](https://pkg.go.dev/github.com/larsartmann/go-etag/server) (package `etag`)   | Server middleware: generate ETags from bodies, answer `If-None-Match` with 304 |
+| [`go-etag/client`](https://pkg.go.dev/github.com/larsartmann/go-etag/client) (package `etagclient`) | Client `http.RoundTripper`: conditional GET cache, 304 rebuilt as 200      |
+| `go-etag` (root)                                    | Deprecated alias shim for the server package; removed in v1.0.0            |
 
 ---
 
@@ -21,9 +27,16 @@ Every HTTP API that serves reusable representations should send `ETag` headers a
 - **Streams gracefully** when the body exceeds `MaxBufferSize` or the handler calls `Hijack`/`Flush`.
 - **Classifies errors** via [`go-error-family`](https://github.com/larsartmann/go-error-family) for retry-aware observability.
 
-Zero configuration required — wrap your handler and go.
+On the client side, **`go-etag/client`** wraps any `http.Client` transport:
 
-## Quick Start
+- **Replays stored validators** as `If-None-Match`, turning unchanged re-fetches into free 304s.
+- **Rebuilds 304s as 200s** with the cached body, so SDKs and callers see no difference.
+- **Preserves fresh headers** (Date, rate limits) from the 304 onto the rebuilt response per `PreserveOn304`.
+- **Bounded memory** — FIFO eviction (`MaxEntries`) and a body-size cap (`MaxBodyBytes`).
+
+Zero configuration required on either side — wrap and go.
+
+## Server Quick Start
 
 ```go
 package main
@@ -31,7 +44,7 @@ package main
 import (
     "net/http"
 
-    "github.com/larsartmann/go-etag"
+    etag "github.com/larsartmann/go-etag/server"
 )
 
 func main() {
@@ -62,6 +75,57 @@ curl -v -H 'If-None-Match: "779a65e7023cd2e7"' http://localhost:8080/
 # < HTTP/1.1 304 Not Modified
 # (no body transferred)
 ```
+
+## Client Quick Start
+
+```go
+package main
+
+import (
+    "net/http"
+
+    etagclient "github.com/larsartmann/go-etag/client"
+)
+
+func main() {
+    client := &http.Client{
+        Transport: etagclient.NewTransport(http.DefaultTransport, etagclient.Options{}),
+    }
+
+    // First GET stores the response under its ETag; the second GET sends
+    // If-None-Match and is rebuilt from cache when the server answers 304.
+    resp, err := client.Get("https://api.example.com/users")
+    _ = resp
+    _ = err
+}
+```
+
+### Client options
+
+```go
+transport := etagclient.NewTransport(next, etagclient.Options{
+    KeyFunc:         nil,                     // nil = request URL; see warning below
+    MaxEntries:      256,                     // FIFO cache bound (default 256)
+    MaxBodyBytes:    1024 * 1024,             // largest cached body (default 1 MiB)
+    PreserveOn304:   []string{"Date"},        // fresh headers merged onto rebuilt 200s
+    FromCacheHeader: "",                      // marker header set on rebuilt responses
+})
+```
+
+| Field              | Type                       | Default   | Description                                                          |
+| ------------------ | -------------------------- | --------- | -------------------------------------------------------------------- |
+| `KeyFunc`          | `func(*http.Request) string` | URL string | Derives the cache key. Must scope by credential when responses vary by caller |
+| `MaxEntries`      | `int`                      | `256`     | Cache bound; oldest entry evicted (FIFO)                             |
+| `MaxBodyBytes`    | `int`                      | `1048576` (1 MiB) | Larger bodies pass through uncached, fully intact          |
+| `PreserveOn304`   | `[]string`                 | `["Date"]` | Headers copied fresh from the 304 onto the rebuilt 200 (RFC 7232 §4.1); empty non-nil slice disables merging |
+| `FromCacheHeader` | `string`                   | `""`      | When set, rebuilt responses carry it with value `1` for diagnostics  |
+
+`transport.Stats()` reports `Stats{Hits, Stored, Entries}` for cache telemetry.
+
+> **Credential warning:** the default key ignores credentials. If the same URL
+> can return different responses for different callers (Authorization header,
+> cookies), supply a `KeyFunc` that includes a credential fingerprint, or one
+> principal's cached response may be served to another.
 
 ## Features
 
@@ -283,13 +347,38 @@ Measured on AMD Ryzen AI MAX+ 395:
 | `MatchesIfNoneMatch` (single tag) | 69    | 40   | 2         |
 | `MatchesIfNoneMatch` (3-tag list) | 182   | 232  | 4         |
 
-The middleware adds sub-microsecond overhead per request. For a typical API returning small JSON payloads, the ETag computation and If-None-Match matching are negligible compared to network I/O.
+Client transport (`go test -bench=. ./client/`):
+
+| Benchmark                        | ns/op | B/op | allocs/op |
+| -------------------------------- | ----- | ---- | --------- |
+| `Transport` fresh 200 (store)    | 1885  | 2160 | 18        |
+| `Transport` 304 rebuild (cache)  | 1259  | 2160 | 18        |
+
+The middleware adds sub-microsecond overhead per request. For a typical API returning small JSON payloads, the ETag computation and If-None-Match matching are negligible compared to network I/O; on the client side, one cache rebuild costs less than a single network round trip by three orders of magnitude.
 
 ## Installation
 
 ```bash
-go get github.com/larsartmann/go-etag
+go get github.com/larsartmann/go-etag/server   # server middleware (package etag)
+go get github.com/larsartmann/go-etag/client   # client transport (package etagclient)
 ```
+
+### Upgrading from v0.1.x
+
+The root package `github.com/larsartmann/go-etag` is now a deprecated alias
+> shim for the server package. Existing code keeps compiling unchanged
+> (deprecation warnings only); migration is a pure import-path swap:
+>
+> ```go
+> // Before:
+> import "github.com/larsartmann/go-etag"
+>
+> // After:
+> import "github.com/larsartmann/go-etag/server"
+> ```
+>
+> The package name stays `etag`, so no call-site changes are needed. The shim
+> is removed in v1.0.0.
 
 ## License
 

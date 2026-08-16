@@ -72,19 +72,26 @@ golangci-lint fmt          # Format (gofumpt + golines@120 + gci)
 
 ## Architecture
 
-Single flat package: `etag`. One external dependency: `github.com/larsartmann/go-error-family`. Go 1.26+.
+One module (`github.com/larsartmann/go-etag`), three packages: the real code lives in `server/` (package name `etag`) and `client/` (package `etagclient`); the root is a deprecated alias shim over the server package (deleted at v1.0.0). One external dependency: `github.com/larsartmann/go-error-family`. Go 1.26+.
 
-| File            | Exports                                                                                                                                                                             | Purpose                                                                                            |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `entity_tag.go` | `ETag`, `Strength`, `Strong`, `Weak`, `NewETag`, `ParseETag`, `ParseETagList`, `MatchesIfNoneMatch`, `MatchesIfMatch`                                                               | RFC 7232 §2.3 entity-tag domain type: opaque value + strength, strong/weak comparison, ABNF parser |
-| `etag.go`       | `ETagConfig`, `DefaultETagConfig()`, `Validate()`, `New()`                                                                                                                          | ETag middleware: FNV-64a generation, If-None-Match 304, buffer overflow, Hijack/Flush streaming    |
-| `wrapper.go`    | (unexported `responseWrapper`)                                                                                                                                                      | Shared ResponseWriter wrapper: buffers WriteHeader, delegates Hijack/Flush                         |
-| `middleware.go` | `Middleware`                                                                                                                                                                        | Type alias for `func(http.Handler) http.Handler`                                                   |
-| `errors.go`     | `ErrCodeETagWriteFailed`, `ErrCodeHijackUnsupported`, `ErrCodeHijackFailed`, `ErrCodeInvalidConfig`, `ErrCodeHashWriteFailed`, `ErrInvalidConfig`, `RegisterErrorClassifications()` | Error codes + stdlib sentinel registration + message templates                                     |
-| `hex.go`        | (unexported `hexEncodeUint64`, `hexDigitsLower`)                                                                                                                                    | Zero-alloc stack-allocated hex encoding for uint64 FNV hashes                                      |
-| `doc.go`        | (package doc only)                                                                                                                                                                  | Package-level GoDoc documentation                                                                  |
+| File                 | Exports                                                                                                                                                                             | Purpose                                                                                            |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `server/entity_tag.go` | `ETag`, `Strength`, `Strong`, `Weak`, `NewETag`, `ParseETag`, `ParseETagList`, `MatchesIfNoneMatch`, `MatchesIfMatch`                                                             | RFC 7232 §2.3 entity-tag domain type: opaque value + strength, strong/weak comparison, ABNF parser |
+| `server/etag.go`       | `ETagConfig`, `DefaultETagConfig()`, `Validate()`, `New()`                                                                                                                          | ETag middleware: FNV-64a generation, If-None-Match 304, buffer overflow, Hijack/Flush streaming    |
+| `server/wrapper.go`    | (unexported `responseWrapper`)                                                                                                                                                      | Shared ResponseWriter wrapper: buffers WriteHeader, delegates Hijack/Flush                         |
+| `server/middleware.go` | `Middleware`                                                                                                                                                                        | Type alias for `func(http.Handler) http.Handler`                                                   |
+| `server/errors.go`     | `ErrCodeETagWriteFailed`, `ErrCodeHijackUnsupported`, `ErrCodeHijackFailed`, `ErrCodeInvalidConfig`, `ErrCodeHashWriteFailed`, `ErrInvalidConfig`, `RegisterErrorClassifications()` | Error codes + stdlib sentinel registration + message templates                                     |
+| `server/hex.go`        | (unexported `hexEncodeUint64`, `hexDigitsLower`)                                                                                                                                    | Zero-alloc stack-allocated hex encoding for uint64 FNV hashes                                      |
+| `server/doc.go`        | (package doc only)                                                                                                                                                                  | Package-level GoDoc documentation                                                                  |
+| `client/options.go`    | `Options` (KeyFunc / MaxEntries / MaxBodyBytes / PreserveOn304 / FromCacheHeader)                                                                                                   | Client transport options with defaults (256 entries / 1 MiB / `["Date"]`)                         |
+| `client/cache.go`      | `Stats` (Hits/Stored/Entries); unexported `responseCache` (map + order-slice FIFO under a mutex)                                                                                    | Bounded concurrency-safe cache with counters                                                       |
+| `client/transport.go`  | `NewTransport`, `Transport` (`RoundTrip`, `Stats`)                                                                                                                                  | Conditional GET transport: If-None-Match replay, 304→200 rebuild, body store with size skip        |
+| `client/doc.go`        | (package doc only)                                                                                                                                                                  | Package docs incl. the KeyFunc credential warning                                                 |
+| `deprecated.go`      | Full alias surface of `server/` (4 types, 7 consts, 1 var, 8 func wrappers), all `// Deprecated:`                                                                                   | Compatibility shim keeping v0.1.x imports compiling; removed at v1.0.0                             |
+| `doc.go`             | (package doc only)                                                                                                                                                                  | Tombstone package doc with migration snippet                                                       |
 
 **Middleware pattern:** `New()` returns `func(http.Handler) http.Handler` (aliased as `Middleware`).
+**Client pattern:** `NewTransport(next, opts) *Transport`; nil `next` falls back to `http.DefaultTransport`; the cache is embedded (no nil-cache state).
 
 ## API Design
 
@@ -107,6 +114,16 @@ The `ETag` struct holds an opaque string and a `Strength` (Strong/Weak). It prov
 - Zero-value `ETagConfig{}` is safe: MaxBufferSize clamped to default (1 MB).
 - `HashFunc func([]byte) string` returns opaque-tag content (not a uint64).
 - Observability hooks (all nil by default, zero cost when nil): `OnETagGenerated func(ETag)`, `On304 func(ETag)`, `OnBufferOverflow func(int)`. They make the library OTEL/Prometheus-ready without a telemetry dependency.
+
+### Client (package `etagclient`)
+
+`Options` has fields: `KeyFunc` (nil = request URL string; MUST scope by credential when responses vary by caller), `MaxEntries` (default 256, FIFO eviction), `MaxBodyBytes` (default 1 MiB; oversized bodies pass through uncached with bodies intact), `PreserveOn304` (default `["Date"]` per RFC 7232 §4.1; empty non-nil slice disables merging), `FromCacheHeader` (default empty = disabled). `Transport.Stats()` returns `Stats{Hits, Stored, Entries}`.
+
+**Client gotchas:**
+
+- **RoundTrip never mutates the caller's request** — If-None-Match rides on a clone (net/http RoundTripper contract).
+- **Oversized bodies keep streaming** — the buffered prefix is chained to the unread remainder; Close still reaches the original body.
+- **Go 1.26 canonical header form of `ETag` is `Etag`** — map literals with `"ETag"` keys are invisible to `Header.Get/Set` (Get canonicalizes on read). Build stub headers via `Header.Set` in tests; real transports canonicalize on both sides.
 
 ## Error Classification
 
@@ -146,9 +163,9 @@ Flush-path write errors are forwarded to `ETagConfig.OnError` (a `func(*errorfam
 
 ## Testing Conventions
 
-- **Same package** (`package etag`) — tests can access unexported symbols
+- **Same package** (`package etag` in `server/`, `package etagclient` in `client/`) — tests can access unexported symbols
 - **Plain `testing`** — no assertion libraries
-- **BDD-style specs** in `etag_bdd_test.go` — Describe/Context/It pattern using `t.Run`
+- **BDD-style specs** in `server/etag_bdd_test.go` — Describe/Context/It pattern using `t.Run`
 - **`t.Errorf`** for non-fatal, **`t.Fatalf`** for fatal assertions
-- **`httptest.NewRecorder()`** + `httptest.NewRequest()` for HTTP doubles
-- **Shared test helpers** in `testutil_test.go`
+- **`httptest.NewRecorder()`** + `httptest.NewRequest()` for server doubles; `roundTripperFunc` stubs for client doubles
+- **Shared test helpers** in `server/testutil_test.go`; client helpers live in `client/transport_test.go`

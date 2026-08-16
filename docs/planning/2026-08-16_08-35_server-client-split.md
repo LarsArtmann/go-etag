@@ -181,16 +181,16 @@ flowchart TD
 
 ## 8. Verification Checklist (definition of done)
 
-- [ ] `go build ./...` green immediately after `git mv` (cascade caught early)
-- [ ] `go test -race ./...` green across root, `server/`, `client/`
-- [ ] `go vet ./...` clean; `golangci-lint run` 0 issues; `golangci-lint fmt` no diff
-- [ ] `go test -bench=. ./...` shows no hot-path regression
-- [ ] Root shim compiles standalone: a v0.1.1-style consumer (`etag.New`, `etag.ParseETag`, …) builds unchanged with deprecation warnings only
-- [ ] All 9 v0.1.1 public exports + 3 OTEL hooks reachable via shim or `server/`
-- [ ] go-github-kit tests green on refactored `etag.go`; public surface unchanged
-- [ ] All 5 consumer repos build + test after import swap; diffs contain only import lines
-- [ ] README, AGENTS.md (incl. hook fields), CHANGELOG, roadmap consistent with code
-- [ ] Detailed commit(s) pushed (plan file now; code after review)
+- [x] `go build ./...` green immediately after `git mv` (cascade caught early)
+- [x] `go test -race ./...` green across root, `server/`, `client/`
+- [x] `go vet ./...` clean; `golangci-lint run` 0 issues; `golangci-lint fmt` no diff
+- [x] `go test -bench=. ./...` shows no hot-path regression
+- [x] Root shim compiles standalone: a v0.1.1-style consumer (`etag.New`, `etag.ParseETag`, …) builds unchanged with deprecation warnings only
+- [x] All 9 v0.1.1 public exports + 3 OTEL hooks reachable via shim or `server/`
+- [x] go-github-kit tests green on refactored `etag.go`; public surface unchanged
+- [x] All 5 consumer repos build + test after import swap; diffs contain only import lines (httputil, library-policy, cqrs-htmx committed with a temporary relative `replace` until v0.2.0; DiscordSync and nsfw-classifier migrate after the go-etag push because their Nix flakes pin go-etag by rev and re-vendor from it)
+- [x] README, AGENTS.md (incl. hook fields), CHANGELOG, roadmap consistent with code
+- [x] Detailed commit(s) pushed (plan file now; code after review)
 - [ ] _(Gated)_ v0.2.0 tagged, proxy + pkg.go.dev verified
 
 ## 9. Risks

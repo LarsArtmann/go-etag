@@ -96,8 +96,8 @@ The foundation is well-built: clean flat-package structure, strong lint culture,
 
 ### `go-etag/otel` sub-module — automatic OpenTelemetry wiring
 
-_Parked 2026-08-16. The core observability hooks (`OnETagGenerated`, `On304`, `OnBufferOverflow`) shipped instead; manual OTEL wiring is ~10 lines._
+_Parked 2026-08-16. The core observability hooks (`OnETagGenerated`, `On304`, `OnBufferOverflow`) shipped instead; manual OTEL wiring is ~10 lines. Updated 2026-08-16 for the server/client split: the wrapper targets the `server` package._
 
-- **Shape:** own `go.mod` at `./otel`, depguard exception for `go.opentelemetry.io/otel` API only (never the SDK, so consumers keep their SDK choice). Single entry `otel.Middleware(cfg, opts...)` wrapping `etag.New`, emitting `etag_hits_total`, `etag_misses_total`, `etag_buffer_overflows_total`, and a hash-duration histogram.
+- **Shape:** own `go.mod` at `./otel`, depguard exception for `go.opentelemetry.io/otel` API only (never the SDK, so consumers keep their SDK choice). Single entry `otel.Middleware(cfg, opts...)` wrapping `etag.New` from `github.com/larsartmann/go-etag/server`, emitting `etag_hits_total`, `etag_misses_total`, `etag_buffer_overflows_total`, and a hash-duration histogram.
 - **Prereqs to unpark:** (a) hooks battle-tested in the wild, (b) at least one real consumer asks for it, (c) acceptance of a second release track (path-scoped tags `otel/vX.Y.Z`; mis-tagging poisons the module proxy), (d) a `go.work` for local dual-module testing.
 - **Why parked:** a telemetry wrapper with zero consumers is speculative surface area. With the hooks, the sub-module is convenience, not capability.
