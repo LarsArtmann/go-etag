@@ -79,3 +79,12 @@ _Predecessor: `2026-08-16_12-28_v0.2.0-release-and-ecosystem-sweep.md` (sections
 1. **httputil v0.12.0 GitHub Release**: the tag's Release workflow is permanently red (workflow file at the tag commit predates the toolchain fix; tags immutable). Module + proxy + CI on master are all green. Create the GitHub Release manually (`gh release create v0.12.0 --generate-notes`), or leave the tag release-less?
 2. **Pre-tag CI gate policy**: all three of today's release tags shipped with red tag-CI runs (every failure pre-existing/environmental, all fixed on master within the hour). Accept the red X's as historical noise, or do you want the go-release skill's gate list amended to require a green `gh run list` before tagging?
 3. **kit toolchain hardening**: kit's govulncheck passed on 1.26.5 only because its code paths don't currently reach the new vulns. Apply the same explicit `GOTOOLCHAIN: go1.26.6` pin to kit now (5-minute change, one CI cycle), or leave it until its next release?
+
+## h. RESOLUTION (same day, ~13:25 CEST)
+
+All three §g questions answered in one structured prompt; executed immediately after:
+
+1. **g.1 — YES, done**: GitHub Release for httputil v0.12.0 created (`gh release create v0.12.0 --generate-notes --notes-start-tag v0.11.0 --latest`), now marked Latest, superseding v0.11.0. Direct-push history means auto-notes carry no PR bullets, so the body was then curated to repo convention (What's New summary + CHANGELOG 0.12.0 sections + compare link) via `gh release edit --notes-file`. Closes b.1 and f.1.
+2. **g.2 — YES, done**: go-release skill Phase 4 gains §4.4 "CI is green on the exact commit being tagged" — a hard `gh run list` gate before any tag, plus the GOTOOLCHAIN manifest-lag pin pattern. The process root cause from d.1 is now encoded where every future release reads it. Closes f.2; per-repo GOTOOLCHAIN pins (f.9/f.10) stay open.
+3. **g.3 — NO, deferred**: kit's govulncheck stays on `go-version: "1.26.x"`; the trace-luck pass on 1.26.5 is accepted until the repo's next touch (f.9 unchanged, owner's call).
+4. **f.4 resolved itself**: kit is live on pkg.go.dev as of ~13:15 CEST — module page renders (v0.1.0 landing, "Go to latest" → v0.2.0). The capital-`LarsArtmann` module path was never broken; it was pure pkgsite crawl latency (~3h). No action needed.
