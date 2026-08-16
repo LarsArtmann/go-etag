@@ -102,10 +102,11 @@ The `ETag` struct holds an opaque string and a `Strength` (Strong/Weak). It prov
 
 ### Config
 
-`ETagConfig` has fields: `Strength`, `MaxBufferSize`, `HashFunc` (returns string), `SkipIfPresent`, `Skip`, `OnError`.
+`ETagConfig` has fields: `Strength`, `MaxBufferSize`, `HashFunc` (returns string), `SkipIfPresent`, `Skip`, `OnError`, `OnETagGenerated`, `On304`, `OnBufferOverflow`.
 
 - Zero-value `ETagConfig{}` is safe: MaxBufferSize clamped to default (1 MB).
 - `HashFunc func([]byte) string` returns opaque-tag content (not a uint64).
+- Observability hooks (all nil by default, zero cost when nil): `OnETagGenerated func(ETag)`, `On304 func(ETag)`, `OnBufferOverflow func(int)`. They make the library OTEL/Prometheus-ready without a telemetry dependency.
 
 ## Error Classification
 
@@ -136,6 +137,10 @@ Flush-path write errors are forwarded to `ETagConfig.OnError` (a `func(*errorfam
 - **`MatchesIfMatch` is an exported helper** — applications call it in their handlers for unsafe-method lost-update prevention.
 - **`ETag` `If-None-Match` uses RFC 7232 §2.3.2 weak comparison** — `W/"abc"` and `"abc"` are treated as equivalent.
 - **Buffer overflow disables ETag** — responses exceeding `MaxBufferSize` are streamed without ETag.
+- **`OnETagGenerated` only fires for computed tags** — handler-provided tags adopted via `SkipIfPresent` do NOT fire it (name honesty: "generated" ≠ "adopted").
+- **`On304` fires regardless of tag source** — computed or handler-provided — and fires in addition to `OnETagGenerated` (ordering: generated first, then 304).
+- **`OnBufferOverflow` fires exactly once per response** — the flushed-flag transition guarantees single fire; handler-initiated `Flush()` does NOT fire it. Payload is the exceeded `MaxBufferSize`.
+- **Hooks are synchronous and unprotected** — they run in the request goroutine with no recover; net/http isolates panics like handler panics.
 - **Hijack/Flush switches to streaming mode** — after either call, the middleware writes through without buffering.
 - **Hash.Write errors panic with a classified Orchestration error** — the `hash.Hash` contract guarantees Write never fails; if it does, the hash implementation is broken and we panic with `http.etag_hash_write_failed`.
 

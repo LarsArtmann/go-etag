@@ -63,18 +63,44 @@ type ETagConfig struct {
 	// surfaced to the client or returned from Write. If nil, such errors are
 	// silently dropped (matching net/http default behavior).
 	OnError func(*errorfamily.Error)
+
+	// OnETagGenerated is called each time the middleware computes a new
+	// entity-tag from the buffered body and sets it on the ETag header. It
+	// does not fire for handler-provided tags adopted via SkipIfPresent, nor
+	// for responses that get no ETag at all (empty body, streaming). Pair it
+	// with On304 to derive cache hit ratios. If nil, no action is taken.
+	OnETagGenerated func(ETag)
+
+	// On304 is called when a conditional request is answered with 304 Not
+	// Modified, after the status line is committed. The argument is the
+	// entity-tag that matched If-None-Match, regardless of whether it was
+	// computed by the middleware or provided by the handler (SkipIfPresent).
+	// On304 fires in addition to OnETagGenerated, which fires first during
+	// tag resolution; a consumer wanting only one event per request should
+	// prefer On304. If nil, no action is taken.
+	On304 func(ETag)
+
+	// OnBufferOverflow is called when a response body exceeds MaxBufferSize
+	// and the writer switches to streaming without an ETag. The argument is
+	// the configured limit that was exceeded. It fires at most once per
+	// response; a handler-initiated Flush does not trigger it. If nil, no
+	// action is taken.
+	OnBufferOverflow func(int)
 }
 
 // DefaultETagConfig returns an ETagConfig with sensible defaults: strong
 // ETags via FNV-64a, 1 MB buffer, no skip predicate.
 func DefaultETagConfig() ETagConfig {
 	return ETagConfig{
-		Strength:      Strong,
-		MaxBufferSize: defaultMaxBufferSize,
-		HashFunc:      defaultHashFunc,
-		SkipIfPresent: false,
-		Skip:          nil,
-		OnError:       nil,
+		Strength:         Strong,
+		MaxBufferSize:    defaultMaxBufferSize,
+		HashFunc:         defaultHashFunc,
+		SkipIfPresent:    false,
+		Skip:             nil,
+		OnError:          nil,
+		OnETagGenerated:  nil,
+		On304:            nil,
+		OnBufferOverflow: nil,
 	}
 }
 
@@ -150,13 +176,16 @@ func New(cfg ETagConfig) Middleware {
 type etagWriter struct {
 	responseWrapper
 
-	body          []byte
-	strength      Strength
-	flushed       bool
-	maxBufferSize int
-	hashFunc      func([]byte) string
-	skipIfPresent bool
-	onError       func(*errorfamily.Error)
+	body             []byte
+	strength         Strength
+	flushed          bool
+	maxBufferSize    int
+	hashFunc         func([]byte) string
+	skipIfPresent    bool
+	onError          func(*errorfamily.Error)
+	onETagGenerated  func(ETag)
+	on304            func(ETag)
+	onBufferOverflow func(int)
 }
 
 func newETagWriter(resp http.ResponseWriter, cfg ETagConfig) *etagWriter {
@@ -174,14 +203,17 @@ func newETagWriter(resp http.ResponseWriter, cfg ETagConfig) *etagWriter {
 	}
 
 	return &etagWriter{
-		responseWrapper: newResponseWrapper(resp),
-		body:            nil,
-		strength:        cfg.Strength,
-		flushed:         false,
-		maxBufferSize:   maxBufferSize,
-		hashFunc:        hashFunc,
-		skipIfPresent:   cfg.SkipIfPresent,
-		onError:         cfg.OnError,
+		responseWrapper:  newResponseWrapper(resp),
+		body:             nil,
+		strength:         cfg.Strength,
+		flushed:          false,
+		maxBufferSize:    maxBufferSize,
+		hashFunc:         hashFunc,
+		skipIfPresent:    cfg.SkipIfPresent,
+		onError:          cfg.OnError,
+		onETagGenerated:  cfg.OnETagGenerated,
+		on304:            cfg.On304,
+		onBufferOverflow: cfg.OnBufferOverflow,
 	}
 }
 
@@ -215,6 +247,10 @@ func (w *etagWriter) Write(b []byte) (int, error) {
 	}
 
 	if w.maxBufferSize > 0 && len(w.body)+len(b) > w.maxBufferSize {
+		if w.onBufferOverflow != nil {
+			w.onBufferOverflow(w.maxBufferSize)
+		}
+
 		w.Flush()
 
 		n, err := w.ResponseWriter.Write(b)
@@ -248,6 +284,10 @@ func (w *etagWriter) flush(req *http.Request) {
 			w.Header().Del(headerContentLength)
 			w.ResponseWriter.WriteHeader(http.StatusNotModified)
 			w.headerCommitted = true
+
+			if w.on304 != nil {
+				w.on304(tag)
+			}
 
 			return
 		}
@@ -297,6 +337,10 @@ func (w *etagWriter) resolveETag() ETag {
 
 	if tag.IsValid() {
 		w.Header().Set(headerETag, tag.String())
+
+		if w.onETagGenerated != nil {
+			w.onETagGenerated(tag)
+		}
 	}
 
 	return tag

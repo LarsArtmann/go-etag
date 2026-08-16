@@ -9,7 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Nothing yet.
+- `ETagConfig.OnETagGenerated func(ETag)`: observability hook firing each time the middleware computes and sets a new entity-tag from the buffered body. Does not fire for handler-provided tags adopted via `SkipIfPresent`. Pairs with `On304` to derive cache hit ratios.
+- `ETagConfig.On304 func(ETag)`: observability hook firing after a 304 Not Modified is committed, with the matching entity-tag regardless of tag source. Fires in addition to `OnETagGenerated` (which fires first).
+- `ETagConfig.OnBufferOverflow func(int)`: observability hook firing at most once per response when the body exceeds `MaxBufferSize` and the response degrades to streaming without an ETag. The argument is the exceeded limit. Handler-initiated `Flush()` does not fire it.
+- GoDoc example `ExampleNew_observabilityHooks` deriving a cache hit ratio from the new hooks.
 
 ### Changed
 

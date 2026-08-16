@@ -107,12 +107,15 @@ tags := etag.ParseETagList(`"a", W/"b", "c"`)
 
 ```go
 cfg := etag.ETagConfig{
-    Strength:      etag.Strong,             // etag.Strong (default) or etag.Weak
-    MaxBufferSize: 1024 * 1024,             // 1 MB buffer before streaming (default)
-    HashFunc:      nil,                     // nil = FNV-64a; or func([]byte) string
-    SkipIfPresent: false,                   // true = respect handler-set ETags
-    Skip:          nil,                     // func(*http.Request) bool — skip routes
-    OnError:       nil,                     // func(*errorfamily.Error) — write-failure hook
+    Strength:         etag.Strong,             // etag.Strong (default) or etag.Weak
+    MaxBufferSize:    1024 * 1024,             // 1 MB buffer before streaming (default)
+    HashFunc:         nil,                     // nil = FNV-64a; or func([]byte) string
+    SkipIfPresent:    false,                   // true = respect handler-set ETags
+    Skip:             nil,                     // func(*http.Request) bool — skip routes
+    OnError:          nil,                     // func(*errorfamily.Error) — write-failure hook
+    OnETagGenerated:  nil,                     // func(etag.ETag) — fires per computed tag
+    On304:            nil,                     // func(etag.ETag) — fires per 304 Not Modified
+    OnBufferOverflow: nil,                     // func(int) — fires when MaxBufferSize is exceeded
 }
 
 // Validate checks for invalid field values. Call at startup.
@@ -123,14 +126,47 @@ if err := cfg.Validate(); err != nil {
 handler := etag.New(cfg)(myHandler)
 ```
 
-| Field           | Type                       | Default          | Description                                                     |
-| --------------- | -------------------------- | ---------------- | --------------------------------------------------------------- |
-| `Strength`      | `Strength`                 | `Strong`         | Strong or weak validator per RFC 7232 §2.1                      |
-| `MaxBufferSize` | `int`                      | `1048576` (1 MB) | Max bytes buffered before abandoning ETag and streaming         |
-| `HashFunc`      | `func([]byte) string`      | FNV-64a          | Computes the opaque-tag value from the body. Nil = FNV-64a      |
-| `SkipIfPresent` | `bool`                     | `false`          | When true, handler-set ETags are respected and not overwritten  |
-| `Skip`          | `func(*http.Request) bool` | `nil`            | When non-nil, requests returning true bypass ETag processing    |
-| `OnError`       | `func(*errorfamily.Error)` | `nil`            | Called when a post-commit write fails (client disconnect, etc.) |
+| Field              | Type                       | Default          | Description                                                       |
+| ------------------ | -------------------------- | ---------------- | ----------------------------------------------------------------- |
+| `Strength`         | `Strength`                 | `Strong`         | Strong or weak validator per RFC 7232 §2.1                        |
+| `MaxBufferSize`    | `int`                      | `1048576` (1 MB) | Max bytes buffered before abandoning ETag and streaming           |
+| `HashFunc`         | `func([]byte) string`      | FNV-64a          | Computes the opaque-tag value from the body. Nil = FNV-64a        |
+| `SkipIfPresent`    | `bool`                     | `false`          | When true, handler-set ETags are respected and not overwritten    |
+| `Skip`             | `func(*http.Request) bool` | `nil`            | When non-nil, requests returning true bypass ETag processing      |
+| `OnError`          | `func(*errorfamily.Error)` | `nil`            | Called when a post-commit write fails (client disconnect, etc.)   |
+| `OnETagGenerated`  | `func(ETag)`               | `nil`            | Fires each time the middleware computes and sets a new tag        |
+| `On304`            | `func(ETag)`               | `nil`            | Fires after a 304 is committed; the cache-hit signal              |
+| `OnBufferOverflow` | `func(int)`                | `nil`            | Fires once when a response exceeds MaxBufferSize (arg = limit)    |
+
+## Observability Hooks
+
+The library takes no telemetry dependency. Instead, three lifecycle hooks
+give any backend (OpenTelemetry, Prometheus, slog) full visibility in a few
+lines:
+
+- `OnETagGenerated` — the denominator of your cache hit ratio. Fires only for
+  tags **computed** by the middleware, not handler-provided ones under
+  `SkipIfPresent`.
+- `On304` — the cache hit. Fires after the 304 is committed, in addition to
+  `OnETagGenerated` (which fires first).
+- `OnBufferOverflow` — a response silently degraded to streaming without an
+  ETag. Fires at most once per response; handler-initiated `Flush()` does not
+  fire it.
+
+All hooks fire synchronously in the request goroutine; keep them fast and
+panic-free (net/http isolates panics the same way as handler panics). The
+pattern is the same for every backend — point the hooks at your handles:
+
+```go
+var cacheHits, etagWrites atomic.Int64 // or otel metric / prom counters
+
+cfg := etag.DefaultETagConfig()
+cfg.OnETagGenerated = func(etag.ETag) { etagWrites.Add(1) }
+cfg.On304 = func(etag.ETag) { cacheHits.Add(1) }
+```
+
+See `ExampleNew_observabilityHooks` in the [GoDoc](https://pkg.go.dev/github.com/larsartmann/go-etag)
+for a runnable version deriving a hit ratio from plain counters.
 
 ## Strong vs Weak Validators
 

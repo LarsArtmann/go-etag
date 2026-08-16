@@ -89,3 +89,15 @@ The foundation is well-built: clean flat-package structure, strong lint culture,
 2. **Hash defaults:** Should FNV-64a default to `Weak` strength (honest) or stay `Strong` (fast, pragmatic)? Currently `Strong` with documented collision tradeoff. A collision would produce a stale 304 (effectively data corruption), but the birthday bound (~4.3 billion bodies) is astronomically unlikely for practical use.
 
 3. **Subpackage split:** Should `entity_tag.go` move to a separate subpackage? Currently: flat package is simpler and the types are tightly coupled to the middleware.
+
+---
+
+## Parked ideas (demand-gated)
+
+### `go-etag/otel` sub-module — automatic OpenTelemetry wiring
+
+_Parked 2026-08-16. The core observability hooks (`OnETagGenerated`, `On304`, `OnBufferOverflow`) shipped instead; manual OTEL wiring is ~10 lines._
+
+- **Shape:** own `go.mod` at `./otel`, depguard exception for `go.opentelemetry.io/otel` API only (never the SDK, so consumers keep their SDK choice). Single entry `otel.Middleware(cfg, opts...)` wrapping `etag.New`, emitting `etag_hits_total`, `etag_misses_total`, `etag_buffer_overflows_total`, and a hash-duration histogram.
+- **Prereqs to unpark:** (a) hooks battle-tested in the wild, (b) at least one real consumer asks for it, (c) acceptance of a second release track (path-scoped tags `otel/vX.Y.Z`; mis-tagging poisons the module proxy), (d) a `go.work` for local dual-module testing.
+- **Why parked:** a telemetry wrapper with zero consumers is speculative surface area. With the hooks, the sub-module is convenience, not capability.
