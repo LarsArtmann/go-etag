@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.2.0] - 2026-08-16
+
+### Added
+
 - `client` package (import `github.com/larsartmann/go-etag/client`, package name `etagclient`): a client-side conditional GET cache as an `http.RoundTripper`. `NewTransport(next, opts)` replays stored validators as `If-None-Match` and rebuilds 304 responses into the cached 200 the caller expects.
 - `etagclient.Options`: `KeyFunc` (credential scoping hook; defaults to the request URL), `MaxEntries` (FIFO bound, default 256), `MaxBodyBytes` (cached-body cap, default 1 MiB; oversized responses pass through uncached), `PreserveOn304` (headers merged fresh from the 304 onto the rebuilt 200, default `["Date"]` per RFC 7232 §4.1), and `FromCacheHeader` (optional from-cache marker).
 - `etagclient.Transport.Stats()` returning `Stats{Hits, Stored, Entries}` for cache telemetry.
@@ -21,10 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - The server middleware moved to `github.com/larsartmann/go-etag/server` (package name stays `etag`, so migration is a pure import-path swap with zero call-site changes). The root package `github.com/larsartmann/go-etag` is now a deprecated alias shim for the server package: every v0.1.x identifier remains available unchanged, with `// Deprecated:` markers nudging consumers toward the new import path. The shim will be removed in v1.0.0.
-
-### Fixed
-
-- Nothing yet.
 
 ## [0.1.1] - 2026-08-14
 
@@ -54,6 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BDD-style spec suite (`etag_bdd_test.go`) mapping RFC 7232 sections to behavioral expectations.
 - Fuzz tests for `ParseETag` and `ParseETagList` verifying no panics and round-trip integrity on arbitrary input.
 
-[Unreleased]: https://github.com/larsartmann/go-etag/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/Larsartmann/go-etag/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Larsartmann/go-etag/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/larsartmann/go-etag/releases/tag/v0.1.1
 [0.1.0]: https://github.com/larsartmann/go-etag/releases/tag/v0.1.0
