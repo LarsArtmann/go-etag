@@ -191,7 +191,7 @@ flowchart TD
 - [x] All 5 consumer repos build + test after import swap; diffs contain only import lines (httputil, library-policy, cqrs-htmx committed with a temporary relative `replace` until v0.2.0; DiscordSync and nsfw-classifier migrate after the go-etag push because their Nix flakes pin go-etag by rev and re-vendor from it)
 - [x] README, AGENTS.md (incl. hook fields), CHANGELOG, roadmap consistent with code
 - [x] Detailed commit(s) pushed (plan file now; code after review)
-- [ ] _(Gated)_ v0.2.0 tagged, proxy + pkg.go.dev verified
+- [x] _(Gated)_ v0.2.0 tagged, proxy + pkg.go.dev verified
 
 ## 9. Risks
 
