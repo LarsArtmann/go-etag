@@ -1,0 +1,81 @@
+# Post-Release Follow-Up: CI Repair, Pushes & httputil v0.12.0 — Status Report
+
+_Date: 2026-08-16 13:12 CEST. Format: Markdown per explicit user preference (status-report skill default is HTML)._
+_Scope: resumed at the committed-but-unreported state of the v0.2.0 ecosystem sweep. This session: committed the prior status report, repaired CI in go-etag + go-github-kit, answered the three open questions via structured prompt, pushed all five local-only consumer commits, cut the httputil v0.2.0 train, and rescued a mid-release vuln-DB curveball._
+_Predecessor: `2026-08-16_12-28_v0.2.0-release-and-ecosystem-sweep.md` (sections referenced as `12-28 §x`)._
+
+## a. FULLY DONE (verified this session)
+
+| Item | Evidence |
+| --- | --- |
+| **12-28 status report committed** | `9476ecc docs(status)` — was the only dirt; daemon had not raced it. |
+| **go-etag fuzz CI fixed** | Root cause: split moved all fuzz targets into `server/` but the job still ran `-fuzz ./...` (Go rejects multi-package fuzzing); red since the split commit. `f1c77db` scopes to `./server/...`; local 2s sanity run green; CI green (2m19s). |
+| **go-github-kit CI fixed (3 causes)** | (1) `GOEXPERIMENT: jsonv2` set on all Go jobs + devShell + test/lint apps — tests import `encoding/json/v2`, which silently worked locally via the user's global `~/.config/go/env`. (2) flake `vendorHash` rotated for the go-etag v0.2.0 bump. (3) after env fix unmasked lint: govet `stdversion` flags all json/v2 calls as go1.27 APIs — disabled with rationale in `.golangci.yml` (`d5732d3`). CI + Benchmark trend green. |
+| **Plan checklist ticked** | Line 194 `_(Gated)_ v0.2.0 tagged, proxy + pkg.go.dev verified` → `[x]`; committed `caed207`, pushed. All three claims verified: proxy hash matches `be19640`, pkg.go.dev renders shim + server + client subpages. |
+| **Root shim compile-verified at v0.2.0** | Scratch v0.1.1-style consumer (root import, `etag.New`, `ParseETag`, `MatchesIfNoneMatch`, `DefaultETagConfig`) compiles AND runs at v0.2.0 (12-28 f.14). |
+| **All 5 consumer commits pushed (authorized via structured prompt)** | httputil `2a53a20`, library-policy `5fa35f6`, cqrs-htmx `f44fbf20` (+2 foreign commits that were stacked on top, explicitly covered by the authorization), DiscordSync `ee0c4124`, nsfw-classifier — already pushed by a parallel session/daemon before I got there (origin in sync, verified). All four pushes I made verified clean; the foreign `flake.nix` hunk in DiscordSync and foreign dirt in cqrs-htmx remain untouched local state. |
+| **httputil v0.12.0 tagged, proxy verified** | CHANGELOG cut (`6adafe3`) incl. two new entries (go-etag re-platform, server_timing sub-tag rationale); `go mod edit -require` → tagged `server_timing@v0.12.0` (no tidy, no replace in sub-module); workspace-mode build+vet+race+lint all green; annotated tags `v0.12.0` + `server_timing/v0.12.0` at one commit; pushed; scratch `go get` green for BOTH module paths (root pulls `go-etag v0.2.0` transitively — exactly right); root `go mod tidy` no-op; server_timing standalone (GOWORK=off) build+test green; proxy `.info` → hash `6adafe3cc…`, ref `refs/tags/v0.12.0`. |
+| **server_timing/v0.11.0 mystery resolved** | `git ls-remote --tags origin`: NO `server_timing/v0.11.0` exists on the remote (only v0.9.1, v0.10.0). v0.11.0 root shipped requiring v0.9.1 + replace (consumers ignore dependency replaces) — so v0.11.0 was never broken for consumers; the untagged `v0.11.0` require was dev-state only, now superseded by the real v0.12.0 sub-tag. |
+| **Vuln-DB curveball caught and fixed** | Mid-release, GO-2026-6089/6090 (crypto/tls, net/http; fixed in go1.26.6) landed and failed the v0.12.0 tag's CI. `1.26.x` in setup-go still resolved 1.26.5 (manifest lag, verified: go1.26.6 exists on go.dev). Definitive fix: job-level `GOTOOLCHAIN: go1.26.6` env — Go's own toolchain switching downloads the pinned version regardless of setup-go. Master CI green (2m22s, `91ecdf7`). |
+| **kit govulncheck hardened** | Same vuln class would break kit's next push; govulncheck-action now runs on `1.26.x` (passed; note it passed on 1.26.5 because kit's symbol traces don't reach the vulns — see f.9). |
+| **/tmp scratch cleaned** | `release-verify-v020`, `kit-verify-v020`, `shim-verify-v020`, `httputil-verify-{root,st}`, both v0.2.0 notes files trashed. Unrelated foreign /tmp artifacts left alone. |
+| **All six repos CI-green on latest master** | go-etag (×2 runs), kit (CI + Benchmark trend), httputil, library-policy, DiscordSync, cqrs-htmx, nsfw-classifier — `gh run list` verified after every push. |
+
+## b. PARTIALLY DONE
+
+| Item | State | Blocker | Effort |
+| --- | --- | --- | --- |
+| **httputil v0.12.0 GitHub Release** | Tag-triggered Release workflow ran from the tag commit (`6adafe3`) whose workflow file predates the GOTOOLCHAIN fix → permanently red (govulncheck on 1.26.5); release never created (`gh release list` shows v0.11.0 as Latest). Module consumers unaffected (proxy green); only the GitHub Release artifact is missing. | Tags immutable; workflow-at-tag can't be retro-fixed. Fix = manual `gh release create v0.12.0 --generate-notes`. Awaiting user GO (see g.1). | S |
+| **Red tag-CI runs on all three of today's release tags** | go-etag v0.2.0 (fuzz `./...` bug), kit v0.2.0 (GOEXPERIMENT + vendorHash), httputil v0.12.0 (vuln DB + manifest lag) — every tag's run is red at the tag commit, green on the follow-up master commit. Root cause shared: released without checking `gh run list` first (see d/e). | Historical runs can't be re-verified against fixed workflows. Cosmetic-but-noisy red X's on the releases page. | M (policy, not code) |
+| **kit on pkg.go.dev** | `github.com/LarsArtmann/go-github-kit@v0.2.0` still 404 at 13:12 (5 fetch attempts over ~2.5h, each scheduling a crawl). Proxy resolves fine; go-etag@v0.2.0 rendered within minutes. Kit's capital-L module path or crawl queue is the suspect, not the release. | pkgsite crawl latency, not actionable from here beyond re-fetching. | S (re-check later) |
+
+## c. NOT STARTED
+
+| Item | Why it matters |
+| --- | --- |
+| cqrs-htmx: ~20 other submodules still carry indirect go-etag v0.1.1 refs (12-28 f.22) | Cosmetic — MVS resolves via the direct pins; no replaces exist there. |
+| DiscordSync `nix flake check` (only `nix build` ran) + foreign `stdenv.hostPlatform` hunk decision (12-28 f.18/f.19) | Owner-level hygiene, unchanged from prior report. |
+| library-policy devShell missing go-licenses/vulnix; nsfw tailwind `signal: killed` (12-28 f.20/f.21) | Unchanged; hook debt for owners. |
+| go-etag docs-health pass (ROADMAP/TODO_LIST/FEATURES post-v0.2.0, 12-28 f.24-f.27) | Not touched this session. |
+
+## d. TOTALLY FUCKED UP (honest accounting)
+
+| Item | What happened | Cost / Recovery |
+| --- | --- | --- |
+| **Released three tags on top of red CI without checking** | go-etag master CI had been red since the split (07:33), kit's since the json/v2 commit (07:43), and httputil's vuln failure hit mid-release — I verified everything LOCALLY (build/race/vet/lint/nix) and never once ran `gh run list` before tagging. All three failures were pre-existing or environmental, none were code bugs I introduced — but a 10-second check would have caught two of three before the tag. | Three permanently-red tag runs (b.2). Root fix is process, not code: pre-tag CI check is now a hard gate for me. |
+| **httputil `1.26.x` fix was a guess that didn't work** | First attempt changed go-version to `1.26.x` assuming setup-go would resolve the newest patch; it still installed 1.26.5 (manifest lag — verified go1.26.6 exists on go.dev). Wasted one CI cycle before landing the GOTOOLCHAIN pin. | Lesson: setup-go's manifest lags go.dev by hours; GOTOOLCHAIN env is the authoritative pin. Should have verified what `1.26.x` resolved to in the FIRST failed run's log before writing the fix — the version was printed there (`go version go1.26.5`). |
+| **Race-prone release finishing move (again)** | 12-28 d documented the kit GitHub-release race; this session the httputil Release workflow failed at the tag and I had to catch it by polling `gh release list` after the fact. | The release train now includes an explicit post-push release-existence check; still cost a red run. |
+| **Stale diagnostics nearly seduced me twice** | The IDE still shows 26 lint warnings on `client/cache.go`/`options.go` (unused/exhaustruct) that `golangci-lint run` proves clean — flagged as stale in the continuation summary, re-confirmed untouched. | Zero cost, but every session must re-verify rather than "fix" these. |
+
+## e. WHAT WE SHOULD IMPROVE!
+
+- **Pre-tag CI gate**: `gh run list` (and ideally a green run on the release-prep commit itself) before ANY `git tag`. Today's three red tags all trace to skipping this. Cheap, deterministic, catches everything local gates cannot (OS matrices, vuln DB drift, env differences like GOEXPERIMENT).
+- **Toolchain pinning belongs in the repo, not the runner**: `GOTOOLCHAIN: goX.Y.Z` at workflow level survives setup-go manifest lag, runner image drift, and vuln-DB surprises. Both httputil jobs now have it; kit and go-etag should follow the same pattern on their next touch (see f.9).
+- **The three-question structured prompt worked extremely well**: one interruption, three unambiguous GOs, zero back-and-forth. Repeat for any gated batch (pushes, releases, ownership).
+- **`git ls-remote --tags origin` before trusting local tag lists**: resolved the server_timing mystery in one command; local `git tag -l` had been misleading the assessment.
+- **Parallel-session discipline held**: foreign dirt in cqrs-htmx/DiscordSync survived five pushes and four CI verifications untouched; nsfw-classifier's push by another session was detected (not duplicated) via a pre-push status check.
+
+## f. NEXT (up to 25, prioritized)
+
+1. User GO on g.1 → `gh release create v0.12.0 --generate-notes` for httputil (tag exists; only the Release artifact is missing).
+2. User GO on g.2 → retrofit pre-tag CI gate (check `gh run list` green) into the go-release skill's gate list / personal release checklist.
+3. User GO on g.3 → GOTOOLCHAIN-pin kit's govulncheck (its current pass on 1.26.5 is trace-luck, not immunity — httputil's server paths reach the vulns, kit's transport paths don't... yet).
+4. Re-check kit on pkg.go.dev after a few hours; if still 404 by tomorrow, investigate module-path casing (capital `LarsArtmann`) vs pkgsite.
+5. cqrs-htmx: after the foreign composition-seams session lands, tidy the ~20 submodules' indirect go-etag refs to v0.2.0 (cosmetic).
+6. DiscordSync: `nix flake check`; foreign flake hunk decision (owner).
+7. library-policy: add go-licenses + vulnix to devShell (pre-commit can pass again).
+8. nsfw-classifier: BuildFlow tailwind-build `signal: killed` (devShell eval vs store contention).
+9. kit: replace govulncheck's `go-version: 1.26.x` with the GOTOOLCHAIN env pin (same pattern as httputil) — manifest lag makes `1.26.x` resolve to whatever setup-go knows, not what's released.
+10. go-etag: consider GOTOOLCHAIN pin in its CI too (no govulncheck job exists there today — adding one is optional; the fuzz job fix already landed).
+11. go-etag docs-health pass: ROADMAP/TODO_LIST/FEATURES/README badge post-v0.2.0 (12-28 f.24-f.27).
+12. Benchmark archive v0.1.1→v0.2.0 into `reports/` (12-28 f.31).
+13. Superseded-pointer notes in the 09-42/11-33 reports → 12-28 report (12-28 f.32) and 12-28 → this report.
+14. Ecosystem completeness search for public go-etag consumers beyond the known six (12-28 f.29).
+15. cqrs-htmx middleware-showcase runtime-verify (start the example server once, 12-28 f.23).
+16. DiscordSync go-cqrs-lite vendor breakage + pin drift — user chose "leave documented" (12-28 f.15-17 stay owner-handoff items; no action from me).
+
+## g. QUESTIONS (cannot resolve myself)
+
+1. **httputil v0.12.0 GitHub Release**: the tag's Release workflow is permanently red (workflow file at the tag commit predates the toolchain fix; tags immutable). Module + proxy + CI on master are all green. Create the GitHub Release manually (`gh release create v0.12.0 --generate-notes`), or leave the tag release-less?
+2. **Pre-tag CI gate policy**: all three of today's release tags shipped with red tag-CI runs (every failure pre-existing/environmental, all fixed on master within the hour). Accept the red X's as historical noise, or do you want the go-release skill's gate list amended to require a green `gh run list` before tagging?
+3. **kit toolchain hardening**: kit's govulncheck passed on 1.26.5 only because its code paths don't currently reach the new vulns. Apply the same explicit `GOTOOLCHAIN: go1.26.6` pin to kit now (5-minute change, one CI cycle), or leave it until its next release?
