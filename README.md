@@ -7,11 +7,11 @@
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/go-etag/server.svg)](https://pkg.go.dev/github.com/larsartmann/go-etag/server)
 
-| Package                                            | Purpose                                                                    |
-| ------------------------------------------------- | -------------------------------------------------------------------------- |
-| [`go-etag/server`](https://pkg.go.dev/github.com/larsartmann/go-etag/server) (package `etag`)   | Server middleware: generate ETags from bodies, answer `If-None-Match` with 304 |
-| [`go-etag/client`](https://pkg.go.dev/github.com/larsartmann/go-etag/client) (package `etagclient`) | Client `http.RoundTripper`: conditional GET cache, 304 rebuilt as 200      |
-| `go-etag` (root)                                    | Deprecated alias shim for the server package; removed in v1.0.0            |
+| Package                                                                                             | Purpose                                                                        |
+| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [`go-etag/server`](https://pkg.go.dev/github.com/larsartmann/go-etag/server) (package `etag`)       | Server middleware: generate ETags from bodies, answer `If-None-Match` with 304 |
+| [`go-etag/client`](https://pkg.go.dev/github.com/larsartmann/go-etag/client) (package `etagclient`) | Client `http.RoundTripper`: conditional GET cache, 304 rebuilt as 200          |
+| `go-etag` (root)                                                                                    | Deprecated alias shim for the server package; removed in v1.0.0                |
 
 ---
 
@@ -112,13 +112,13 @@ transport := etagclient.NewTransport(next, etagclient.Options{
 })
 ```
 
-| Field              | Type                       | Default   | Description                                                          |
-| ------------------ | -------------------------- | --------- | -------------------------------------------------------------------- |
-| `KeyFunc`          | `func(*http.Request) string` | URL string | Derives the cache key. Must scope by credential when responses vary by caller |
-| `MaxEntries`      | `int`                      | `256`     | Cache bound; oldest entry evicted (FIFO)                             |
-| `MaxBodyBytes`    | `int`                      | `1048576` (1 MiB) | Larger bodies pass through uncached, fully intact          |
-| `PreserveOn304`   | `[]string`                 | `["Date"]` | Headers copied fresh from the 304 onto the rebuilt 200 (RFC 7232 §4.1); empty non-nil slice disables merging |
-| `FromCacheHeader` | `string`                   | `""`      | When set, rebuilt responses carry it with value `1` for diagnostics  |
+| Field             | Type                         | Default           | Description                                                                                                  |
+| ----------------- | ---------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| `KeyFunc`         | `func(*http.Request) string` | URL string        | Derives the cache key. Must scope by credential when responses vary by caller                                |
+| `MaxEntries`      | `int`                        | `256`             | Cache bound; oldest entry evicted (FIFO)                                                                     |
+| `MaxBodyBytes`    | `int`                        | `1048576` (1 MiB) | Larger bodies pass through uncached, fully intact                                                            |
+| `PreserveOn304`   | `[]string`                   | `["Date"]`        | Headers copied fresh from the 304 onto the rebuilt 200 (RFC 7232 §4.1); empty non-nil slice disables merging |
+| `FromCacheHeader` | `string`                     | `""`              | When set, rebuilt responses carry it with value `1` for diagnostics                                          |
 
 `transport.Stats()` reports `Stats{Hits, Stored, Entries}` for cache telemetry.
 
@@ -349,10 +349,10 @@ Measured on AMD Ryzen AI MAX+ 395:
 
 Client transport (`go test -bench=. ./client/`):
 
-| Benchmark                        | ns/op | B/op | allocs/op |
-| -------------------------------- | ----- | ---- | --------- |
-| `Transport` fresh 200 (store)    | 1885  | 2160 | 18        |
-| `Transport` 304 rebuild (cache)  | 1259  | 2160 | 18        |
+| Benchmark                       | ns/op | B/op | allocs/op |
+| ------------------------------- | ----- | ---- | --------- |
+| `Transport` fresh 200 (store)   | 1885  | 2160 | 18        |
+| `Transport` 304 rebuild (cache) | 1259  | 2160 | 18        |
 
 The middleware adds sub-microsecond overhead per request. For a typical API returning small JSON payloads, the ETag computation and If-None-Match matching are negligible compared to network I/O; on the client side, one cache rebuild costs less than a single network round trip by three orders of magnitude.
 
@@ -366,6 +366,7 @@ go get github.com/larsartmann/go-etag/client   # client transport (package etagc
 ### Upgrading from v0.1.x
 
 The root package `github.com/larsartmann/go-etag` is now a deprecated alias
+
 > shim for the server package. Existing code keeps compiling unchanged
 > (deprecation warnings only); migration is a pure import-path swap:
 >
