@@ -104,7 +104,7 @@ func (t *Transport) rebuildFromCache(notModified *http.Response, entry cacheEntr
 		header.Set(t.opts.FromCacheHeader, markerValue)
 	}
 
-	return &http.Response{ //nolint:exhaustruct // transport metadata has no meaning on a rebuilt response
+	return &http.Response{
 		Status:        statusTextOK,
 		StatusCode:    http.StatusOK,
 		Proto:         notModified.Proto,

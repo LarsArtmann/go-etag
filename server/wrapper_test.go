@@ -20,8 +20,8 @@ func TestHijackDelegate_UnsupportedWriter(t *testing.T) {
 		t.Fatal("hijackDelegate returned nil error for non-hijackable writer")
 	}
 
-	var classified *errorfamily.Error
-	if !errors.As(err, &classified) {
+	classified, ok := errors.AsType[*errorfamily.Error](err)
+	if !ok {
 		t.Fatalf("error is %T, want *errorfamily.Error", err)
 	}
 
@@ -45,8 +45,8 @@ func TestHijackDelegate_HijackFails(t *testing.T) {
 		t.Fatal("hijackDelegate returned nil error for failing hijack writer")
 	}
 
-	var classified *errorfamily.Error
-	if !errors.As(err, &classified) {
+	classified, ok := errors.AsType[*errorfamily.Error](err)
+	if !ok {
 		t.Fatalf("error is %T, want *errorfamily.Error", err)
 	}
 

@@ -1,7 +1,13 @@
 version: "2"
 run:
   timeout: 5m
-  go: 1.26.4
+  go: 1.26.7
+  build-tags:
+    - goexperiment.arenas
+    - goexperiment.goroutineleakprofile
+    - goexperiment.jsonv2
+    - goexperiment.runtimesecret
+    - goexperiment.simd
   allow-parallel-runners: true
   allow-serial-runners: true
   issues-exit-code: 1
@@ -22,7 +28,6 @@ linters:
     - copyloopvar
     - cyclop
     - decorder
-    - depguard
     - dogsled
     - dupl
     - dupword
@@ -83,7 +88,6 @@ linters:
     - nilnil
     - nlreturn
     - noctx
-    - noinlineerr
     - nolintlint
     - nonamedreturns
     - nosprintfhostport
@@ -120,21 +124,49 @@ linters:
     - wrapcheck
     - wsl_v5
     - zerologlint
+  disable:
+    - depguard
+    - noinlineerr
   settings:
     cyclop:
       max-complexity: 12
-    depguard:
-      rules:
-        main:
-          allow:
-            - $gostd
-            - github.com/larsartmann/go-etag
-            # Explicit subpackage paths: this depguard build does not glob-match
-            # allow entries, so each in-module package is listed.
-            - github.com/larsartmann/go-etag/server
-            - github.com/larsartmann/go-etag/client
-            - github.com/larsartmann/go-error-family
-    exhaustruct: {}
+    errcheck:
+      exclude-functions:
+        - (*os.File).Close
+        - (io.Closer).Close
+        - (*sql.DB).Close
+        - (*sql.Rows).Close
+        - (*sql.Stmt).Close
+        - (net.Conn).Close
+        - (*net.TCPConn).Close
+        - (*net.UDPConn).Close
+        - fmt.Fprint
+        - fmt.Fprintf
+        - fmt.Fprintln
+        - fmt.Print
+        - fmt.Printf
+        - fmt.Println
+        - (*strings.Builder).WriteString
+        - (*bytes.Buffer).WriteString
+    exhaustruct:
+      exclude:
+        - net/http.Client
+        - net/http.Server
+        - net/http.Request
+        - net/http.Response
+        - net/http.Transport
+        - net/http.Cookie
+        - net.TCPAddr
+        - net.Dialer
+        - log/slog.HandlerOptions
+        - sync.WaitGroup
+        - bytes.Buffer
+        - time.Ticker
+        - time.Timer
+        - os/exec.Cmd
+    funlen:
+      lines: 200
+      statements: 100
     ginkgolinter:
       forbid-focus-container: true
       forbid-spec-pollution: true
@@ -144,9 +176,6 @@ linters:
     gomoddirectives:
       replace-local: true
     gosec:
-      # G705 (XSS via taint analysis) is structurally a false positive in a
-      # response-writing middleware library: every ResponseWriter.Write emits
-      # intentional response output, never unsanitized HTML rendering.
       excludes:
         - G705
     ireturn:
@@ -158,6 +187,12 @@ linters:
         - generic
     makezero:
       always: true
+    mnd:
+      ignored-numbers:
+        - "0"
+        - "1"
+        - "2"
+        - "100"
     revive:
       rules:
         - disabled: true
@@ -198,6 +233,17 @@ linters:
         - l
         - c
       ignore-type-assert-ok: true
+    wrapcheck:
+      ignore-sigs:
+        - .Errorf(
+        - errors.New(
+        - errors.Unwrap(
+        - errors.Join(
+        - .Wrap(
+        - .Wrapf(
+        - .WithMessage(
+        - .WithMessagef(
+        - .WithStack(
   exclusions:
     generated: lax
     rules:

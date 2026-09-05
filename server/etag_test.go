@@ -740,8 +740,8 @@ func TestNew_OverflowWriteError(t *testing.T) {
 		t.Fatal("Write returned nil error for overflow to failing writer")
 	}
 
-	var classified *errorfamily.Error
-	if !errors.As(writeErr, &classified) {
+	classified, ok := errors.AsType[*errorfamily.Error](writeErr)
+	if !ok {
 		t.Fatalf("Write error is %T, want *errorfamily.Error", writeErr)
 	}
 
