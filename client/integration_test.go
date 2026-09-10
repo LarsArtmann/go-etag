@@ -89,3 +89,91 @@ func TestIntegrationRealServerRoundTrip(t *testing.T) {
 		t.Errorf("revalidations = %d, want exactly one conditional round trip", got)
 	}
 }
+
+// TestIntegrationUnsafeMethodInvalidatesThroughRealServer runs the RFC 9111
+// §4.4 invalidation through a real net/http server and client: a 204 answer
+// to PUT must invalidate the stored GET entry, so the next GET refetches
+// unconditionally and receives the mutated representation instead of
+// revalidating the pre-mutation body.
+func TestIntegrationUnsafeMethodInvalidatesThroughRealServer(t *testing.T) {
+	t.Parallel()
+
+	var (
+		mutated      atomic.Bool
+		conditionals atomic.Int64
+	)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPut:
+			mutated.Store(true)
+
+			w.WriteHeader(http.StatusNoContent)
+		case http.MethodGet:
+			if r.Header.Get("If-None-Match") != "" {
+				conditionals.Add(1)
+			}
+
+			if mutated.Load() {
+				w.Header().Set("ETag", `"mutated-v2"`)
+				_, _ = w.Write([]byte("mutated payload"))
+
+				return
+			}
+
+			w.Header().Set("ETag", `"v1"`)
+			_, _ = w.Write([]byte("original payload"))
+		}
+	}))
+	t.Cleanup(server.Close)
+
+	client := &http.Client{Transport: NewTransport(http.DefaultTransport, Options{})}
+
+	read := func() (int, string) {
+		t.Helper()
+
+		resp, err := client.Get(server.URL + "/thing")
+		if err != nil {
+			t.Fatalf("GET: %v", err)
+		}
+
+		defer func() { _ = resp.Body.Close() }()
+
+		data, readErr := io.ReadAll(resp.Body)
+		if readErr != nil {
+			t.Fatalf("read body: %v", readErr)
+		}
+
+		return resp.StatusCode, string(data)
+	}
+
+	status, body := read()
+	if status != http.StatusOK || body != "original payload" {
+		t.Fatalf("first GET = %d %q, want the original payload", status, body)
+	}
+
+	put, err := http.NewRequestWithContext(t.Context(), http.MethodPut, server.URL+"/thing", nil)
+	if err != nil {
+		t.Fatalf("build PUT: %v", err)
+	}
+
+	resp, err := client.Do(put)
+	if err != nil {
+		t.Fatalf("PUT: %v", err)
+	}
+
+	_ = resp.Body.Close()
+
+	if resp.StatusCode != http.StatusNoContent {
+		t.Fatalf("PUT status = %d, want 204", resp.StatusCode)
+	}
+
+	status, body = read()
+	if status != http.StatusOK || body != "mutated payload" {
+		t.Fatalf("post-PUT GET = %d %q, want the mutated payload (RFC 9111 §4.4)", status, body)
+	}
+
+	if got := conditionals.Load(); got != 0 {
+		t.Errorf("conditional GETs = %d, want 0 (the entry was invalidated, not revalidated)", got)
+	}
+}

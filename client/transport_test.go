@@ -603,3 +603,226 @@ func TestRoundTripConcurrent(t *testing.T) {
 		t.Errorf("hits+stored = %d, want %d (every request is a store or a hit)", got.Hits+got.Stored, total)
 	}
 }
+
+// errCloseBoom is the sentinel closeFailingBody replays from Close.
+var errCloseBoom = errors.New("close boom")
+
+// closeFailingBody yields its data normally but fails on Close, exercising
+// the store path that must keep the response re-readable when the original
+// body cannot be released.
+type closeFailingBody struct {
+	data []byte
+	read int
+}
+
+func (b *closeFailingBody) Read(p []byte) (int, error) {
+	if b.read >= len(b.data) {
+		return 0, io.EOF
+	}
+
+	n := copy(p, b.data[b.read:])
+	b.read += n
+
+	return n, nil
+}
+
+func (b *closeFailingBody) Close() error {
+	return errCloseBoom
+}
+
+// TestStoreCloseFailureKeepsResponseReadable pins the store path when the
+// original body refuses to close: the caller still receives a fully
+// re-readable body with accurate Content-Length, and the unreadable-to-close
+// response is never stored.
+func TestStoreCloseFailureKeepsResponseReadable(t *testing.T) {
+	t.Parallel()
+
+	next := roundTripperFunc(func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{
+			Status:        "200 OK",
+			StatusCode:    http.StatusOK,
+			Proto:         "HTTP/1.1",
+			ProtoMajor:    1,
+			ProtoMinor:    1,
+			Header:        stubHeader(headerPair{"ETag", `"v"`}),
+			Body:          &closeFailingBody{data: []byte("payload")},
+			ContentLength: -1,
+			Request:       nil,
+		}, nil
+	})
+
+	transport := NewTransport(next, Options{})
+
+	resp, err := transport.RoundTrip(newGetRequest(t, "https://example.test/data"))
+	if err != nil {
+		t.Fatalf("RoundTrip: %v", err)
+	}
+
+	defer resp.Body.Close()
+
+	data, readErr := io.ReadAll(resp.Body)
+	if readErr != nil {
+		t.Fatalf("read body: %v", readErr)
+	}
+
+	if string(data) != "payload" {
+		t.Errorf("body = %q, want the full payload", data)
+	}
+
+	if resp.ContentLength != int64(len("payload")) {
+		t.Errorf("ContentLength = %d, want %d", resp.ContentLength, len("payload"))
+	}
+
+	if got := transport.Stats(); got.Stored != 0 || got.Entries != 0 {
+		t.Errorf("stats = %+v, want nothing stored when Close fails", got)
+	}
+}
+
+// TestRoundTripNilNilFromNextPassesThrough pins the guard for a broken next
+// RoundTripper that violates its contract by returning (nil, nil): the
+// transport forwards the pair untouched instead of dereferencing a nil
+// response.
+func TestRoundTripNilNilFromNextPassesThrough(t *testing.T) {
+	t.Parallel()
+
+	next := roundTripperFunc(func(_ *http.Request) (*http.Response, error) {
+		return nil, nil //nolint:nilnil // the contract-violating pair is the subject under test
+	})
+
+	transport := NewTransport(next, Options{})
+
+	resp, err := transport.RoundTrip(newGetRequest(t, "https://example.test/data"))
+	if err != nil {
+		t.Fatalf("RoundTrip error = %v, want nil", err)
+	}
+
+	if resp != nil {
+		_ = resp.Body.Close()
+
+		t.Errorf("RoundTrip = %v, want nil, nil passed through", resp)
+	}
+}
+
+// TestWeaklyMatchesValidator pins the comparison the §4.3.4 validator filter
+// relies on: the same opaque tag matches regardless of the W/ marker, in
+// either argument, while a lowercase w/ is not a weakness marker and an empty
+// side never matches.
+func TestWeaklyMatchesValidator(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		a    string
+		b    string
+		want bool
+	}{
+		{name: "identical strong forms", a: `"v"`, b: `"v"`, want: true},
+		{name: "weak vs strong", a: `W/"v"`, b: `"v"`, want: true},
+		{name: "strong vs weak", a: `"v"`, b: `W/"v"`, want: true},
+		{name: "both weak", a: `W/"v"`, b: `W/"v"`, want: true},
+		{name: "different opaque tags", a: `"a"`, b: `"b"`, want: false},
+		{name: "lowercase w is not a marker", a: `w/"v"`, b: `"v"`, want: false},
+		{name: "empty left", a: "", b: `"v"`, want: false},
+		{name: "empty right", a: `"v"`, b: "", want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := weaklyMatchesValidator(tt.a, tt.b); got != tt.want {
+				t.Errorf("weaklyMatchesValidator(%q, %q) = %v, want %v", tt.a, tt.b, got, tt.want)
+			}
+		})
+	}
+}
+
+// TestMergeHeaderPrefersExactThenCanonical pins the dual lookup: a literal
+// non-canonical key in the source map wins, and a canonical name falls back
+// to the source's canonical entry, so restricted PreserveOn304 lists work
+// regardless of how the 304's header map was built.
+func TestMergeHeaderPrefersExactThenCanonical(t *testing.T) {
+	t.Parallel()
+
+	t.Run("exact non-canonical key wins", func(t *testing.T) {
+		t.Parallel()
+
+		dst := stubHeader(headerPair{"X-A", "dst"})
+		src := http.Header{"x-b": {"src"}}
+
+		mergeHeader(dst, src, "x-b")
+
+		// The merged value lands under the literal key, invisible to Get's
+		// canonicalized lookup: the dual-key sharp edge for restricted
+		// PreserveOn304 lists built from non-canonical names.
+		//nolint:staticcheck // SA1008: the non-canonical key is the subject under test
+		if got := dst["x-b"]; len(got) != 1 || got[0] != "src" {
+			t.Errorf("dst[x-b] = %v, want [src] via the exact key", got)
+		}
+	})
+
+	t.Run("canonical fallback for lowercase name", func(t *testing.T) {
+		t.Parallel()
+
+		dst := stubHeader(headerPair{"X-A", "dst"})
+		src := stubHeader(headerPair{"Date", "fresh"})
+
+		mergeHeader(dst, src, "date")
+
+		if got := dst.Get("Date"); got != "fresh" {
+			t.Errorf("Date = %q, want fresh via the canonical fallback", got)
+		}
+	})
+
+	t.Run("absent name leaves destination untouched", func(t *testing.T) {
+		t.Parallel()
+
+		dst := stubHeader(headerPair{"Date", "stale"})
+		src := stubHeader(headerPair{"ETag", `"v"`})
+
+		mergeHeader(dst, src, "Age")
+
+		if got := dst.Get("Age"); got != "" {
+			t.Errorf("Age = %q, want empty (source has no Age)", got)
+		}
+
+		if got := dst.Get("Date"); got != "stale" {
+			t.Errorf("Date = %q, want the stored value", got)
+		}
+	})
+}
+
+// TestIsUnsafeMethodTable pins the full safe-method set of RFC 9110 §9.2.1
+// that §4.4 invalidation respects: GET, HEAD, OPTIONS, and TRACE are safe;
+// everything else, including CONNECT and methods the spec does not know, is
+// treated as unsafe.
+func TestIsUnsafeMethodTable(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		method string
+		unsafe bool
+	}{
+		{http.MethodGet, false},
+		{http.MethodHead, false},
+		{http.MethodOptions, false},
+		{http.MethodTrace, false},
+		{http.MethodPost, true},
+		{http.MethodPut, true},
+		{http.MethodDelete, true},
+		{http.MethodPatch, true},
+		{http.MethodConnect, true},
+		{"BREW", true},
+		{"", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.method, func(t *testing.T) {
+			t.Parallel()
+
+			if got := isUnsafeMethod(tt.method); got != tt.unsafe {
+				t.Errorf("isUnsafeMethod(%q) = %v, want %v", tt.method, got, tt.unsafe)
+			}
+		})
+	}
+}

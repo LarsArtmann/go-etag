@@ -76,3 +76,6 @@ jobs:
 
       - name: Fuzz ETag
         run: go test -run=^$ -fuzz=^FuzzETag$ -fuzztime=30s ./server/...
+
+      - name: Fuzz HasNoStoreDirective
+        run: go test -run=^$ -fuzz=^FuzzHasNoStoreDirective$ -fuzztime=30s ./client/...

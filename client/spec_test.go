@@ -933,3 +933,166 @@ func TestSpecWeakFormOfStoredValidatorIsAdopted(t *testing.T) {
 		t.Errorf("revalidation validator = %q, want the adopted weak form (RFC 9111 §4.3.4)", got)
 	}
 }
+
+// TestSpecOnly200WithValidatorIsStored pins the storage gate the transport
+// applies ahead of RFC 9111 §3: only a 200 carrying a validator is stored,
+// because §4 reuse requires successful validation and §4.3 validation
+// requires a validator. Other final statuses pass through untouched.
+func TestSpecOnly200WithValidatorIsStored(t *testing.T) {
+	t.Parallel()
+
+	for _, spec := range []struct {
+		name   string
+		status int
+	}{
+		{name: "201 Created", status: http.StatusCreated},
+		{name: "206 Partial Content", status: http.StatusPartialContent},
+		{name: "304 Not Modified", status: http.StatusNotModified},
+		{name: "500 Internal Server Error", status: http.StatusInternalServerError},
+	} {
+		t.Run(spec.name, func(t *testing.T) {
+			t.Parallel()
+
+			next := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+				if got := req.Header.Get("If-None-Match"); got != "" {
+					t.Errorf("If-None-Match = %q on second request, want none (nothing stored)", got)
+				}
+
+				return stubResponse(spec.status, stubHeader(headerPair{"ETag", `"v"`}), "body"), nil
+			})
+
+			transport := NewTransport(next, Options{})
+
+			for range 2 {
+				status, _, body := fetch(t, transport, newGetRequest(t, "https://example.test/data"))
+				if status != spec.status || body != "body" {
+					t.Fatalf("response = %d %q, want passthrough %d", status, body, spec.status)
+				}
+			}
+
+			if got := transport.Stats(); got.Stored != 0 || got.Entries != 0 {
+				t.Errorf("stats = %+v, a %d response must never be stored", got, spec.status)
+			}
+		})
+	}
+}
+
+// TestSpecNoStoreOn304DoesNotBlockRebuild pins the reading that RFC 9111
+// §5.2.2.5 governs STORAGE of the response carrying it: the 304 itself is
+// never stored (only 200s are), so its no-store directive cannot veto
+// updating and rebuilding from the already-stored 200 (§4.3.4).
+func TestSpecNoStoreOn304DoesNotBlockRebuild(t *testing.T) {
+	t.Parallel()
+
+	notModified := stubHeader(
+		headerPair{"ETag", `"v"`},
+		headerPair{"Cache-Control", "no-store"},
+		headerPair{"Date", "fresh-date"},
+	)
+
+	stub := &recordedStub{steps: []stubStep{
+		{status: http.StatusOK, header: stubHeader(headerPair{"ETag", `"v"`}), body: "payload"},
+		{status: http.StatusNotModified, header: notModified},
+	}}
+
+	transport := NewTransport(stub, Options{})
+
+	fetch(t, transport, newGetRequest(t, "https://example.test/data"))
+	status, header, body := fetch(t, transport, newGetRequest(t, "https://example.test/data"))
+
+	if status != http.StatusOK || body != "payload" {
+		t.Fatalf("rebuilt response = %d %q, want the cached 200 despite the 304's no-store", status, body)
+	}
+
+	if got := header.Get("Date"); got != "fresh-date" {
+		t.Errorf("Date = %q, want fresh-date (the 304 still freshens the stored entry)", got)
+	}
+
+	if got := transport.Stats().Hits; got != 1 {
+		t.Errorf("hits = %d, want 1 (revalidation proceeded normally)", got)
+	}
+}
+
+// TestSpecFresheningAddsFieldsTheStoredResponseLacks pins the additive half
+// of the §3.2 update rules behind §4.3.4: the cache MUST add each header
+// field in the 304, including fields the stored response never had, and the
+// addition persists to the store for later rebuilds.
+func TestSpecFresheningAddsFieldsTheStoredResponseLacks(t *testing.T) {
+	t.Parallel()
+
+	stub := &recordedStub{steps: []stubStep{
+		{status: http.StatusOK, header: stubHeader(headerPair{"ETag", `"v"`}), body: "payload"},
+		{status: http.StatusNotModified, header: stubHeader(
+			headerPair{"ETag", `"v"`},
+			headerPair{"X-Ratelimit-Limit", "5000"},
+		)},
+		{status: http.StatusNotModified, header: stubHeader(headerPair{"ETag", `"v"`})},
+	}}
+
+	transport := NewTransport(stub, Options{})
+
+	fetch(t, transport, newGetRequest(t, "https://example.test/data"))
+
+	_, header, _ := fetch(t, transport, newGetRequest(t, "https://example.test/data"))
+
+	if got := header.Get("X-Ratelimit-Limit"); got != "5000" {
+		t.Fatalf("X-Ratelimit-Limit = %q, want 5000 added by the 304 (§3.2 add rule)", got)
+	}
+
+	_, header, _ = fetch(t, transport, newGetRequest(t, "https://example.test/data"))
+
+	if got := header.Get("X-Ratelimit-Limit"); got != "5000" {
+		t.Errorf("X-Ratelimit-Limit = %q, want 5000 persisted to the store", got)
+	}
+}
+
+// TestSpecAgeNeverRunsBackwardsAcrossRevalidations pins the field case's
+// masked symptom over a longer conversation: every revalidation's Age
+// replaces the stored one, so the rebuilt response's Age must equal the
+// freshest 304's value and never decrease.
+func TestSpecAgeNeverRunsBackwardsAcrossRevalidations(t *testing.T) {
+	t.Parallel()
+
+	ages := []string{"137882", "138000", "138100", "139000"}
+
+	steps := make([]stubStep, 0, len(ages))
+	steps = append(
+		steps,
+		stubStep{status: http.StatusOK, header: stubHeader(headerPair{"ETag", `"v"`}), body: "payload"},
+	)
+
+	for _, age := range ages[1:] {
+		steps = append(steps, stubStep{
+			status: http.StatusNotModified,
+			header: stubHeader(headerPair{"ETag", `"v"`}, headerPair{"Age", age}),
+		})
+	}
+
+	stub := &recordedStub{steps: steps}
+	transport := NewTransport(stub, Options{})
+	url := "https://api.dev.test/articles"
+
+	fetch(t, transport, newGetRequest(t, url))
+
+	previous := ages[0]
+
+	for _, wantAge := range ages[1:] {
+		_, header, _ := fetch(t, transport, newGetRequest(t, url))
+
+		age := header.Get("Age")
+
+		if age != wantAge {
+			t.Errorf("Age = %q, want the 304's %q", age, wantAge)
+		}
+
+		if age < previous {
+			t.Errorf("Age = %q, ran backwards from %q", age, previous)
+		}
+
+		previous = wantAge
+	}
+
+	if got := transport.Stats().Hits; got != int64(len(ages)-1) {
+		t.Errorf("hits = %d, want %d (every revalidation rebuilt from cache)", got, len(ages)-1)
+	}
+}

@@ -85,3 +85,55 @@ func TestNewTransportDefaultsToDefaultTransport(t *testing.T) {
 		t.Error("nil next must fall back to http.DefaultTransport")
 	}
 }
+
+func TestResponseCacheFreshenReplacesMatchingEntry(t *testing.T) {
+	t.Parallel()
+
+	cache := newResponseCache(2)
+
+	cache.set("k1", cacheEntry{etag: `"a"`, body: []byte("old")})
+	cache.freshen("k1", `"a"`, cacheEntry{etag: `"a"`, body: []byte("new")})
+
+	entry, ok := cache.get("k1")
+	if !ok {
+		t.Fatal("k1 must be present")
+	}
+
+	if string(entry.body) != "new" {
+		t.Errorf("body = %q, want the freshened value", entry.body)
+	}
+}
+
+func TestResponseCacheFreshenSkipsWhenValidatorMovedOn(t *testing.T) {
+	t.Parallel()
+
+	// RFC 9111 §4.3.4 updates the stored response that was validated; when a
+	// concurrent 200 already replaced the entry, the older freshening must
+	// not overwrite the newer response.
+	cache := newResponseCache(2)
+
+	cache.set("k1", cacheEntry{etag: `"old"`, body: []byte("validated entry")})
+	cache.set("k1", cacheEntry{etag: `"new"`, body: []byte("concurrent 200")})
+	cache.freshen("k1", `"old"`, cacheEntry{etag: `"old"`, body: []byte("stale freshening")})
+
+	entry, ok := cache.get("k1")
+	if !ok {
+		t.Fatal("k1 must be present")
+	}
+
+	if entry.etag != `"new"` || string(entry.body) != "concurrent 200" {
+		t.Errorf("entry = %s %q, want the concurrent 200 to win", entry.etag, entry.body)
+	}
+}
+
+func TestResponseCacheFreshenAbsentKeyIsInert(t *testing.T) {
+	t.Parallel()
+
+	cache := newResponseCache(2)
+
+	cache.freshen("missing", `"a"`, cacheEntry{etag: `"a"`})
+
+	if got := cache.stats().Entries; got != 0 {
+		t.Errorf("entries = %d, want 0 (freshening must not create entries)", got)
+	}
+}

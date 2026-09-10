@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `client/spec_test.go`: an RFC 9111-grounded test suite for the client transport, motivated by a field report of a CDN serving a two-day-stale 200 (Age: 137882) whose ETag faithfully described the stale entity. Pins Age surfacing, §4.3.4 freshening, stored-validator persistence, the no-store storage ban (§3), §4.4 invalidation, HEAD bypass, and caller-owned `If-None-Match`.
 - RFC 9111 §4.4 conformance: a non-error (2xx/3xx) response to an unsafe request method (anything but GET/HEAD/OPTIONS/TRACE) now invalidates the stored entry for that URI, so a mutation cannot leave a pre-mutation body waiting to be rebuilt.
 - `client/integration_test.go`: a real `httptest.Server` + `http.Client` round trip verifying canonical header forms, the bodiless 304, and Age freshening against production net/http rather than stubs.
+- Five unpinned RFC statements now have conformance tests: the 304's mandatory 200 metadata (RFC 7232 §4.1), the case-sensitive `W/` weak prefix (RFC 7232 §2.3), §4.4 invalidation scoped to the mutated URI only, the never-store rule for validator-less 200s, and weak-comparison adoption of a 304's `W/`-marked validator (RFC 9110 §8.8.3.2).
+- `deprecated_test.go`: an export-parity suite for the deprecated root shim — compile-time type-identity assertions plus behavior smoke tests through every re-exported wrapper, so alias drift breaks the build instead of silently splitting the domain (root package coverage 0% → 100%).
+- Client branch-coverage specs: `freshen` skip-guard on concurrent replacement, the store path when a body refuses to Close, `weaklyMatchesValidator` edge table, `mergeHeader` exact-key/canonical-fallback duality, and passthrough of a contract-violating `(nil, nil)` from `next` (client coverage 94.3% → 97.7%).
+- Client spec pin-ups: only a 200 with a validator is stored (201/206/304/500 pass through), a `no-store`-carrying 304 still freshens and rebuilds, the exhaustive safe/unsafe method table, additive freshening of fields the stored response lacked, and Age monotonicity across repeated revalidations.
+- `client/fuzz_test.go`: `FuzzHasNoStoreDirective` fuzzes the untrusted `Cache-Control` parser with a soundness property (a literal top-level `no-store` directive is always detected) and a CI fuzz job mirroring the server's.
+- `server/integration_test.go`: real-wire server tests pinning Content-Length framing on 200s, HEAD body suppression with advertised length, and a bodiless 304 without Content-Length over TCP.
+- `TestIntegrationUnsafeMethodInvalidatesThroughRealServer`: §4.4 invalidation verified through a real server — a 204 PUT forces the next GET to refetch unconditionally.
+- `Example_ageAwareStalenessCheck`: documents rejecting edge-served stale entities via the surfaced Age header.
 
 ### Changed
 

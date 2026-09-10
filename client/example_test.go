@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 )
 
 // ExampleNewTransport wraps a stubbed origin with a conditional GET cache and
@@ -57,4 +58,66 @@ func ExampleNewTransport() {
 	// 200 hello from-cache=1
 	// network calls: 2
 	// stats: {Hits:1 Stored:1 Entries:1}
+}
+
+// Example_ageAwareStalenessCheck demonstrates the field case that motivated
+// Age surfacing: an edge cache can answer 200 with a faithful ETag attached
+// to a days-old entity. A conditional-GET client that cares about freshness
+// reads the Age the transport surfaces and rejects responses older than its
+// tolerance, because ETag alone cannot detect that case.
+func Example_ageAwareStalenessCheck() {
+	next := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		if req.Header.Get("If-None-Match") == `"stale-v1"` {
+			header := stubHeader(headerPair{"ETag", `"stale-v1"`}, headerPair{"Age", "137900"})
+
+			return stubResponse(http.StatusNotModified, header, ""), nil
+		}
+
+		header := stubHeader(headerPair{"ETag", `"stale-v1"`}, headerPair{"Age", "137882"})
+
+		return stubResponse(http.StatusOK, header, "two-day-old payload"), nil
+	})
+
+	client := &http.Client{Transport: NewTransport(next, Options{})}
+
+	resp, err := client.Get("https://api.dev.test/articles")
+	if err != nil {
+		fmt.Println("error:", err)
+
+		return
+	}
+
+	body, readErr := io.ReadAll(resp.Body)
+	_ = resp.Body.Close()
+
+	if readErr != nil {
+		fmt.Println("error:", readErr)
+
+		return
+	}
+
+	age, parseErr := strconv.Atoi(resp.Header.Get("Age"))
+	if parseErr != nil {
+		fmt.Println("error:", parseErr)
+
+		return
+	}
+
+	const staleAfterSeconds = 24 * 60 * 60
+
+	if age > staleAfterSeconds {
+		fmt.Printf(
+			"rejecting %q: Age %d exceeds %d seconds, the edge may hold stale content\n",
+			string(body),
+			age,
+			staleAfterSeconds,
+		)
+
+		return
+	}
+
+	fmt.Println("fresh:", string(body))
+
+	// Output:
+	// rejecting "two-day-old payload": Age 137882 exceeds 86400 seconds, the edge may hold stale content
 }

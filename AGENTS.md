@@ -179,7 +179,10 @@ Flush-path write errors are forwarded to `ETagConfig.OnError` (a `func(*errorfam
 - **Plain `testing`** — no assertion libraries
 - **BDD-style specs** in `server/etag_bdd_test.go` — Describe/Context/It pattern using `t.Run`
 - **RFC-citing spec suite** in `client/spec_test.go` — pins the transport to RFC 9111 requirements (Age surfacing §5.1, freshening §4.3.4/§3.2, no-store ban §3, invalidation §4.4, HEAD bypass, caller-owned If-None-Match); every test cites its section
-- **Real-server integration test** in `client/integration_test.go` — httptest.Server + real http.Client round trip for canonical header forms and bodiless 304s
+- **Real-server integration test** in `client/integration_test.go` — httptest.Server + real http.Client round trip for canonical header forms, bodiless 304s, and §4.4 invalidation through a real PUT (the next GET must refetch unconditionally)
+- **Real-wire server integration** in `server/integration_test.go` — pins Content-Length framing on 200s, HEAD body suppression with advertised length, and a bodiless 304 without Content-Length over TCP (the rest of the server suite is recorder-only)
+- **Shim export-parity suite** in `deprecated_test.go` (root) — compile-time type-identity assertions plus wrapper smoke tests pin the deprecated alias surface until its v1.0.0 removal
+- **Client fuzz target** in `client/fuzz_test.go` — `FuzzHasNoStoreDirective` with a soundness property (a literal top-level no-store directive is always detected), wired into the CI fuzz job alongside the server targets
 - **`t.Errorf`** for non-fatal, **`t.Fatalf`** for fatal assertions
 - **`httptest.NewRecorder()`** + `httptest.NewRequest()` for server doubles; `roundTripperFunc` stubs for client doubles
 - **Shared test helpers** in `server/testutil_test.go`; client helpers live in `client/transport_test.go`
