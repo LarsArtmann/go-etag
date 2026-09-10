@@ -277,6 +277,66 @@ func TestRoundTripSeparatesCredentialsViaKeyFunc(t *testing.T) {
 	}
 }
 
+func TestRoundTripDerivesCacheKeyLazily(t *testing.T) {
+	t.Parallel()
+
+	// The cache key is derived only when a method can use it: GET needs it
+	// for the lookup up front, while a non-GET needs it only when its
+	// response actually invalidates (RFC 9111 §4.4). Passthrough round trips
+	// must never pay for key derivation.
+	var keyCalls int
+
+	next := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		if req.Method == http.MethodGet {
+			header := stubHeader(headerPair{"ETag", `"v"`})
+
+			return stubResponse(http.StatusOK, header, "body"), nil
+		}
+
+		return stubResponse(http.StatusInternalServerError, nil, ""), nil
+	})
+
+	transport := NewTransport(next, Options{
+		KeyFunc: func(req *http.Request) string {
+			keyCalls++
+
+			return req.URL.String()
+		},
+	})
+
+	post := newSpecRequest(t, http.MethodPost, "https://example.test/things")
+	fetch(t, transport, post)
+
+	if keyCalls != 0 {
+		t.Fatalf("KeyFunc called %d times for a non-invalidating POST, want 0", keyCalls)
+	}
+
+	get := newGetRequest(t, "https://example.test/things")
+	fetch(t, transport, get)
+
+	if keyCalls != 1 {
+		t.Fatalf("KeyFunc called %d times for one GET, want 1", keyCalls)
+	}
+
+	next = roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		return stubResponse(http.StatusNoContent, nil, ""), nil
+	})
+
+	transport = NewTransport(next, Options{
+		KeyFunc: func(req *http.Request) string {
+			keyCalls++
+
+			return req.URL.String()
+		},
+	})
+
+	fetch(t, transport, post)
+
+	if keyCalls != 2 {
+		t.Fatalf("KeyFunc called %d times total, want 2 (one invalidating POST)", keyCalls)
+	}
+}
+
 func TestRoundTripDefaultKeyIgnoresCredentials(t *testing.T) {
 	t.Parallel()
 

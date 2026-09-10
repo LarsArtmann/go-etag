@@ -726,7 +726,9 @@ func TestSpecMismatched304ValidatorIsNotAdopted(t *testing.T) {
 // invalidate the target URI ... when it receives a non-error status code in
 // response to an unsafe request method" — a mutation cannot leave a
 // pre-mutation body waiting to be rebuilt. Non-error means 2xx/3xx; error
-// responses and safe methods (GET/HEAD/OPTIONS/TRACE) leave the entry alone.
+// responses and safe methods (GET/OPTIONS/TRACE) leave the entry alone.
+// HEAD is safe too, but it has its own freshening rules (RFC 9111 §4.3.5,
+// pinned by TestSpecHeadFreshening).
 func TestSpecUnsafeMethodInvalidatesEntry(t *testing.T) {
 	t.Parallel()
 
@@ -739,7 +741,7 @@ func TestSpecUnsafeMethodInvalidatesEntry(t *testing.T) {
 		{name: "2xx after DELETE invalidates", method: http.MethodDelete, status: http.StatusNoContent, invalidated: true},
 		{name: "3xx after POST invalidates", method: http.MethodPost, status: http.StatusFound, invalidated: true},
 		{name: "error after POST keeps the entry", method: http.MethodPost, status: http.StatusInternalServerError, invalidated: false},
-		{name: "safe HEAD keeps the entry", method: http.MethodHead, status: http.StatusOK, invalidated: false},
+		{name: "safe OPTIONS keeps the entry", method: http.MethodOptions, status: http.StatusOK, invalidated: false},
 	} {
 		t.Run(spec.name, func(t *testing.T) {
 			t.Parallel()

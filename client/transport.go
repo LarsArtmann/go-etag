@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/textproto"
+	"strconv"
 	"strings"
 )
 
@@ -13,6 +14,9 @@ const (
 	headerIfNoneMatch  = "If-None-Match"
 	headerCacheControl = "Cache-Control"
 	headerConnection   = "Connection"
+
+	headerLastModified  = "Last-Modified"
+	headerContentLength = "Content-Length"
 
 	weakTagPrefix = "W/"
 
@@ -58,13 +62,19 @@ func (t *Transport) Stats() Stats {
 	return t.cache.stats()
 }
 
-// RoundTrip implements http.RoundTripper.
+// RoundTrip implements http.RoundTripper. The cache key is derived only when
+// a method can use it — GET for lookups, an invalidating non-GET after its
+// response arrives — so passthrough round trips never pay for key derivation.
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	key := t.opts.KeyFunc(req)
+	if req.Method == http.MethodHead {
+		return t.roundTripHead(req)
+	}
 
 	if req.Method != http.MethodGet {
-		return t.roundTripUnsafe(req, key)
+		return t.roundTripUnsafe(req)
 	}
+
+	key := t.opts.KeyFunc(req)
 
 	entry, cached := t.cache.get(key)
 
@@ -103,13 +113,106 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 // the stored entry for its URI when the response is a non-error answer to an
 // unsafe method (RFC 9111 §4.4), so a mutation cannot leave a pre-mutation
 // body waiting to be rebuilt for the next GET.
-func (t *Transport) roundTripUnsafe(req *http.Request, key string) (*http.Response, error) {
+func (t *Transport) roundTripUnsafe(req *http.Request) (*http.Response, error) {
 	resp, err := t.next.RoundTrip(req)
 	if err == nil && resp != nil && isUnsafeMethod(req.Method) && isNonErrorStatus(resp.StatusCode) {
-		t.cache.invalidate(key)
+		t.cache.invalidate(t.opts.KeyFunc(req))
 	}
 
 	return resp, err //nolint:wrapcheck // passthrough preserves the underlying error
+}
+
+// roundTripHead passes a HEAD request through untouched and uses its 200 to
+// freshen or invalidate the stored GET entry for the same key
+// (RFC 9111 §4.3.5): a HEAD response whose validators and Content-Length
+// match the stored response updates the stored metadata with the fields the
+// HEAD provides (§3.2 update rules), while any mismatch — or the absence of
+// a comparable validator — marks the stored response stale, so the next GET
+// fetches afresh. A no-store response neither updates nor invalidates:
+// storing parts of it is forbidden (RFC 9111 §3) and it gives no signal that
+// the stored representation changed.
+func (t *Transport) roundTripHead(req *http.Request) (*http.Response, error) {
+	resp, err := t.next.RoundTrip(req)
+	if err != nil || resp == nil {
+		return resp, err //nolint:wrapcheck // passthrough preserves the underlying error
+	}
+
+	if resp.StatusCode != http.StatusOK || hasNoStoreDirective(resp.Header) {
+		return resp, nil
+	}
+
+	key := t.opts.KeyFunc(req)
+
+	entry, cached := t.cache.get(key)
+	if !cached {
+		return resp, nil
+	}
+
+	if headConfirmsStored(resp.Header, entry) {
+		t.freshenFromHead(key, entry, resp.Header)
+	} else {
+		t.cache.invalidate(key)
+	}
+
+	return resp, nil
+}
+
+// headConfirmsStored reports whether a HEAD 200 response describes the
+// stored response (RFC 9111 §4.3.5): every validator field both responses
+// carry must match (ETag weakly, Last-Modified exactly), at least one
+// validator must be comparable, and a Content-Length on the HEAD response
+// must equal the stored body's length.
+func headConfirmsStored(head http.Header, entry cacheEntry) bool {
+	validatorMatched := false
+
+	if headEtag := head.Get(headerETag); entry.etag != "" && headEtag != "" {
+		if !weaklyMatchesValidator(headEtag, entry.etag) {
+			return false
+		}
+
+		validatorMatched = true
+	}
+
+	storedLastModified := entry.header.Get(headerLastModified)
+
+	if headLastModified := head.Get(headerLastModified); storedLastModified != "" && headLastModified != "" {
+		if headLastModified != storedLastModified {
+			return false
+		}
+
+		validatorMatched = true
+	}
+
+	if !validatorMatched {
+		return false
+	}
+
+	if headContentLength := head.Get(headerContentLength); headContentLength != "" {
+		return headContentLength == strconv.Itoa(len(entry.body))
+	}
+
+	return true
+}
+
+// freshenFromHead applies a confirming HEAD 200's metadata to the stored
+// entry (RFC 9111 §4.3.5 mandates the §3.2 update rules for the fields the
+// HEAD provides). The stored body, status, and decompression record are the
+// validated ones and never change.
+func (t *Transport) freshenFromHead(key string, entry cacheEntry, head http.Header) {
+	header := freshenedHeader(entry.header, head, entry.uncompressed)
+
+	etag := header.Get(headerETag)
+	if etag == "" {
+		etag = entry.etag
+	}
+
+	t.cache.freshen(key, entry.etag, cacheEntry{
+		etag:         etag,
+		status:       entry.status,
+		header:       header,
+		body:         entry.body,
+		uncompressed: entry.uncompressed,
+	})
 }
 
 // rebuildFromCache synthesizes the 200 the caller expects: cached body and
