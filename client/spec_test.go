@@ -830,3 +830,106 @@ func TestSpecStoredHeaderShedsHopByHopFields(t *testing.T) {
 		}
 	}
 }
+
+// TestSpecInvalidationIsScopedToTheTargetURI pins RFC 9111 §4.4's scoping: a
+// cache MUST invalidate the TARGET URI of the unsafe request — and that URI
+// only — so a mutation of one resource can never discard another resource's
+// stored entry. After the unrelated mutation, the untouched entry still
+// revalidates with a conditional GET instead of refetching.
+func TestSpecInvalidationIsScopedToTheTargetURI(t *testing.T) {
+	t.Parallel()
+
+	next := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		if req.Header.Get("If-None-Match") == `"kept"` {
+			return stubResponse(http.StatusNotModified, stubHeader(headerPair{"ETag", `"kept"`}), ""), nil
+		}
+
+		if req.URL.Path == "/kept" {
+			return stubResponse(http.StatusOK, stubHeader(headerPair{"ETag", `"kept"`}), "kept payload"), nil
+		}
+
+		return stubResponse(http.StatusNoContent, stubHeader(), ""), nil
+	})
+
+	transport := NewTransport(next, Options{})
+
+	fetch(t, transport, newGetRequest(t, "https://example.test/kept"))
+
+	status, _, _ := fetch(t, transport, newSpecRequest(t, http.MethodDelete, "https://example.test/other"))
+	if status != http.StatusNoContent {
+		t.Fatalf("DELETE /other status = %d, want passthrough 204", status)
+	}
+
+	status, _, body := fetch(t, transport, newGetRequest(t, "https://example.test/kept"))
+	if status != http.StatusOK || body != "kept payload" {
+		t.Fatalf("revalidated /kept = %d %q, want the cached 200 payload", status, body)
+	}
+
+	if got := transport.Stats().Hits; got != 1 {
+		t.Errorf("hits = %d, want 1 (the entry survived an unrelated mutation)", got)
+	}
+}
+
+// TestSpec200WithoutValidatorIsNeverStored pins RFC 9111 §4 via §4.3: reuse
+// requires successful validation, and validation requires a validator, so a
+// 200 without an ETag can never legally be served from cache. The transport
+// stores only what it can revalidate; the validator-less response keeps
+// passing through untouched.
+func TestSpec200WithoutValidatorIsNeverStored(t *testing.T) {
+	t.Parallel()
+
+	next := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		if got := req.Header.Get("If-None-Match"); got != "" {
+			t.Errorf("If-None-Match = %q, want none (nothing was stored)", got)
+		}
+
+		return stubResponse(
+			http.StatusOK,
+			stubHeader(headerPair{"Content-Type", "text/plain"}),
+			"validator-less payload",
+		), nil
+	})
+
+	transport := NewTransport(next, Options{})
+
+	for range 2 {
+		status, _, body := fetch(t, transport, newGetRequest(t, "https://example.test/data"))
+		if status != http.StatusOK || body != "validator-less payload" {
+			t.Fatalf("response = %d %q, want the passthrough 200 body", status, body)
+		}
+	}
+
+	if got := transport.Stats(); got.Stored != 0 || got.Entries != 0 {
+		t.Errorf("stats = %+v, a 200 without a validator must never be stored", got)
+	}
+}
+
+// TestSpecWeakFormOfStoredValidatorIsAdopted pins the comparison function of
+// the RFC 9111 §4.3.4 validator filter: weak comparison (RFC 9110 §8.8.3.2).
+// A 304 answering stored "v1" with the weak form W/"v1" names the same
+// representation, so its claim is adopted and re-presented — only a
+// mismatching opaque tag is filtered.
+func TestSpecWeakFormOfStoredValidatorIsAdopted(t *testing.T) {
+	t.Parallel()
+
+	stub := &recordedStub{steps: []stubStep{
+		{status: http.StatusOK, header: stubHeader(headerPair{"ETag", `"v1"`}), body: "payload"},
+		{status: http.StatusNotModified, header: stubHeader(headerPair{"ETag", `W/"v1"`})},
+		{status: http.StatusNotModified, header: stubHeader(headerPair{"ETag", `W/"v1"`})},
+	}}
+
+	transport := NewTransport(stub, Options{})
+
+	fetch(t, transport, newGetRequest(t, "https://example.test/data"))
+	_, header, _ := fetch(t, transport, newGetRequest(t, "https://example.test/data"))
+
+	if got := header.Get("ETag"); got != `W/"v1"` {
+		t.Errorf("rebuilt ETag = %q, want the 304's weak form (weak comparison adopts it)", got)
+	}
+
+	fetch(t, transport, newGetRequest(t, "https://example.test/data"))
+
+	if got := stub.lastValidator(); got != `W/"v1"` {
+		t.Errorf("revalidation validator = %q, want the adopted weak form (RFC 9111 §4.3.4)", got)
+	}
+}

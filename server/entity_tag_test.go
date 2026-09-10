@@ -133,6 +133,8 @@ func TestParseETag(t *testing.T) {
 		{name: "only closing quote", input: `abc"`, wantOk: false},
 		{name: "empty string", input: ``, wantOk: false},
 		{name: "W/ only", input: `W/`, wantOk: false},
+		// RFC 7232 §2.3: weak = %x57.2F ; "W/", case-sensitive.
+		{name: "lowercase weak prefix", input: `w/"abc"`, wantOk: false},
 	}
 
 	for _, tt := range tests {

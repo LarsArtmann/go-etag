@@ -198,6 +198,48 @@ func TestSpec_RFC7232_NotModifiedResponse(t *testing.T) {
 	})
 }
 
+func TestSpec_RFC7232_NotModifiedMetadata(t *testing.T) {
+	t.Parallel()
+
+	// RFC 7232 §4.1: "The server generating a 304 response MUST generate any
+	// of the following header fields that would have been sent in a 200 (OK)
+	// response to the same request: Cache-Control, Content-Location, Date,
+	// ETag, Expires, and Vary." Handler-set metadata therefore survives the
+	// 304 alongside the mandatory ETag.
+
+	handler := New(DefaultETagConfig())(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Cache-Control", "max-age=60")
+		w.Header().Set("Content-Location", "/versions/1")
+		w.Header().Set("Date", "date-of-representation")
+		w.Header().Set("Expires", "expiration-of-representation")
+		w.Header().Set("Vary", "Accept-Encoding")
+		w.WriteHeader(http.StatusOK)
+
+		_, _ = w.Write([]byte("hello world"))
+	}))
+
+	req := newTestRequest(http.MethodGet)
+	req.Header.Set(headerIfNoneMatch, `"779a65e7023cd2e7"`)
+	rec := newRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	assertStatus(t, rec, http.StatusNotModified)
+
+	for name, want := range map[string]string{
+		"Cache-Control":    "max-age=60",
+		"Content-Location": "/versions/1",
+		"Date":             "date-of-representation",
+		"ETag":             `"779a65e7023cd2e7"`,
+		"Expires":          "expiration-of-representation",
+		"Vary":             "Accept-Encoding",
+	} {
+		if got := rec.Header().Get(name); got != want {
+			t.Errorf("%s = %q, want %q (RFC 7232 §4.1: 304 must carry the 200's metadata)", name, got, want)
+		}
+	}
+}
+
 func TestSpec_RFC7232_IfMatch(t *testing.T) {
 	t.Parallel()
 

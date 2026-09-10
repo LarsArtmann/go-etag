@@ -131,8 +131,11 @@ The `ETag` struct holds an opaque string and a `Strength` (Strong/Weak). It prov
 - **Age is surfaced, and cannot run backwards** — a 200's Age passes through verbatim (§5.1 staleness signal); a 304's Age replaces the stored Age on rebuilds. An edge cache serving a stale copy is detectable by Age even though the ETag faithfully matches.
 - **`Cache-Control: no-store` responses are never stored** — RFC 9111 §3 MUST NOT; quote-aware, case-insensitive directive parsing (a quoted `"no-store"` argument does not match).
 - **Hop-by-hop fields are stripped at store time** — Connection-listed fields, Keep-Alive, Proxy-* (§3.1), so rebuilds cannot resurrect them.
+- **Vary is not negotiated** — the cache key is the URL (or KeyFunc); RFC 9111 §4.1 secondary keys are out of scope, so responses varying on request headers must be disambiguated via `KeyFunc`.
 - **Oversized bodies keep streaming** — the buffered prefix is chained to the unread remainder; Close still reaches the original body.
 - **Go 1.26 canonical header form of `ETag` is `Etag`** — map literals with `"ETag"` keys are invisible to `Header.Get/Set` (Get canonicalizes on read). Build stub headers via `Header.Set` in tests; real transports canonicalize on both sides.
+- **Runtime canonicalization vs the `canonicalheader` linter are different authorities** — the linter demands the literal `ETag` spelling in source (our `headerETag = "ETag"` constant); the runtime canonicalizes whatever you pass into `Etag` on the wire. Do not "fix" one to match the other.
+- **RFC 9111 §4.3.5 HEAD-based freshening is deliberately not implemented** (SHOULD; documented opt-out in `client/doc.go`) — HEAD bypasses the cache entirely.
 
 ## Error Classification
 
@@ -180,3 +183,8 @@ Flush-path write errors are forwarded to `ETagConfig.OnError` (a `func(*errorfam
 - **`t.Errorf`** for non-fatal, **`t.Fatalf`** for fatal assertions
 - **`httptest.NewRecorder()`** + `httptest.NewRequest()` for server doubles; `roundTripperFunc` stubs for client doubles
 - **Shared test helpers** in `server/testutil_test.go`; client helpers live in `client/transport_test.go`
+
+## Repo Workflow Notes
+
+- **An auto-git daemon commits and re-formats continuously** — status reports and tables get re-touched within minutes of your edit. Always re-read a shared file immediately before re-editing it; never assume remembered file geometry.
+- **`docs/status/` and `docs/planning/` are point-in-time snapshots** — never rewrite their narrative; annotate resolved items inline (`~~item~~ done at `hash``) per the docs-health skill. The living backlog is `TODO_LIST.md`, never the reports.
