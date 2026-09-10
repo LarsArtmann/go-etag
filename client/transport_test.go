@@ -192,7 +192,7 @@ func TestRoundTripRebuilds304FromCache(t *testing.T) {
 	}
 
 	if got := header.Get("Date"); got != "fresh-date" {
-		t.Errorf("Date = %q, want the 304's fresh value (default PreserveOn304)", got)
+		t.Errorf("Date = %q, want the 304's fresh value (default FreshenOn304)", got)
 	}
 
 	if got := header.Get("Content-Type"); got != "text/plain" {

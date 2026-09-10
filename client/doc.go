@@ -30,11 +30,28 @@
 // generated or validated by the origin server for this request." Age and
 // every other field the 304 provides are surfaced on the rebuilt response
 // (RFC 9111 §4.3.4 freshening), so callers can detect stale-at-the-edge
-// content instead of trusting the validator. Responses carrying
+// content instead of trusting the validator. One edge to know: when a 304
+// omits Age, the stored value persists and is worn by every rebuild, so a
+// stream of Age-less 304s freezes the last known age rather than resetting
+// it. Treat a frozen Age as a revalidation-frequency hint, not as proof of
+// freshness. Responses carrying
 // Cache-Control: no-store are never stored (RFC 9111 §3), and a non-error
 // response to an unsafe request method invalidates the stored entry for
 // that URI (RFC 9111 §4.4), so a mutation cannot leave a pre-mutation body
 // waiting to be rebuilt.
+//
+// # HEAD revalidation
+//
+// A HEAD 200 response also maintains the cache (RFC 9111 §4.3.5): when its
+// validators match the stored entry (ETag weakly, Last-Modified exactly)
+// and its Content-Length, if any, equals the stored body's length, the
+// stored metadata is updated with the fields the HEAD provides under the
+// §3.2 update rules — the same exceptions as 304 freshening;
+// [Options.FreshenOn304] does not apply to HEAD updates. Any mismatch, or a
+// HEAD response with no comparable validator, marks the stored entry stale:
+// the next GET fetches afresh instead of revalidating. A no-store HEAD
+// neither updates nor invalidates: the storage ban (RFC 9111 §3) wins over
+// the update SHOULD, and the response carries no staleness signal.
 //
 // # Vary
 //

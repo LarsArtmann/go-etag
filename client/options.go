@@ -21,6 +21,11 @@ type Options struct {
 	// MaxBodyBytes is the largest response body that may be cached. Zero or
 	// negative is clamped to 1 MiB. Larger responses pass through uncached
 	// with their bodies intact, so a huge payload cannot balloon memory.
+	//
+	// The limit counts the bytes as the transport would store them: when
+	// net/http transparently decompresses the body (gzip), it counts the
+	// decoded bytes, not the encoded wire bytes, because the decoded form is
+	// what a rebuilt response would serve.
 	MaxBodyBytes int
 
 	// FreshenOn304 governs which header fields a 304 Not Modified response

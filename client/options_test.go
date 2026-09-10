@@ -1,6 +1,7 @@
 package etagclient
 
 import (
+	"slices"
 	"testing"
 )
 
@@ -19,7 +20,7 @@ func TestOptionsNormalizeDefaults(t *testing.T) {
 
 	// The zero FreshenPolicy is meaningful: it selects RFC 9111 §4.3.4
 	// freshening wholesale, so normalize must keep it untouched.
-	if normalized.FreshenOn304 != (FreshenPolicy{}) {
+	if normalized.FreshenOn304.kind != freshenPerRFC || normalized.FreshenOn304.fields != nil {
 		t.Errorf("FreshenOn304 = %+v, want the zero policy (RFC 9111 §4.3.4 freshening)", normalized.FreshenOn304)
 	}
 
@@ -45,8 +46,11 @@ func TestOptionsNormalizeKeepsExplicitValues(t *testing.T) {
 		t.Errorf("MaxBodyBytes = %d, want 512", normalized.MaxBodyBytes)
 	}
 
-	if normalized.FreshenOn304 != FreshenFields("Date") {
-		t.Errorf("FreshenOn304 = %+v, want the provided policy untouched", normalized.FreshenOn304)
+	switch {
+	case normalized.FreshenOn304.kind != freshenNamedFields:
+		t.Errorf("FreshenOn304 kind = %d, want named-fields mode preserved", normalized.FreshenOn304.kind)
+	case !slices.Equal(normalized.FreshenOn304.fields, []string{"Date"}):
+		t.Errorf("FreshenOn304 fields = %v, want [Date] preserved", normalized.FreshenOn304.fields)
 	}
 }
 
