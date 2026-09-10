@@ -177,3 +177,79 @@ func TestIntegrationUnsafeMethodInvalidatesThroughRealServer(t *testing.T) {
 		t.Errorf("conditional GETs = %d, want 0 (the entry was invalidated, not revalidated)", got)
 	}
 }
+
+// TestIntegrationHeadFreshensStoredEntryThroughRealServer runs RFC 9111
+// §4.3.5 through a real net/http server and client: a HEAD 200 with the
+// stored validator (and matching Content-Length) must freshen the stored
+// metadata, and the next conditional GET must rebuild wearing the HEAD's
+// fields — with Go's canonical "Etag" key on both sides of the wire.
+func TestIntegrationHeadFreshensStoredEntryThroughRealServer(t *testing.T) {
+	t.Parallel()
+
+	const (
+		validator = `"head-v1"`
+		payload   = "head payload"
+	)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("ETag", validator)
+
+		if r.Method == http.MethodHead {
+			w.Header().Set("X-RateLimit-Remaining", "41")
+			w.WriteHeader(http.StatusOK)
+
+			return
+		}
+
+		if r.Header.Get("If-None-Match") == validator {
+			w.WriteHeader(http.StatusNotModified)
+
+			return
+		}
+
+		_, _ = w.Write([]byte(payload))
+	}))
+	t.Cleanup(server.Close)
+
+	client := &http.Client{Transport: NewTransport(http.DefaultTransport, Options{})}
+
+	head, err := http.NewRequestWithContext(t.Context(), http.MethodHead, server.URL+"/articles", nil)
+	if err != nil {
+		t.Fatalf("build HEAD: %v", err)
+	}
+
+	headResp, err := client.Do(head)
+	if err != nil {
+		t.Fatalf("HEAD: %v", err)
+	}
+
+	_ = headResp.Body.Close()
+
+	if headResp.StatusCode != http.StatusOK {
+		t.Fatalf("HEAD status = %d, want 200", headResp.StatusCode)
+	}
+
+	getResp, err := client.Get(server.URL + "/articles")
+	if err != nil {
+		t.Fatalf("GET: %v", err)
+	}
+
+	defer func() { _ = getResp.Body.Close() }()
+
+	data, readErr := io.ReadAll(getResp.Body)
+	if readErr != nil {
+		t.Fatalf("read body: %v", readErr)
+	}
+
+	if getResp.StatusCode != http.StatusOK || string(data) != payload {
+		t.Fatalf("rebuilt GET = %d %q, want the stored 200 %q", getResp.StatusCode, string(data), payload)
+	}
+
+	if got := getResp.Header.Get("X-RateLimit-Remaining"); got != "41" {
+		t.Errorf("X-RateLimit-Remaining = %q, want the HEAD-freshened 41 (RFC 9111 §4.3.5)", got)
+	}
+
+	if got := getResp.Header.Get("ETag"); got != validator {
+		t.Errorf("Etag = %q, want %q through real canonicalization", got, validator)
+	}
+}

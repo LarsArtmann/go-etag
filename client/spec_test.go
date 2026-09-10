@@ -1098,3 +1098,234 @@ func TestSpecAgeNeverRunsBackwardsAcrossRevalidations(t *testing.T) {
 		t.Errorf("hits = %d, want %d (every revalidation rebuilt from cache)", got, len(ages)-1)
 	}
 }
+
+// TestSpecHeadFreshening pins RFC 9111 §4.3.5: a HEAD 200 whose validators
+// and Content-Length match a stored response "SHOULD update" it ("the cache
+// MUST use the header fields provided in the HEAD response to update the
+// stored response", via the §3.2 update rules); "otherwise, the cache SHOULD
+// consider the stored response to be stale", so the next GET fetches afresh.
+// A HEAD 200 whose validators cannot be compared to the stored response at
+// all counts as "otherwise": identity is unproven.
+func TestSpecHeadFreshening(t *testing.T) {
+	t.Parallel()
+
+	for _, spec := range []struct {
+		name          string
+		headHeader    []headerPair
+		freshened     bool
+		wantValidator string
+	}{
+		{
+			name:          "matching ETag and Content-Length updates the stored metadata",
+			headHeader:    []headerPair{{"ETag", `"v1"`}, {"Content-Length", "7"}, {"Date", "date-two"}, {"X-RateLimit-Remaining", "41"}},
+			freshened:     true,
+			wantValidator: `"v1"`,
+		},
+		{
+			name:          "weak form of the stored ETag matches",
+			headHeader:    []headerPair{{"ETag", `W/"v1"`}, {"Content-Length", "7"}, {"Date", "date-two"}},
+			freshened:     true,
+			wantValidator: `W/"v1"`,
+		},
+		{
+			name:          "matching Last-Modified alone is comparable when stored",
+			headHeader:    []headerPair{{"Last-Modified", "tue, 01 jan 2025 00:00:00 gmt"}, {"Date", "date-two"}},
+			freshened:     true,
+			wantValidator: `"v1"`,
+		},
+		{name: "different ETag is stale", headHeader: []headerPair{{"ETag", `"v2"`}}, freshened: false},
+		{
+			name:          "Content-Length mismatch is stale",
+			headHeader:    []headerPair{{"ETag", `"v1"`}, {"Content-Length", "999"}},
+			freshened:     false,
+			wantValidator: `"v1"`,
+		},
+		{name: "no comparable validator is stale", headHeader: []headerPair{{"Date", "date-two"}}, freshened: false},
+		{
+			name:          "differing Last-Modified is stale",
+			headHeader:    []headerPair{{"Last-Modified", "wed, 01 jan 2026 00:00:00 gmt"}},
+			freshened:     false,
+			wantValidator: `"v1"`,
+		},
+	} {
+		t.Run(spec.name, func(t *testing.T) {
+			t.Parallel()
+
+			storedHeader := stubHeader(
+				headerPair{"ETag", `"v1"`},
+				headerPair{"Last-Modified", "tue, 01 jan 2025 00:00:00 gmt"},
+				headerPair{"Date", "date-one"},
+			)
+
+			notModifiedHeader := stubHeader(headerPair{"ETag", `"v1"`})
+
+			headStepHeader := stubHeader(spec.headHeader...)
+
+			finalStep := stubStep{status: http.StatusNotModified, header: notModifiedHeader, body: ""}
+			if !spec.freshened {
+				finalStep = stubStep{status: http.StatusOK, header: storedHeader, body: "payload"}
+			}
+
+			stub := &recordedStub{steps: []stubStep{
+				{status: http.StatusOK, header: storedHeader, body: "payload"},
+				{status: http.StatusOK, header: headStepHeader, body: ""},
+				finalStep,
+			}}
+
+			transport := NewTransport(stub, Options{})
+			url := "https://api.dev.test/articles"
+
+			fetch(t, transport, newGetRequest(t, url))
+
+			head := newSpecRequest(t, http.MethodHead, url)
+			headStatus, _, _ := fetch(t, transport, head)
+			if headStatus != http.StatusOK {
+				t.Fatalf("HEAD status = %d, want passthrough 200", headStatus)
+			}
+
+			if spec.freshened {
+				if got := transport.Stats().Entries; got != 1 {
+					t.Fatalf("entries after confirming HEAD = %d, want the freshened entry kept", got)
+				}
+			} else if got := transport.Stats().Entries; got != 0 {
+				t.Fatalf("entries after non-confirming HEAD = %d, want 0 (stale, RFC 9111 §4.3.5)", got)
+			}
+
+			status, header, body := fetch(t, transport, newGetRequest(t, url))
+
+			if status != http.StatusOK || body != "payload" {
+				t.Fatalf("final GET = %d %q, want the stored body rebuilt", status, body)
+			}
+
+			if !spec.freshened {
+				if got := stub.lastValidator(); got != "" {
+					t.Errorf("final GET validator = %q, want none (the entry was invalidated)", got)
+				}
+
+				return
+			}
+
+			if got := stub.lastValidator(); got != spec.wantValidator {
+				t.Errorf("final GET validator = %q, want the stored %s", got, spec.wantValidator)
+			}
+
+			if got := header.Get("Date"); got != "date-two" {
+				t.Errorf("Date = %q, want the HEAD's date-two (§4.3.5 update)", got)
+			}
+		})
+	}
+}
+
+// TestSpecHeadFresheningPersistsToTheStore pins that the §4.3.5 update lands
+// on the stored entry, not only on a response in flight: the HEAD's fields
+// must still be visible on a much later rebuild.
+func TestSpecHeadFresheningPersistsToTheStore(t *testing.T) {
+	t.Parallel()
+
+	stub := &recordedStub{steps: []stubStep{
+		{
+			status: http.StatusOK,
+			header: stubHeader(headerPair{"ETag", `"v1"`}, headerPair{"Date", "date-one"}),
+			body:   "payload",
+		},
+		{
+			status: http.StatusOK,
+			header: stubHeader(
+				headerPair{"ETag", `"v1"`},
+				headerPair{"Content-Length", "7"},
+				headerPair{"Date", "date-two"},
+			),
+			body: "",
+		},
+		{status: http.StatusNotModified, header: stubHeader(), body: ""},
+	}}
+
+	transport := NewTransport(stub, Options{})
+	url := "https://api.dev.test/articles"
+
+	fetch(t, transport, newGetRequest(t, url))
+	fetch(t, transport, newSpecRequest(t, http.MethodHead, url))
+
+	_, header, _ := fetch(t, transport, newGetRequest(t, url))
+
+	if got := header.Get("Date"); got != "date-two" {
+		t.Errorf("Date = %q, want the HEAD-freshened date-two on a later rebuild", got)
+	}
+}
+
+// TestSpecHeadNoStoreLeavesTheEntryAlone pins that a no-store HEAD 200
+// neither updates nor invalidates the stored entry (RFC 9111 §3 forbids
+// storing parts of the response; §4.3.5 gives no staleness signal either).
+func TestSpecHeadNoStoreLeavesTheEntryAlone(t *testing.T) {
+	t.Parallel()
+
+	stub := &recordedStub{steps: []stubStep{
+		{status: http.StatusOK, header: stubHeader(headerPair{"ETag", `"v1"`}), body: "payload"},
+		{
+			status: http.StatusOK,
+			header: stubHeader(headerPair{"ETag", `"v1"`}, headerPair{"Cache-Control", "no-store"}),
+			body:   "",
+		},
+		{status: http.StatusNotModified, header: stubHeader(), body: ""},
+	}}
+
+	transport := NewTransport(stub, Options{})
+	url := "https://api.dev.test/articles"
+
+	fetch(t, transport, newGetRequest(t, url))
+	fetch(t, transport, newSpecRequest(t, http.MethodHead, url))
+
+	if got := transport.Stats().Entries; got != 1 {
+		t.Fatalf("entries after no-store HEAD = %d, want the entry untouched", got)
+	}
+
+	status, header, body := fetch(t, transport, newGetRequest(t, url))
+
+	if status != http.StatusOK || body != "payload" || header.Get("ETag") != `"v1"` {
+		t.Fatalf("final GET = %d %q ETag %q, want the untouched entry rebuilt", status, body, header.Get("ETag"))
+	}
+
+	if got := transport.Stats().Hits; got != 1 {
+		t.Errorf("hits = %d, want 1 (the entry still revalidates)", got)
+	}
+}
+
+// TestSpecHeadErrorAndCacheMissesPassThrough pins the §4.3.5 preconditions:
+// only a 200 with a stored entry under the same key can update or
+// invalidate; error responses and uncached URIs pass through with the store
+// untouched, and a HEAD response itself is never stored.
+func TestSpecHeadErrorAndCacheMissesPassThrough(t *testing.T) {
+	t.Parallel()
+
+	stub := &recordedStub{steps: []stubStep{
+		{status: http.StatusInternalServerError, header: stubHeader(), body: ""},
+		{status: http.StatusOK, header: stubHeader(headerPair{"ETag", `"head-only"`}), body: ""},
+		{status: http.StatusNotFound, header: stubHeader(), body: ""},
+	}}
+
+	transport := NewTransport(stub, Options{})
+	url := "https://api.dev.test/articles"
+
+	head := newSpecRequest(t, http.MethodHead, url)
+
+	status, _, _ := fetch(t, transport, head)
+	if status != http.StatusInternalServerError {
+		t.Fatalf("first HEAD status = %d, want passthrough 500", status)
+	}
+
+	status, _, _ = fetch(t, transport, head)
+	if status != http.StatusOK {
+		t.Fatalf("second HEAD status = %d, want passthrough 200", status)
+	}
+
+	status, _, _ = fetch(t, transport, newGetRequest(t, url))
+	if status != http.StatusNotFound {
+		t.Fatalf("GET status = %d, want passthrough 404", status)
+	}
+
+	stats := transport.Stats()
+
+	if stats.Stored != 0 || stats.Entries != 0 || stats.Hits != 0 {
+		t.Errorf("stats = %+v, want all zero (HEAD responses are never stored)", stats)
+	}
+}
