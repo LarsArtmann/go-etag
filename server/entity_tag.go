@@ -118,13 +118,13 @@ func ParseETag(s string) (ETag, bool) {
 	}
 
 	if len(s) < minETagWireLen || s[0] != '"' || s[len(s)-1] != '"' {
-		return ETag{}, false //nolint:exhaustruct // zero value signals parse failure
+		return ETag{}, false //nolint:exhaustruct_v5 // zero value signals parse failure
 	}
 
 	opaque := s[1 : len(s)-1]
 
 	if opaque == "" {
-		return ETag{}, false //nolint:exhaustruct // zero value signals parse failure
+		return ETag{}, false //nolint:exhaustruct_v5 // zero value signals parse failure
 	}
 
 	return ETag{

@@ -9,6 +9,12 @@ on:
 permissions:
   contents: read
 
+# Pin the exact toolchain go.mod names: the setup-go manifest can lag go.dev,
+# and GOTOOLCHAIN forces the go command to fetch the precise version. Keep in
+# sync with the `go` directive in go.mod.
+env:
+  GOTOOLCHAIN: go1.26.7
+
 jobs:
   test:
     name: Test
@@ -53,7 +59,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Install golangci-lint
-        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2
+        run: go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
 
       - name: Lint
         run: golangci-lint run
@@ -79,3 +85,12 @@ jobs:
 
       - name: Fuzz HasNoStoreDirective
         run: go test -run=^$ -fuzz=^FuzzHasNoStoreDirective$ -fuzztime=30s ./client/...
+
+  govulncheck:
+    name: Vulnerabilities
+    runs-on: ubuntu-latest
+    steps:
+      - uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1.1.0
+        with:
+          go-version-file: go.mod
+          go-package: ./...
