@@ -22,20 +22,22 @@
 
 ## b) PARTIALLY DONE
 
-1. **RFC 9111 conformance** — §3, §3.1, §3.2, §4.3.4, §5.1 handled; §4.4 (unsafe-method invalidation, a MUST) and §4.3.5 (HEAD freshening, a SHOULD) knowingly not implemented — and worse, **§4.4 was in the extracted RFC text I read and I skipped it silently**. It is neither implemented, tested, nor documented as a known gap in AGENTS.md. The always-revalidate design makes the *impact* small (a post-PUT stale entry costs one wasted revalidation, then a 200 replaces it), but the MUST stands unmet.
-2. **Repo hygiene** — `dprint.json` exists and I edited three Markdown files **without running dprint**. `CONTRIBUTING.md` exists and I never opened it (Project Discovery checklist violation).
-3. **IDE diagnostics** — the LSP still shows 11 stale warnings (bodyclose at pre-refactor lines, `freshen` "unused") that fresh CLI runs contradict. Verified stale, never cleared via `lsp_restart`. The next session will see phantom errors.
-4. **Validator-update spec tension (found during this self-review, not during the work)** — RFC 9111 §4.3.4's filtering says a 304 carrying a *strong* validator only updates stored responses with that *same strong* validator; my weak→strong validator persistence test encodes behavior that is practical (it is what the single-entry model wants) but arguably beyond what §4.3.4's update filter permits. Needs a deliberate decision: restrict validator replacement to matching tags, or document the deviation.
+1. ~~**RFC 9111 conformance** — §3, §3.1, §3.2, §4.3.4, §5.1 handled; §4.4 (unsafe-method invalidation, a MUST) and §4.3.5 (HEAD freshening, a SHOULD) knowingly not implemented — and worse, **§4.4 was in the extracted RFC text I read and I skipped it silently**.~~ §4.4 landed at `9204885`; §4.3.5 remains a documented opt-out (TODO_LIST #5). The AGENTS.md known-gap note is no longer needed for §4.4.
+2. ~~**Repo hygiene** — `dprint.json` exists and I edited three Markdown files **without running dprint**. `CONTRIBUTING.md` exists and I never opened it (Project Discovery checklist violation).~~ done (block two: CONTRIBUTING read — nothing to reconcile; dprint investigated — binary absent locally and in CI, CHANGELOG excluded by config, skipped deliberately)
+3. ~~**IDE diagnostics** — the LSP still shows 11 stale warnings (bodyclose at pre-refactor lines, `freshen` "unused") that fresh CLI runs contradict. Verified stale, never cleared via `lsp_restart`. The next session will see phantom errors.~~ resolved (moot — `golangci-lint run` re-verified 0 issues on 2026-09-10)
+4. ~~**Validator-update spec tension (found during this self-review, not during the work)** — RFC 9111 §4.3.4's filtering says a 304 carrying a *strong* validator only updates stored responses with that *same strong* validator; my weak→strong validator persistence test encodes behavior that is practical (it is what the single-entry model wants) but arguably beyond what §4.3.4's update filter permits. Needs a deliberate decision: restrict validator replacement to matching tags, or document the deviation.~~ done at `9204885` — the strict reading won: `restoreMismatchedValidator` filters by weak match (RFC 9110 §8.8.3.2), and weak-form adoption (`W/"v1` answering stored `"v1`) is pinned by `TestSpecWeakFormOfStoredValidatorIsAdopted`
 5. **Alex's email** — answered in-chat to the user; **no draft reply email exists** and his offer of raw header-capture fixtures was never taken up.
 
 ## c) NOT STARTED
 
-- §4.4 unsafe-method invalidation (see above).
+_Open items route to TODO_LIST.md / ROADMAP.md — 2026-09-10 docs-health harvest._
+
+- ~~§4.4 unsafe-method invalidation (see above).~~ done at `9204885`
 - §4.3.5 HEAD-based freshening/invalidation.
-- `Vary` awareness in cache selection or even a documented sharp-edge note (today only the credential warning exists; `Vary: Accept-Encoding` across a shared key is the classic trap).
-- Integration test against a real `httptest.Server` + real `http.Client` (all current tests are stub-based; canonical-form and hop-by-hop claims rest on knowledge, not an executed round trip).
+- ~~`Vary` awareness in cache selection or even a documented sharp-edge note (today only the credential warning exists; `Vary: Accept-Encoding` across a shared key is the classic trap).~~ done at `9204885` — §Vary sharp-edge section in `client/doc.go` + AGENTS.md gotcha (KeyFunc is the mitigation)
+- ~~Integration test against a real `httptest.Server` + real `http.Client` (all current tests are stub-based; canonical-form and hop-by-hop claims rest on knowledge, not an executed round trip).~~ done at `9204885` — `client/integration_test.go`
 - Version/release decision (v0.3.0 vs holding) — the `PreserveOn304` default change is a behavior change sitting in `[Unreleased]`.
-- `TODO_LIST.md` / `ROADMAP.md` — the repo has neither; harvesting this report's section (f) is pending instruction.
+- ~~`TODO_LIST.md` / `ROADMAP.md` — the repo has neither; harvesting this report's section (f) is pending instruction.~~ done (2026-09-10 docs-health pass — both files created, this report harvested)
 - Reply email to Alex; fixture ingestion (`testdata/`).
 
 ## d) TOTALLY FUCKED UP (all caught in-session, none shipped)
@@ -59,20 +61,20 @@
 ## f) UP TO 50 THINGS NEXT
 
 *Spec conformance (high impact):*
-1. Implement RFC 9111 §4.4: invalidate the stored entry when a non-error response answers an unsafe method (PUT/POST/DELETE/PATCH) for the same URI.
-2. Test §4.4: PUT 200 → next GET must not rebuild from the pre-PUT entry.
+1. ~~Implement RFC 9111 §4.4: invalidate the stored entry when a non-error response answers an unsafe method (PUT/POST/DELETE/PATCH) for the same URI.~~ done at `9204885`
+2. ~~Test §4.4: PUT 200 → next GET must not rebuild from the pre-PUT entry.~~ done at `9204885` (`TestSpecUnsafeMethodInvalidatesEntry` + the URI-scoping test)
 3. Implement/test §4.3.5 HEAD freshening: HEAD 200 with matching ETag (and Content-Length) freshens stored metadata; mismatch marks stale (drop entry).
-4. Resolve the §4.3.4 strong-validator filter question (b.4): restrict stored-validator replacement to matching tags, or document the deviation as deliberate.
-5. Set `Uncompressed: entry.uncompressed` on synthesized responses.
-6. Document (or implement) `Vary` handling; minimum: a sharp-edge paragraph beside the credential warning.
+4. ~~Resolve the §4.3.4 strong-validator filter question (b.4): restrict stored-validator replacement to matching tags, or document the deviation as deliberate.~~ done at `9204885` — `restoreMismatchedValidator` filters by weak match; weak-form adoption pinned by test
+5. ~~Set `Uncompressed: entry.uncompressed` on synthesized responses.~~ done at `9204885`
+6. ~~Document (or implement) `Vary` handling; minimum: a sharp-edge paragraph beside the credential warning.~~ done at `9204885` — §Vary section in `client/doc.go` + AGENTS.md gotcha
 7. Document the "stored Age survives when the 304 omits Age" limitation; decide whether to drop it instead.
 8. Add a MUST-by-MUST RFC 9111 conformance table to the docs (done/deviation/not-applicable).
 9. Pin "only 200s are ever stored" with a test (206/304/500 never stored).
 10. Decide `no-cache="field"` argument semantics (currently treated as plain no-cache for storage purposes — legal, but say so).
 
 *Testing (high impact):*
-11. Integration test: `httptest.NewServer` + real `http.Client{Transport: NewTransport(...)}` — canonical `Etag` form, real 304 (no body), real `Age` flow, gzip round trip.
-12. Cover the `cacheControlDirectives` escaped-quote branch (`private="a\"b,no-store"` must not match).
+11. ~~Integration test: `httptest.NewServer` + real `http.Client{Transport: NewTransport(...)}` — canonical `Etag` form, real 304 (no body), real `Age` flow, gzip round trip.~~ done at `9204885` — `client/integration_test.go`
+12. ~~Cover the `cacheControlDirectives` escaped-quote branch (`private="a\"b,no-store"` must not match).~~ done at `9204885`
 13. Cover `responseCache.freshen`'s skip-guard (freshen vs concurrent replace).
 14. Race test: parallel rebuilds + stores on one key; assert `hits+stored` invariant and single `Entries`.
 15. Fuzz `hasNoStoreDirective`/`cacheControlDirectives` (it is a parser; the server side already fuzzes parsers).
@@ -92,13 +94,13 @@
 27. Revisit `MaxBodyBytes` counting decoded bytes on transparent gzip (document or fix).
 
 *Docs / process:*
-28. Run `dprint` over the Markdown I touched (README, CHANGELOG, AGENTS.md).
-29. Read `CONTRIBUTING.md`; reconcile anything I violated.
+28. ~~Run `dprint` over the Markdown I touched (README, CHANGELOG, AGENTS.md).~~ done (block two: binary absent locally and in CI, CHANGELOG excluded by `dprint.json` — deliberately skipped)
+29. ~~Read `CONTRIBUTING.md`; reconcile anything I violated.~~ done (block two: nothing beyond the commands already followed)
 30. Draft the reply email to Alex; decide on his fixture offer and where fixtures live (`client/testdata/`).
-31. Create `TODO_LIST.md` + `ROADMAP.md`; harvest section (f).
-32. Update README's "98.9% test coverage" claim (now inaccurate as a number and unversioned).
-33. AGENTS.md: add "§4.4 not implemented" as an explicit KNOWN GAP.
-34. `lsp_restart` to clear the 11 stale diagnostics.
+31. ~~Create `TODO_LIST.md` + `ROADMAP.md`; harvest section (f).~~ done (2026-09-10 docs-health pass)
+32. ~~Update README's "98.9% test coverage" claim (now inaccurate as a number and unversioned).~~ done (prose fixed at `9204885`; hardcoded coverage badge removed 2026-09-10 docs-health pass)
+33. ~~AGENTS.md: add "§4.4 not implemented" as an explicit KNOWN GAP.~~ superseded — §4.4 implemented at `9204885`; the §4.3.5 opt-out is documented instead
+34. ~~`lsp_restart` to clear the 11 stale diagnostics.~~ resolved (moot — fresh session diagnostics clean; lint 0 issues re-verified 2026-09-10)
 35. Upgrade `exhaustruct` → `exhaustruct_v5` (deprecation warning appeared during lint).
 36. GoDoc example: an Age-aware client that rejects stale-at-the-edge responses.
 
@@ -114,13 +116,16 @@
 43. Per-host key partitioning by default (cross-origin KeyFunc safety).
 44. OTEL/Prometheus example wiring.
 45. Project website launch (sibling-repo pattern).
-46. Clarify the role of `reports/` vs `docs/status/` and unify.
+46. ~~Clarify the role of `reports/` vs `docs/status/` and unify.~~ **Won't implement — no `reports/` directory exists; `docs/status/` is the single snapshot location (ROADMAP non-goal).**
 
 ## g) QUESTIONS I CANNOT ANSWER MYSELF (max 3)
 
 1. **Release timing:** cut **v0.3.0 now** with the `PreserveOn304` behavior change in `[Unreleased]`, or hold until §4.4 invalidation (+ HEAD freshening) land so "RFC 9111 conformance" ships as one coherent minor?
+   _**Status (2026-09-10):** §4.4 landed; §4.3.5 is a documented opt-out. Release still awaits owner GO — TODO_LIST.md #1._
 2. **Domain-type direction:** may the client import `server`'s `ETag` type (new intra-module coupling), or should the type move to a shared subpackage first? This shapes items 22–24 and is a public-surface decision.
+   _**Status (2026-09-10):** moved to ROADMAP.md Open Questions._
 3. **Alex:** do you want a draft reply email (I'd fold in the Age answer + the no-store/freshening changes), and should we accept his raw header captures as fixtures — if yes, `client/testdata/` is my proposed home?
+   _**Status (2026-09-10):** moved to ROADMAP.md Open Questions._
 
 ---
 

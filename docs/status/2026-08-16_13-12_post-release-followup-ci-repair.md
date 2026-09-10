@@ -58,21 +58,35 @@ _Predecessor: `2026-08-16_12-28_v0.2.0-release-and-ecosystem-sweep.md` (sections
 ## f. NEXT (up to 25, prioritized)
 
 1. User GO on g.1 → `gh release create v0.12.0 --generate-notes` for httputil (tag exists; only the Release artifact is missing).
+   _**Resolved:** done — see §h.1 (release created and curated, 2026-08-16)._
 2. User GO on g.2 → retrofit pre-tag CI gate (check `gh run list` green) into the go-release skill's gate list / personal release checklist.
+   _**Resolved:** done — see §h.2 (skill §4.4 added; per-repo GOTOOLCHAIN pins remain open for the repos' owners)._
 3. User GO on g.3 → GOTOOLCHAIN-pin kit's govulncheck (its current pass on 1.26.5 is trace-luck, not immunity — httputil's server paths reach the vulns, kit's transport paths don't... yet).
+   _**Resolved:** declined by owner — see §h.3 (deferred to kit's next touch; foreign repo)._
 4. Re-check kit on pkg.go.dev after a few hours; if still 404 by tomorrow, investigate module-path casing (capital `LarsArtmann`) vs pkgsite.
+   _**Resolved:** done — see §h.4 (kit live on pkg.go.dev; crawl latency, not the module path; the @v0.2.0 page verified rendering 2026-09-10)._
 5. cqrs-htmx: after the foreign composition-seams session lands, tidy the ~20 submodules' indirect go-etag refs to v0.2.0 (cosmetic).
+   _**Status (2026-09-10):** foreign repo._
 6. DiscordSync: `nix flake check`; foreign flake hunk decision (owner).
+   _**Status (2026-09-10):** foreign repo._
 7. library-policy: add go-licenses + vulnix to devShell (pre-commit can pass again).
+   _**Status (2026-09-10):** foreign repo._
 8. nsfw-classifier: BuildFlow tailwind-build `signal: killed` (devShell eval vs store contention).
+   _**Status (2026-09-10):** foreign repo._
 9. kit: replace govulncheck's `go-version: 1.26.x` with the GOTOOLCHAIN env pin (same pattern as httputil) — manifest lag makes `1.26.x` resolve to whatever setup-go knows, not what's released.
+   _**Status (2026-09-10):** foreign repo (deferred by owner per §h.3)._
 10. go-etag: consider GOTOOLCHAIN pin in its CI too (no govulncheck job exists there today — adding one is optional; the fuzz job fix already landed).
+    _**Status (2026-09-10):** open — TODO_LIST.md #11._
 11. go-etag docs-health pass: ROADMAP/TODO_LIST/FEATURES/README badge post-v0.2.0 (12-28 f.24-f.27).
-12. Benchmark archive v0.1.1→v0.2.0 into `reports/` (12-28 f.31).
-13. Superseded-pointer notes in the 09-42/11-33 reports → 12-28 report (12-28 f.32) and 12-28 → this report.
+    _**Resolved (2026-09-10):_ done — TODO_LIST, ROADMAP, FEATURES, docs/DOMAIN_LANGUAGE built; README badge removed; AGENTS.md fixed (docs-health pass)._~
+12. ~~Benchmark archive v0.1.1→v0.2.0 into `reports/` (12-28 f.31).~~ **Won't implement — no `reports/` directory exists; benchmarks live in README** (ROADMAP non-goal)
+13. ~~Superseded-pointer notes in the 09-42/11-33 reports → 12-28 report (12-28 f.32) and 12-28 → this report.~~ done (2026-09-10 docs-health pass — every 2026-0* report annotated inline with resolutions)
 14. Ecosystem completeness search for public go-etag consumers beyond the known six (12-28 f.29).
+    _**Status (2026-09-10):** open — TODO_LIST.md #21._
 15. cqrs-htmx middleware-showcase runtime-verify (start the example server once, 12-28 f.23).
+    _**Status (2026-09-10):** foreign repo._
 16. DiscordSync go-cqrs-lite vendor breakage + pin drift — user chose "leave documented" (12-28 f.15-17 stay owner-handoff items; no action from me).
+    _**Status (2026-09-10):** closed by owner decision (leave documented)._
 
 ## g. QUESTIONS (cannot resolve myself)
 

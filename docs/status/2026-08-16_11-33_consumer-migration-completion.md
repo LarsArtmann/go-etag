@@ -16,16 +16,17 @@ _Format: Markdown per explicit user request (status-report skill default is HTML
 
 | Item                                    | State                                                                                                                                                                                                               | Blocker                                    | Effort  |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------- |
-| **Post-v0.2.0 replace sweep (6 repos)** | Designed and documented (drop replace + pin v0.2.0 in go-github-kit, httputil, library-policy, cqrs-htmx, DiscordSync; pseudo-version only in nsfw-classifier); zero executions                                     | v0.2.0 tag does not exist yet — user-gated | M total |
+| **Post-v0.2.0 replace sweep (6 repos)** | ~~Designed and documented (drop replace + pin v0.2.0 in go-github-kit, httputil, library-policy, cqrs-htmx, DiscordSync; pseudo-version only in nsfw-classifier); zero executions~~ | done — executed and pushed (12-28 §a + 13-12 §a) | — |
 | **nsfw-classifier HEAD hygiene**        | Migration green at `2d137c5`, but BuildFlow's own advisory findings remain (inlined vendorHash, missing meta attrs, `goimports` key rejected by golangci config schema) — repo-owner territory, not migration scope | Owner decision                             | S each  |
 
 ## c. Not Started
 
-1. **v0.2.0 release lifecycle** — CHANGELOG `[Unreleased]` cut, annotated tag, push, proxy + pkg.go.dev + scratch `go get` verification (go-release skill). Blocked solely on user GO.
-2. **go-github-kit next release** — impossible before the tag exists (its `replace ../go-etag` is local-only); sequencing after tag undecided.
-3. **httputil release train** — downstream consumers of published httputil still pull the deprecated root via the shim; needs its own version bump after the sweep.
+1. ~~**v0.2.0 release lifecycle** — CHANGELOG `[Unreleased]` cut, annotated tag, push, proxy + pkg.go.dev + scratch `go get` verification (go-release skill). Blocked solely on user GO.~~ done — tagged `be19640`, pushed, proxy + pkg.go.dev verified (12-28 §a)
+2. ~~**go-github-kit next release** — impossible before the tag exists (its `replace ../go-etag` is local-only); sequencing after tag undecided.~~ done — kit v0.2.0 tagged and released (12-28 §a)
+3. ~~**httputil release train** — downstream consumers of published httputil still pull the deprecated root via the shim; needs its own version bump after the sweep.~~ done — httputil v0.12.0 (+ `server_timing/v0.12.0`) tagged, pushed, released (13-12 §a)
 4. **Optional polish** — in-repo shim export-parity test; client/ coverage % measurement (README's 98.9% badge is server-measured).
-5. **Flake revs → v0.2.0 tag commit** in DiscordSync/nsfw-classifier at sweep time.
+   _**Status (2026-09-10):** coverage measured (client 94.3%, badge since removed); the shim parity test is open — TODO_LIST.md #14._
+5. ~~**Flake revs → v0.2.0 tag commit** in DiscordSync/nsfw-classifier at sweep time.~~ done (12-28 §a — DiscordSync flake rev → `be19640`; nsfw-classifier pinned `v0.2.0`)
 
 ## d. Totally Fucked Up
 
@@ -48,29 +49,31 @@ _Format: Markdown per explicit user request (status-report skill default is HTML
 
 | #  | Task                                                                                                                                    | Impact   | Effort | Category      |
 | -- | --------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ------------- |
-| 1  | User GO/NO-GO on v0.2.0                                                                                                                 | Critical | S      | Decision      |
-| 2  | If GO: go-release lifecycle in go-etag (CHANGELOG cut, annotated tag, push, proxy/pkg.go.dev/`go get` verify)                           | Critical | M      | Release       |
-| 3  | Sweep: go-github-kit — drop replace, pin v0.2.0, test, commit                                                                           | High     | S      | Cleanup       |
-| 4  | Sweep: httputil — drop replace, pin v0.2.0                                                                                              | High     | S      | Cleanup       |
-| 5  | Sweep: library-policy — drop replace, pin v0.2.0                                                                                        | High     | S      | Cleanup       |
-| 6  | Sweep: cqrs-htmx examples submodule — drop replace, pin v0.2.0                                                                          | High     | S      | Cleanup       |
-| 7  | Sweep: DiscordSync — drop replace, pseudo→v0.2.0, flake rev→tag commit, pin guard, nix build                                            | High     | M      | Cleanup       |
-| 8  | Sweep: nsfw-classifier — pseudo→v0.2.0, vendorHash rotate, nix build                                                                    | High     | M      | Cleanup       |
-| 9  | Release go-github-kit once go-etag v0.2.0 exists                                                                                        | Medium   | M      | Release       |
-| 10 | httputil release train for downstream vendored consumers                                                                                | Medium   | M      | Release       |
-| 11 | In-repo shim export-parity test (`deprecated.go` vs `server`)                                                                           | Medium   | S      | Quality       |
-| 12 | Measure client/ coverage %; correct README badge claim                                                                                  | Medium   | S      | Quality       |
-| 13 | nsfw BuildFlow env fix (go-licenses/vulnix in devShell; tailwind-build out of pre-commit budget)                                        | Medium   | M      | Tooling       |
-| 14 | nsfw nix-checker advice: extract inline vendorHash to vendorHash.nix                                                                    | Low      | S      | Tooling       |
-| 15 | Flag DiscordSync's foreign unstaged `flake.nix` overlay drift (`${final.stdenv.hostPlatform.system}`) to its owner — not mine to commit | Low      | S      | Coordination  |
-| 16 | Tick the release box in plan `2026-08-16_08-35_server-client-split.md` after tagging                                                    | Low      | S      | Documentation |
-| 17 | Ecosystem-wide grep proving no `../go-etag` replaces survive post-sweep                                                                 | Low      | S      | Verification  |
-| 18 | docs-health HARVEST of this report's section f into TODO_LIST/ROADMAP if the project adopts those files                                 | Low      | S      | Documentation |
-| 19 | Re-run client benchmarks on final toolchain; refresh README numbers                                                                     | Low      | S      | Quality       |
-| 20 | Consider a short "temporary replace" note in consumer AGENTS.md/README files so the invisible debt is visible until the sweep           | Low      | S      | Documentation |
+| 1  | ~~User GO/NO-GO on v0.2.0~~ done — GO given, tagged `be19640` (12-28 §a)                                                                                                                 | Critical | S      | Decision      |
+| 2  | ~~If GO: go-release lifecycle in go-etag (CHANGELOG cut, annotated tag, push, proxy/pkg.go.dev/`go get` verify)~~ done (12-28 §a)                           | Critical | M      | Release       |
+| 3  | ~~Sweep: go-github-kit — drop replace, pin v0.2.0, test, commit~~ done (12-28 §a)                                                                           | High     | S      | Cleanup       |
+| 4  | ~~Sweep: httputil — drop replace, pin v0.2.0~~ done (12-28 §a, `2a53a20`)                                                                                              | High     | S      | Cleanup       |
+| 5  | ~~Sweep: library-policy — drop replace, pin v0.2.0~~ done (12-28 §a, `5fa35f6`)                                                                                        | High     | S      | Cleanup       |
+| 6  | ~~Sweep: cqrs-htmx examples submodule — drop replace, pin v0.2.0~~ done (12-28 §a, `f44fbf20`)                                                                          | High     | S      | Cleanup       |
+| 7  | ~~Sweep: DiscordSync — drop replace, pseudo→v0.2.0, flake rev→tag commit, pin guard, nix build~~ done (12-28 §a, `ee0c4124`)                                            | High     | M      | Cleanup       |
+| 8  | ~~Sweep: nsfw-classifier — pseudo→v0.2.0, vendorHash rotate, nix build~~ done (12-28 §a, `754bb3f`)                                                                    | High     | M      | Cleanup       |
+| 9  | ~~Release go-github-kit once go-etag v0.2.0 exists~~ done (kit v0.2.0 at `3871941`, 12-28 §a)                                                                                        | Medium   | M      | Release       |
+| 10 | ~~httputil release train for downstream vendored consumers~~ done (13-12 §a, v0.12.0)                                                                                | Medium   | M      | Release       |
+| 11 | In-repo shim export-parity test (`deprecated.go` vs `server`) — open, TODO_LIST.md #14                                                                           | Medium   | S      | Quality       |
+| 12 | ~~Measure client/ coverage %; correct README badge claim~~ done (94.3% measured; badge removed 2026-09-10)                                                                                  | Medium   | S      | Quality       |
+| 13 | nsfw BuildFlow env fix (go-licenses/vulnix in devShell; tailwind-build out of pre-commit budget) — foreign repo, owner                                        | Medium   | M      | Tooling       |
+| 14 | nsfw nix-checker advice: extract inline vendorHash to vendorHash.nix — foreign repo, owner                                                                    | Low      | S      | Tooling       |
+| 15 | Flag DiscordSync's foreign unstaged `flake.nix` overlay drift to its owner — foreign repo, owner decision pending | Low      | S      | Coordination  |
+| 16 | ~~Tick the release box in plan `2026-08-16_08-35_server-client-split.md` after tagging~~ done at `caed207`                                                    | Low      | S      | Documentation |
+| 17 | Ecosystem-wide grep proving no `../go-etag` replaces survive post-sweep — superseded by TODO_LIST.md #21 (broader search); in-house sweep verified 12-28 §a                                                                 | Low      | S      | Verification  |
+| 18 | ~~docs-health HARVEST of this report's section f into TODO_LIST/ROADMAP if the project adopts those files~~ done (2026-09-10 docs-health pass) | Low      | S      | Documentation |
+| 19 | Re-run client benchmarks on final toolchain; refresh README numbers — open, TODO_LIST.md #19                                                                     | Low      | S      | Quality       |
+| 20 | ~~Consider a short "temporary replace" note in consumer AGENTS.md/README files so the invisible debt is visible until the sweep~~ moot — sweep completed 2026-08-16 (12-28 §a); no temporary replaces remain           | Low      | S      | Documentation |
 
 ## g. Questions (cannot self-determine)
 
-1. **GO/NO-GO on tagging v0.2.0?** All five consumers are migrated, committed, and green; the tag is the sole blocker for the entire replace sweep (items f.3–f.8). Consumers currently ride pseudo-version `6292abb` + local replace scaffolding.
+1. ~~**GO/NO-GO on tagging v0.2.0?** All five consumers are migrated, committed, and green; the tag is the sole blocker for the entire replace sweep (items f.3–f.8). Consumers currently ride pseudo-version `6292abb` + local replace scaffolding.~~ **Resolved:** GO given — tagged and verified (12-28 §a).**
 2. **Are other agent sessions still active in the consumer repos?** This session saw a parallel session commit nsfw-classifier (`6876946`, `2d137c5` — MiniMax-M3 trailer) and foreign commits/drift appear in DiscordSync mid-flight. If others still own those repos, should I leave the post-release sweep of those repos to them, or take them back once you stop the other sessions?
+   _**Resolved (moot):** the sweep of all six repos completed 2026-08-16 (12-28 §a) regardless of session ownership; foreign state was respected throughout._
 3. **go-github-kit release sequencing:** ship a kit release immediately after the v0.2.0 tag lands (same session, off a clean `go get` pin), or let it wait for its own release train? (A kit release before the tag is impossible — its replace is local-only.)
+   _**Resolved:** shipped same-session — kit v0.2.0 tagged at `3871941` (12-28 §a)._

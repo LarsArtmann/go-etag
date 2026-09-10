@@ -1,5 +1,7 @@
 # go-etag Two-Sided Library: server/ + client/ Split with Deprecated Root Shim — Master Plan
 
+> **FULLY EXECUTED — archived 2026-09-10.** The split shipped at `bc5a551` (v0.2.0, tag `be19640`): server/ + client/ + root shim, all six consumers migrated and swept, checklist below fully ticked (release box ticked at `caed207`). Follow the status reports `2026-08-16_09-42` → `11-33` → `12-28` for the execution trail.
+
 _Date: 2026-08-16 08:35 · Scope: go-etag restructure, `client` package extraction, go-github-kit refactor, consumer migration, docs_
 _Related: [`2026-08-16_08-21_otel-observability-hooks.md`](./2026-08-16_08-21_otel-observability-hooks.md) — **executed** (`OnETagGenerated`/`On304`/`OnBufferOverflow` live in `etag.go:67-88`); this plan carries them into `server/` unchanged and fixes the stale AGENTS.md field list that plan left behind._
 

@@ -24,10 +24,12 @@
 
 1. **Perf detail introduced unbenchmarked**: `RoundTrip` now computes the cache key *before* the method check, so every non-GET passthrough pays a `KeyFunc` call (default: an allocating `URL.String()`) even when no invalidation follows. Should be computed lazily inside `roundTripUnsafe`. Small, but real, and I did not re-run benchmarks after §4.4 landed.
 2. **`restoreMismatchedValidator` canonical-key nuance**: it `header.Set(headerETag, entry.etag)`, which writes the canonical `Etag` key; a stored map carrying a non-canonical `ETag` key could briefly hold both keys. Real transports and our stubs canonicalize, so it is cosmetic — but untested in the restricted-mode + mismatch combination.
-3. **AGENTS.md canonicalization note now contradicts the linter**: the note says Go 1.26's canonical form is `Etag`; the `canonicalheader` linter *demands* the literal `ETag`. Runtime canonicalization and linter preference are different authorities and AGENTS.md doesn't explain that — I hit the flip-flop live (see d.3) and left the doc uncorrected.
-4. **Status report hygiene**: block one's 46-item next-step list still lives only in the timestamped report; the repo still has no `TODO_LIST.md`/`ROADMAP.md` to harvest into (withheld pending instruction, but it is now two reports deep).
+3. ~~**AGENTS.md canonicalization note now contradicts the linter**: the note says Go 1.26's canonical form is `Etag`; the `canonicalheader` linter *demands* the literal `ETag`. Runtime canonicalization and linter preference are different authorities and AGENTS.md doesn't explain that — I hit the flip-flop live (see d.3) and left the doc uncorrected.~~ done (AGENTS.md now explains the runtime-vs-linter split — 2026-09-10 docs-health pass)
+4. ~~**Status report hygiene**: block one's 46-item next-step list still lives only in the timestamped report; the repo still has no `TODO_LIST.md`/`ROADMAP.md` to harvest into (withheld pending instruction, but it is now two reports deep).~~ done (`TODO_LIST.md` + `ROADMAP.md` created and both reports harvested — 2026-09-10 docs-health pass)
 
 ## c) NOT STARTED
+
+_All §c items are open and routed: TODO_LIST.md (§4.3.5, §4.4 integration, fuzzing, branch audit, release) and ROADMAP.md (Vary parsing, Alex fixtures/email) — 2026-09-10 docs-health harvest._
 
 - §4.3.5 HEAD-based freshening (SHOULD — opted out, documented).
 - Vary-aware selection (documented sharp edge only; no parsing).
@@ -61,14 +63,14 @@
 4. Fuzz `cacheControlDirectives` + `hasNoStoreDirective` (30s seeds in CI, mirroring server fuzz jobs).
 5. `restoreMismatchedValidator`: avoid the dual-key edge; test restricted-mode + mismatch combination.
 6. Test `weaklyMatchesValidator` edge forms (`W/` vs `w/`, malformed tags).
-7. AGENTS.md: correct/nuance the `ETag`/`Etag` canonicalization note (runtime vs `canonicalheader` linter).
+7. ~~AGENTS.md: correct/nuance the `ETag`/`Etag` canonicalization note (runtime vs `canonicalheader` linter).~~ done (2026-09-10 docs-health pass)
 8. **Release v0.3.0** (go-release flow): verify CHANGELOG, tag, push, watch the module proxy and pkg.go.dev, `go get` round trip.
 9. Draft the reply email to Alex; answer stands: Age surfaces verbatim on 200s, freshens from 304s on rebuilds; cache decision internal by design.
 10. Accept/decline Alex's header-capture fixtures; if accepted, land them in `client/testdata/` as replayed real-world cases.
 11. §4.3.5 HEAD freshening (SHOULD): HEAD 200 with matching ETag (+ Content-Length) freshens stored metadata; mismatch invalidates.
 12. §4.4 integration variant: PUT 200 through the real server, then GET must refetch.
 13. Vary parsing: at least warn in `Stats` or docs when a stored response carries `Vary` the KeyFunc ignores.
-14. Create `TODO_LIST.md` + `ROADMAP.md`; harvest both status reports.
+14. ~~Create `TODO_LIST.md` + `ROADMAP.md`; harvest both status reports.~~ done (2026-09-10 docs-health pass — `TODO_LIST.md` 21 items, `ROADMAP.md` 4 themes)
 15. Decide the `ETag` domain-type sharing question (client strings vs server type).
 16. Typed `PreserveOn304` mode (FreshenPerRFC / FreshenFields / FreshenNone) to kill the nil-vs-empty overload.
 17. `cacheEntry` → `storedResponse` with validator-matching methods (§4.3.4-aware).
@@ -86,16 +88,19 @@
 29. Exhaustive `isUnsafeMethod` table (CONNECT, PATCH, custom `X-FOO`).
 30. `exhaustruct` → `exhaustruct_v5` migration (deprecation warning).
 31. Website/docs launch for the repo (sibling-repo pattern).
-32. Unify `reports/` vs `docs/status/` locations.
-33. Review `docs/planning/2026-08-16_*server-client-split.md` for now-resolved items to mark done.
+32. ~~Unify `reports/` vs `docs/status/` locations.~~ **Won't implement — no `reports/` directory exists; `docs/status/` is the single snapshot location (recorded in ROADMAP non-goals).**
+33. ~~Review `docs/planning/2026-08-16_*server-client-split.md` for now-resolved items to mark done.~~ done (2026-09-10 docs-health pass — plan fully resolved and archived)
 34. CHANGELOG polish against Keep-a-Changelog before the tag.
 35. Consider a `CONTRIBUTING.md` refresh (it predates the client package and the lint/format commands in AGENTS.md).
 
 ## g) QUESTIONS I CANNOT ANSWER MYSELF (max 3)
 
 1. **Ship it?** Everything is staged and verified for **v0.3.0** — say the word and I run the go-release flow (tag + push + proxy verification). Tag message/notes preferences, if any?
+   _**Status (2026-09-10):** still awaiting owner GO — tracked as TODO_LIST.md #1._
 2. **Alex:** draft the reply email for you to send? And do we want his raw header captures as permanent fixtures in `client/testdata/`?
+   _**Status (2026-09-10):** moved to ROADMAP.md Open Questions._
 3. **Domain type:** for post-release work — may the client import `server`'s `ETag` type, or should it be extracted to a shared package first? (Blocks items 15–17 either way.)
+   _**Status (2026-09-10):** moved to ROADMAP.md Open Questions (blocks Theme 2)._
 
 ---
 

@@ -37,15 +37,19 @@ Nothing mid-flight. All five consumers are migrated and committed; the release a
 
 ## e. Not Done (remaining work)
 
-1. v0.2.0 release — **explicitly gated on user GO** (go-release skill: CHANGELOG cut, annotated tag, push, proxy + pkg.go.dev verify).
-2. Post-release sweep: drop every temporary `replace`/pseudo-version in go-github-kit, httputil, library-policy, cqrs-htmx, DiscordSync and pin v0.2.0 (nsfw-classifier only drops the pseudo-version).
+1. ~~v0.2.0 release — **explicitly gated on user GO** (go-release skill: CHANGELOG cut, annotated tag, push, proxy + pkg.go.dev verify).~~ done — tagged `be19640`, proxy + pkg.go.dev verified (12-28 §a)
+2. ~~Post-release sweep: drop every temporary `replace`/pseudo-version in go-github-kit, httputil, library-policy, cqrs-htmx, DiscordSync and pin v0.2.0 (nsfw-classifier only drops the pseudo-version).~~ done — all six swept and pushed (12-28 §a + 13-12 §a)
 3. Optional polish: in-repo shim compile test; client coverage % (README's 98.9% badge is server-measured).
+   _**Status (2026-09-10):** shim compile-verified against a scratch consumer (13-12 §a); coverage measured at 94.3% (badge removed). The in-repo parity test remains open — TODO_LIST.md #14._
 
 ## f. Follow-ups (minor, non-blocking)
 
 - Root shim `deprecated.go` has no in-repo test enforcing export parity (verified manually once via `go doc` diff + scratch consumer).
+  _**Status (2026-09-10):** still open — TODO_LIST.md #14 (scratch-consumer verification repeated at v0.2.0, 13-12 §a)._
 - go-github-kit `DefaultETagEntries` const is now informational (default enforced inside etagclient); harmless.
+  _**Status (2026-09-10):** foreign repo — informational const still present on the rendered pkg.go.dev page; harmless as noted._
 - The auto-commit daemon committed kit work as `1afdd80` while the repo also carries unrelated staged state (`helpers_test.go`, `testutil_test.go` modified) — foreign, untouched.
+  _**Status (2026-09-10):** foreign repo state — nothing to do here._
 
 ## g. Session Quality Assessment (honest)
 
@@ -54,3 +58,5 @@ Nothing mid-flight. All five consumers are migrated and committed; the release a
 **Weak / risks:** the replace-directive scaffolding across 5 repos is invisible debt until v0.2.0 ships — if the release stalls, local builds of consumers silently depend on sibling checkouts; the plan's "11 files across 5 repos" count slightly undercounted (httputil's own published-version consumers pull the old root package — safe via shim, but the ecosystem takes two release trains to converge).
 
 **Verdict:** plan ~95% executed — all five consumers migrated, committed, and green; only the user-gated v0.2.0 tag and the post-release replace sweep remain.
+
+_**Post-script (2026-09-10 docs-health pass):** the last 5% landed — v0.2.0 tagged and the six-repo sweep completed and pushed on 2026-08-16 (see `2026-08-16_12-28_v0.2.0-release-and-ecosystem-sweep.md`). The plan document is fully resolved and archived._

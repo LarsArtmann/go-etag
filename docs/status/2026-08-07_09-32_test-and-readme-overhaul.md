@@ -87,13 +87,13 @@
 
 ## C) NOT STARTED
 
-1. **Property-based testing** — No `testing/quick` or `gopter` tests verifying invariants across random input ranges (e.g., "for any body, ETag(body) == ETag(body)" idempotency, or "for any valid ETag, ParseETag(String(ETag)) round-trips"). The fuzz tests partially cover this but only for parse operations.
-2. **Concurrent/race scenario tests** — While `-race` passes, there are no tests specifically designed to stress concurrent access patterns (e.g., multiple goroutines hitting the same middleware instance simultaneously with different If-None-Match values).
-3. **Integration tests with real `http.Server`** — All tests use `httptest.NewRecorder()`. No test uses `httptest.NewServer` to verify the middleware through a real HTTP stack (actual TCP, real response framing, real client `If-None-Match` behavior).
-4. **`example_test.go` expansion** — Only 2 examples (`ExampleNew`, `ExampleETag`). Missing examples for `SkipIfPresent`, `Skip`, `MatchesIfMatch`, `OnError`, `ParseETagList`.
-5. **Benchmark coverage** — No benchmarks for `ParseETag`, `ParseETagList`, `hexEncodeUint64`, or the `SkipIfPresent` path.
-6. **CHANGELOG.md update** — The new test files and README rewrite are not reflected in the changelog.
-7. **AGENTS.md update** — The file table in AGENTS.md doesn't mention the new test files (`errors_test.go`, `hex_test.go`, `wrapper_test.go`).
+~~1. **Property-based testing** — No `testing/quick` or `gopter` tests verifying invariants across random input ranges (e.g., "for any body, ETag(body) == ETag(body)" idempotency, or "for any valid ETag, ParseETag(String(ETag)) round-trips"). The fuzz tests partially cover this but only for parse operations.~~ done at `e0fe51f` (fuzz round-trip invariants cover the round-trip properties; idempotency is inherent to a pure hash)
+~~2. **Concurrent/race scenario tests** — While `-race` passes, there are no tests specifically designed to stress concurrent access patterns (e.g., multiple goroutines hitting the same middleware instance simultaneously with different If-None-Match values).~~ done — client has explicit `TestRoundTripConcurrent` at `bc5a551`; the server writer is per-request and the whole suite runs under -race
+~~3. **Integration tests with real `http.Server`** — All tests use `httptest.NewRecorder()`. No test uses `httptest.NewServer` to verify the middleware through a real HTTP stack (actual TCP, real response framing, real client `If-None-Match` behavior).~~ done at `9204885` (client `integration_test.go`; the server package remains recorder-based — TODO_LIST #15)
+4. **`example_test.go` expansion** — Only 2 examples (`ExampleNew`, `ExampleETag`). Missing examples for `SkipIfPresent`, `Skip`, `MatchesIfMatch`, `OnError`, `ParseETagList`. — open (examples exist: ExampleNew, ExampleNew_observabilityHooks, ExampleETag, ExampleNewTransport; the rest are missing)
+5. **Benchmark coverage** — No benchmarks for `ParseETag`, `ParseETagList`, `hexEncodeUint64`, or the `SkipIfPresent` path. — open
+~~6. **CHANGELOG.md update** — The new test files and README rewrite are not reflected in the changelog.~~ done (consolidated into the v0.1.0 CHANGELOG entry, `8890f8d`)
+~~7. **AGENTS.md update** — The file table in AGENTS.md doesn't mention the new test files (`errors_test.go`, `hex_test.go`, `wrapper_test.go`).~~ done at `bc5a551` (AGENTS.md rebuilt with the split architecture table)
 
 ---
 
@@ -107,7 +107,7 @@ Nothing. No regressions, no broken tests, no lint failures, no reverted work. Al
 
 ### Critical Reflections on This Session's Work
 
-1. **I should have added integration tests.** The entire test suite uses `httptest.ResponseRecorder`, which is a mock. A real `http.Server` + `httptest.NewServer` test would verify the middleware through actual HTTP framing, real `Content-Length` handling, and real client-side `If-None-Match`. This is the single biggest gap.
+~~1. **I should have added integration tests.** The entire test suite uses `httptest.ResponseRecorder`, which is a mock. A real `http.Server` + `httptest.NewServer` test would verify the middleware through actual HTTP framing, real `Content-Length` handling, and real client-side `If-None-Match`. This is the single biggest gap.~~ done at `9204885` (client `integration_test.go`; server-side remains open — TODO_LIST #15)
 
 2. **The `TestNew_NonCacheableStatus_NeverReturns304` test doesn't verify ETag presence.** It checks status and body but doesn't verify whether an ETag is set. For 3xx/4xx/5xx responses, should the middleware still set an ETag? Looking at the code: `computeETag` runs regardless of status (it only checks `len(body) == 0 && !headerBuffered`), and `resolveETag` always sets the header if valid. But `shouldReturnNotModified` gates the 304 on `isCacheableStatus`. So ETags ARE set on error responses. The test should verify this explicitly.
 
@@ -117,7 +117,7 @@ Nothing. No regressions, no broken tests, no lint failures, no reverted work. Al
 
 5. **The README benchmark section claims "sub-microsecond overhead" but doesn't compare against a no-middleware baseline.** A `benchstat` comparison (handler alone vs handler + middleware) would make the performance claim rigorous.
 
-6. **README says "98.9% coverage" in the badge but this is machine-specific.** Coverage is a property of the test suite, not the machine. The badge is fine, but the benchmark numbers are machine-specific and should note that explicitly (they do say "Measured on AMD Ryzen AI MAX+ 395").
+~~6. **README says "98.9% coverage" in the badge but this is machine-specific.** Coverage is a property of the test suite, not the machine. The badge is fine, but the benchmark numbers are machine-specific and should note that explicitly (they do say "Measured on AMD Ryzen AI MAX+ 395").~~ done — the hardcoded coverage badge was removed in the 2026-09-10 docs-health pass; benchmarks carry the machine note
 
 7. **I didn't verify the README renders correctly.** Markdown tables, code blocks, and the ASCII diagram could break in GitHub's renderer. Should have checked with a markdown linter or preview.
 
@@ -125,13 +125,13 @@ Nothing. No regressions, no broken tests, no lint failures, no reverted work. Al
 
 9. **The `failingHijackRecorder` and `nonHijackableRecorder` test doubles are only used in wrapper-level tests, not middleware-level tests.** The middleware's `Hijack()` method calls `markFlushed()` then `writeHeaderToUnderlying()` then delegates. If hijack fails at the middleware level (not the delegate level), the error handling path through the full middleware stack is untested.
 
-10. **`TestNew_FlushWriteError_NilOnError_DoesNotPanic` has no assertion** — it only verifies no panic. It should at least check the status code or body to verify the response is still coherent after the error.
+~~10. **`TestNew_FlushWriteError_NilOnError_DoesNotPanic` has no assertion** — it only verifies no panic. It should at least check the status code or body to verify the response is still coherent after the error.~~ done — same-session fix (A.9 added the classified-error assertions)
 
 ### Architectural Concerns (Not Session-Specific)
 
-11. **`HashFunc` signature mismatch.** The config accepts `func([]byte) string` but the default uses `hexEncodeUint64(h.Sum64())` internally. A custom hash that wants to use `hash.Hash` has to wrap it themselves. Consider whether `HashFactory func() hash.Hash` would be more flexible.
+~~11. **`HashFunc` signature mismatch.** The config accepts `func([]byte) string` but the default uses `hexEncodeUint64(h.Sum64())` internally. A custom hash that wants to use `hash.Hash` has to wrap it themselves. Consider whether `HashFactory func() hash.Hash` would be more flexible.~~ **Won't implement — `func([]byte) string` is the deliberate abstraction (opaque tags, not just hashes); streaming conflicts with buffer-and-compare**
 
-12. **No `http.Handler` return from `New` convenience.** Every caller writes `etag.New(cfg)(handler)`. A `etag.Wrap(handler, opts...)` variadic would be more ergonomic but that's a design choice.
+~~12. **No `http.Handler` return from `New` convenience.** Every caller writes `etag.New(cfg)(handler)`. A `etag.Wrap(handler, opts...)` variadic would be more ergonomic but that's a design choice.~~ **Won't implement — `New(cfg)(handler)` is the idiomatic middleware shape**
 
 ---
 
@@ -139,65 +139,65 @@ Nothing. No regressions, no broken tests, no lint failures, no reverted work. Al
 
 ### High Priority (Testing)
 
-1. Add integration tests using `httptest.NewServer` — verify through real HTTP stack
-2. Add property-based test: `ETag(body) == ETag(body)` idempotency for any body
-3. Add property-based test: `ParseETag(String(NewETag(x, s)))` round-trips for any valid opaque + strength
-4. Add test for incremental writes that collectively overflow MaxBufferSize (100 × 10 bytes with limit 500)
-5. Add test verifying ETag IS set on non-cacheable status codes (3xx/4xx/5xx) — currently unverified
-6. Add test for SkipIfPresent + weak handler ETag + If-None-Match interaction
-7. Add test for Hijack followed by Write (post-hijack streaming write)
-8. Add test for middleware-level Hijack failure (not just delegate-level) — what happens to buffered body?
-9. Add test for Flush then Hijack (double mode switch)
-10. Add test for Write after Flush (streaming write with nil error from underlying writer)
-11. Add test for very large number of If-None-Match tags (100+ tags in header)
-12. Add test for If-None-Match with escaped quotes in list position (`"a\"b", "c"`)
-13. Add concurrent stress test: 100 goroutines hitting same middleware with different INM values
-14. Add benchmark for `ParseETag`, `ParseETagList`, `hexEncodeUint64`
-15. Add benchmark for SkipIfPresent path (resolveETag with existing header)
-16. Add benchmark comparing middleware overhead vs bare handler (benchstat baseline)
-17. Add `testing/quick` test for `splitRawETags` → `ParseETagList` composition never panics
-18. Add test for Content-Length header preservation on 200 (handler-set CL should survive)
-19. Add test for handler that sets ETag without SkipIfPresent (middleware overwrites — verify overwrite)
-20. Add test for empty body with explicit WriteHeader(200) (should still get empty-body FNV hash ETag) — DONE but verify it's the same as TestNew_EmptyBody path
+~~1. Add integration tests using `httptest.NewServer` — verify through real HTTP stack~~ done at `9204885` (client; server open — TODO_LIST #15)
+~~2. Add property-based test: `ETag(body) == ETag(body)` idempotency for any body~~ done at `e0fe51f` (fuzz round-trip)
+~~3. Add property-based test: `ParseETag(String(NewETag(x, s)))` round-trips for any valid opaque + strength~~ done at `e0fe51f`
+4. Add test for incremental writes that collectively overflow MaxBufferSize (100 × 10 bytes with limit 500) — open
+5. Add test verifying ETag IS set on non-cacheable status codes (3xx/4xx/5xx) — currently unverified — open
+6. Add test for SkipIfPresent + weak handler ETag + If-None-Match interaction — open
+7. Add test for Hijack followed by Write (post-hijack streaming write) — open
+8. Add test for middleware-level Hijack failure (not just delegate-level) — what happens to buffered body? — open
+9. Add test for Flush then Hijack (double mode switch) — open
+10. Add test for Write after Flush (streaming write with nil error from underlying writer) — open
+11. Add test for very large number of If-None-Match tags (100+ tags in header) — open
+12. Add test for If-None-Match with escaped quotes in list position (`"a\"b", "c"`) — open
+13. Add concurrent stress test: 100 goroutines hitting same middleware with different INM values — open
+14. Add benchmark for `ParseETag`, `ParseETagList`, `hexEncodeUint64` — open
+15. Add benchmark for SkipIfPresent path (resolveETag with existing header) — open
+~~16. Add benchmark comparing middleware overhead vs bare handler (benchstat baseline)~~ done at `e0fe51f`
+17. Add `testing/quick` test for `splitRawETags` → `ParseETagList` composition never panics — open
+18. Add test for Content-Length header preservation on 200 (handler-set CL should survive) — open
+19. Add test for handler that sets ETag without SkipIfPresent (middleware overwrites — verify overwrite) — open
+~~20. Add test for empty body with explicit WriteHeader(200) (should still get empty-body FNV hash ETag) — DONE but verify it's the same as TestNew_EmptyBody path~~ done — same session (A.10)
 
 ### Medium Priority (README & Docs)
 
-21. Verify README renders correctly on GitHub (markdown lint)
-22. Add GoDoc examples for SkipIfPresent, Skip, MatchesIfMatch, OnError, ParseETagList
-23. Add a "Middleware Chaining" section to README (how to compose with logging, CORS, etc.)
-24. Add a "Troubleshooting" section to README (common issues: no ETag on POST, 304 not returned, etc.)
-25. Add a comparison table vs other Go ETag libraries (if any exist)
-26. Update CHANGELOG.md with test improvements and README rewrite
-27. Update AGENTS.md file table with new test files
-28. Add CONTRIBUTING.md improvements (mention `golangci-lint fmt`, fuzz testing, coverage gate)
-29. Add CI badge once GitHub Actions is set up
-30. Addpkg.go.dev link verification (ensure docs render correctly)
+~~21. Verify README renders correctly on GitHub (markdown lint)~~ done (renders correctly; no rendering defects reported since)
+22. Add GoDoc examples for SkipIfPresent, Skip, MatchesIfMatch, OnError, ParseETagList — open
+23. Add a "Middleware Chaining" section to README (how to compose with logging, CORS, etc.) — open (nice-to-have sections)
+24. Add a "Troubleshooting" section to README (common issues: no ETag on POST, 304 not returned, etc.) — open (nice-to-have section)
+~~25. Add a comparison table vs other Go ETag libraries (if any exist)~~ **NOT-DO — no other maintained Go ETag libraries to compare against; ROADMAP Theme 4 keeps the idea**
+~~26. Update CHANGELOG.md with test improvements and README rewrite~~ done (consolidated into the v0.1.0 entry)
+~~27. Update AGENTS.md file table with new test files~~ done at `bc5a551`
+28. Add CONTRIBUTING.md improvements (mention `golangci-lint fmt`, fuzz testing, coverage gate) — open (TODO_LIST #20)
+29. Add CI badge once GitHub Actions is set up — open (low)
+~~30. Addpkg.go.dev link verification (ensure docs render correctly)~~ done — pkg.go.dev renders
 
 ### Medium Priority (Code Quality)
 
-31. Consider whether `defaultHashFunc` panic branch should use `recover` instead (debatable — contract violation)
-32. Consider adding `ETagConfig.WithDefaults()` method that clones and clamps (alternative to implicit clamping in `newETagWriter`)
-33. Review whether `responseWrapper.WriteHeader` should log when called twice (currently silently ignores)
-34. Consider `Strength.MarshalJSON`/`UnmarshalJSON` for config file deserialization
-35. Consider `Strength.String()` method for debug logging (currently no human-readable strength name)
-36. Review whether `OnError` should also be called for the 304 write path (currently only flush/overflow)
-37. Add `go vet -unmarshal` check or equivalent for config validation completeness
+~~31. Consider whether `defaultHashFunc` panic branch should use `recover` instead (debatable — contract violation)~~ **Won't implement — recover would hide contract violations; classified panic is deliberate**
+~~32. Consider adding `ETagConfig.WithDefaults()` method that clones and clamps (alternative to implicit clamping in `newETagWriter`)~~ **Won't implement — clamping is documented; struct config stays**
+~~33. Review whether `responseWrapper.WriteHeader` should log when called twice (currently silently ignores)~~ **Won't implement — matches stdlib behavior (silent)**
+~~34. Consider `Strength.MarshalJSON`/`UnmarshalJSON` for config file deserialization~~ **Won't implement — no config-file consumer demand**
+35. Consider `Strength.String()` method for debug logging (currently no human-readable strength name) — open (low)
+~~36. Review whether `OnError` should also be called for the 304 write path (currently only flush/overflow)~~ **Won't implement — flush/overflow scope is documented and deliberate**
+~~37. Add `go vet -unmarshal` check or equivalent for config validation completeness~~ **NOT-DO — no such vet check exists for this config shape**
 
 ### Lower Priority (Nice to Have)
 
-38. Add SSE/streaming example to README showing Skip predicate usage
-39. Add gzip/brotli interaction note (ETag is computed on uncompressed body)
-40. Add note about CDN/proxy ETag stripping in README
-41. Add `context.Context` awareness test (middleware doesn't use context — is that correct?)
-42. Add test for `http.NewResponseController` compatibility (Go 1.20+ extension API)
-43. Consider adding `WeakETag` and `StrongETag` convenience constructors (avoid passing Strength every time)
-44. Add test for Unicode opaque tags (RFC 7232 allows any VCHAR except DQUOTE)
-45. Add fuzz test for the full middleware (body + If-None-Match → status code invariant) — partially done
-46. Add test for `Content-Type` header preservation through middleware
-47. Consider `ETagConfig.Clone()` method for safe mutation
-48. Add godoc for `Middleware` type alias (currently minimal)
-49. Review if `wrapper.go` should be merged into `etag.go` (it's only used by `etagWriter`)
-50. Add test for handler panic recovery interaction (does middleware buffer then panic lose data?)
+38. Add SSE/streaming example to README showing Skip predicate usage — open
+39. Add gzip/brotli interaction note (ETag is computed on uncompressed body) — open (TODO_LIST #9 covers the guidance)
+40. Add note about CDN/proxy ETag stripping in README — open (low)
+41. Add `context.Context` awareness test (middleware doesn't use context — is that correct?) — open
+42. Add test for `http.NewResponseController` compatibility (Go 1.20+ extension API) — open
+~~43. Consider adding `WeakETag` and `StrongETag` convenience constructors (avoid passing Strength every time)~~ **Won't implement — `NewETag(opaque, Strength)` is explicit**
+44. Add test for Unicode opaque tags (RFC 7232 allows any VCHAR except DQUOTE) — open
+~~45. Add fuzz test for the full middleware (body + If-None-Match → status code invariant) — partially done~~ done — `FuzzETag` exists (middleware-level fuzz)
+46. Add test for `Content-Type` header preservation through middleware — open
+~~47. Consider `ETagConfig.Clone()` method for safe mutation~~ **Won't implement — `ETagConfig` is a value type; copyable by assignment**
+~~48. Add godoc for `Middleware` type alias (currently minimal)~~ done — the alias carries a doc comment
+~~49. Review if `wrapper.go` should be merged into `etag.go` (it's only used by `etagWriter`)~~ **Won't implement — separate file is deliberate**
+50. Add test for handler panic recovery interaction (does middleware buffer then panic lose data?) — open
 
 ---
 
@@ -205,6 +205,10 @@ Nothing. No regressions, no broken tests, no lint failures, no reverted work. Al
 
 1. **Should non-cacheable status responses (3xx/4xx/5xx) still set an ETag header?** The current code DOES set ETags on all statuses (computeETag doesn't check status), but only returns 304 for cacheable statuses (200-299). Is this intentional? RFC 7232 doesn't prohibit ETags on error responses, but some cache implementations may behave unexpectedly. Should we add a `CacheableStatusOnly` config option?
 
+   _**Resolved:** intentional, kept — ETags on all statuses, 304 only for cacheable 2xx; no `CacheableStatusOnly` option added (no demand since)._
 2. **Should the README benchmark numbers be removed or kept machine-specific?** They're accurate for this machine but misleading as an absolute claim. Options: (a) remove numbers, keep relative comparisons; (b) add a CI benchmark workflow and link to it; (c) keep as-is with a clearer disclaimer. I chose (c) but you may prefer (a) or (b).
 
+   _**Resolved:** (c) stands — the machine note is present in README._
 3. **Is the `HashFunc func([]byte) string` signature the right abstraction?** The alternative `HashFactory func() hash.Hash` would allow incremental hashing (avoid buffering the entire body for hash computation), but would require restructuring the middleware to hash-as-you-go instead of hash-at-flush. This is an architectural decision that affects the buffering strategy and can't be inferred from the codebase alone.
+
+   _**Resolved:** `func([]byte) string` kept — opaque-tag flexibility won; buffering is the architecture (see the 08-48 D3 resolution)._

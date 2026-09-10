@@ -21,10 +21,10 @@ _Scope: strictly this session — resuming at the 13-12 report's §g waiting sta
 
 | Item                                             | State                                                                                                                                                                                                                                                                                            | Blocker                                                                                                                 | Effort |
 | ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ------ |
-| **go-release skill gate: prose in, tooling out** | §4.4 documents the CI gate and GOTOOLCHAIN pin, but the skill's own `scripts/pre-release-check.sh` ("Use the helper script to automate the gate checks", §4 intro) was NOT extended — the script still cannot fail on a red/in-progress CI run.                                                  | Prose/script split brain: the documented gate and the automated gate now diverge. Needs a deliberate edit to the skill. | S      |
-| **kit@v0.2.0 pkg.go.dev render**                 | Landing page + "Go to latest" banner verified (indexing proven), but `pkg.go.dev/...go-github-kit@v0.2.0` was never fetched directly, so the v0.2.0 docs page itself is inferred, not seen. My closing message said "live on pkg.go.dev" — true but one step short of the claim's full strength. | One `fetch` call.                                                                                                       | XS     |
-| **go-etag master ahead 1**                       | `dc7ca86` (report addendum) committed locally, unpushed. Push requires explicit GO per standing rule.                                                                                                                                                                                            | Awaiting user GO (g.1 below).                                                                                           | XS     |
-| **TODO harvest (3 reports deep)**                | 13-12 §f (16 items) + this report's §f have never been harvested into `TODO_LIST.md`/`ROADMAP.md`; the status reports are acting as the de-facto task store — exactly the entombment the status-report skill warns about.                                                                        | Needs docs-health HARVEST pass (13-12 f.11 covers the docs pass generally; harvest is the specific missing move).       | M      |
+| ~~**go-release skill gate: prose in, tooling out**~~ | §4.4 documents the CI gate and GOTOOLCHAIN pin, but the skill's own `scripts/pre-release-check.sh` ("Use the helper script to automate the gate checks", §4 intro) was NOT extended — the script still cannot fail on a red/in-progress CI run.                                                  | **NOT-DO for this repo** — the script lives in the owner's personal skill, not go-etag; the go-release §4.4 prose gate is the encoded fix. | S      |
+| ~~**kit@v0.2.0 pkg.go.dev render**~~                 | Landing page + "Go to latest" banner verified (indexing proven), but `pkg.go.dev/...go-github-kit@v0.2.0` was never fetched directly, so the v0.2.0 docs page itself is inferred, not seen. My closing message said "live on pkg.go.dev" — true but one step short of the claim's full strength. | done — the @v0.2.0 page renders fully (verified 2026-09-10 docs-health pass).                                                                                                       | XS     |
+| ~~**go-etag master ahead 1**~~                       | `dc7ca86` (report addendum) committed locally, unpushed. Push requires explicit GO per standing rule.                                                                                                                                                                                            | done — pushed; master long past `dc7ca86`.                                                                                           | XS     |
+| ~~**TODO harvest (3 reports deep)**~~                | 13-12 §f (16 items) + this report's §f have never been harvested into `TODO_LIST.md`/`ROADMAP.md`; the status reports are acting as the de-facto task store — exactly the entombment the status-report skill warns about.                                                                        | done (2026-09-10 docs-health pass — TODO_LIST + ROADMAP created, all reports harvested).       | M      |
 
 ## c. NOT STARTED
 
@@ -54,32 +54,46 @@ _Scope: strictly this session — resuming at the 13-12 report's §g waiting sta
 
 ## f. NEXT (prioritized)
 
-1. **GO: push `dc7ca86`** — go-etag master is ahead 1 (report addendum).
+1. ~~**GO: push `dc7ca86`** — go-etag master is ahead 1 (report addendum).~~ done — pushed (master has advanced far past it)
 2. **Extend `pre-release-check.sh` in go-release skill** to fail on red/in-progress CI (`gh run list` check), matching §4.4 — closes b.1/d's split brain. Needs GO (edit to your personal skill's tested surface).
-3. **Fetch `pkg.go.dev/github.com/LarsArtmann/go-github-kit@v0.2.0` directly** — close the b.2 inference gap (XS).
-4. **GO: docs-health HARVEST** — pull 13-12 §f + this §f into `TODO_LIST.md`/`ROADMAP.md` before a fourth report entombs more items.
+   _**Status (2026-09-10):** out of repo scope — owner's personal skill; prose gate §4.4 is the encoded fix._
+3. ~~**Fetch `pkg.go.dev/github.com/LarsArtmann/go-github-kit@v0.2.0` directly** — close the b.2 inference gap (XS).~~ done (2026-09-10 docs-health pass — page renders fully)
+4. ~~**GO: docs-health HARVEST** — pull 13-12 §f + this §f into `TODO_LIST.md`/`ROADMAP.md` before a fourth report entombs more items.~~ done (2026-09-10 — both files created and populated)
 5. Kit GOTOOLCHAIN pin at next touch (deferred by g.3; 13-12 f.9 unchanged).
+   _**Status (2026-09-10):** foreign repo — kit owner's call._
 6. go-etag GOTOOLCHAIN pin / optional govulncheck job (13-12 f.10).
+   _**Status (2026-09-10):** open — TODO_LIST.md #11._
 7. cqrs-htmx: tidy ~20 submodules' indirect go-etag refs after the foreign session lands (13-12 f.5).
+   _**Status (2026-09-10):** foreign repo._
 8. DiscordSync: `nix flake check` + foreign `stdenv.hostPlatform` hunk decision (13-12 f.6, owner).
+   _**Status (2026-09-10):** foreign repo._
 9. library-policy: add go-licenses + vulnix to devShell (13-12 f.7).
+   _**Status (2026-09-10):** foreign repo._
 10. nsfw-classifier: tailwind-build `signal: killed` (13-12 f.8).
-11. go-etag docs-health pass: ROADMAP/TODO_LIST/FEATURES/README post-v0.2.0 (13-12 f.11 — subsumes f.4 above if done together).
-12. Benchmark archive v0.1.1→v0.2.0 into `reports/` (13-12 f.12).
-13. Superseded-pointer annotations: 09-42/11-33 → 12-28 → 13-12 → this report (13-12 f.13; this report now also needs a pointer).
+    _**Status (2026-09-10):** foreign repo._
+11. ~~go-etag docs-health pass: ROADMAP/TODO_LIST/FEATURES/README post-v0.2.0 (13-12 f.11 — subsumes f.4 above if done together).~~ done (2026-09-10 — TODO_LIST, ROADMAP, FEATURES, docs/DOMAIN_LANGUAGE built; README badge + AGENTS.md fixed)
+12. ~~Benchmark archive v0.1.1→v0.2.0 into `reports/` (13-12 f.12).~~ **Won't implement — no `reports/` directory exists; benchmarks live in README** (ROADMAP non-goal)
+13. ~~Superseded-pointer annotations: 09-42/11-33 → 12-28 → 13-12 → this report (13-12 f.13; this report now also needs a pointer).~~ done (2026-09-10 docs-health pass — every 2026-0* report annotated inline; this file included)
 14. Ecosystem completeness search for public go-etag consumers beyond the known six (13-12 f.14).
+    _**Status (2026-09-10):** open — TODO_LIST.md #21._
 15. cqrs-htmx middleware-showcase runtime-verify (13-12 f.15).
+    _**Status (2026-09-10):** foreign repo._
 16. Check whether `server_timing/v0.10.0`/`v0.9.1` ever had release pages; decide the sub-module release convention once (noticed this session).
-17. Delete `/tmp/httputil-release-notes-v0.12.0.md` (or decide release-note sources belong in-repo).
-18. Re-run `golangci-lint run` on go-etag once to re-confirm the 26 IDE warnings are still stale false reads (not re-confirmed THIS session; prior sessions' verification inherited).
+    _**Status (2026-09-10):** foreign repo (httputil)._
+17. ~~Delete `/tmp/httputil-release-notes-v0.12.0.md` (or decide release-note sources belong in-repo).~~ resolved (moot — tmpfs state from 2026-08-16 no longer exists)
+18. ~~Re-run `golangci-lint run` on go-etag once to re-confirm the 26 IDE warnings are still stale false reads (not re-confirmed THIS session; prior sessions' verification inherited).~~ done (2026-09-10 — lint run clean, 0 issues)
 19. Consider a Release workflow guard for go-etag (it currently has no release workflow at all — tags are release-page-less by default; decide if that's intended).
-20. Daemon interplay: note in AGENTS.md that status reports get auto-reformatted within ~minutes of commit, so follow-up edits must always re-read (operational knowledge, currently only in session history).
+    _**Status (2026-09-10):** open — ROADMAP.md Open Questions #3._
+20. ~~Daemon interplay: note in AGENTS.md that status reports get auto-reformatted within ~minutes of commit, so follow-up edits must always re-read (operational knowledge, currently only in session history).~~ done (2026-09-10 — AGENTS.md "Repo Workflow Notes" section)
 
 ## g. QUESTIONS (cannot resolve myself)
 
 1. **Push `dc7ca86` now?** go-etag master is ahead 1 (the 13-12 §h resolution addendum). Standing rule is push-only-on-request; this is the request slot.
+   _**Resolved:** pushed — master history long since advanced past `dc7ca86`._
 2. **Extend the go-release skill's `scripts/pre-release-check.sh`** to enforce the new CI gate (a code change to your personal skill's automation), or is the §4.4 prose gate enough? I can do the script edit + self-test in one step, but it's your tested tooling.
+   _**Status (2026-09-10):** owner's personal skill — out of repo scope; §4.4 prose gate stands._
 3. **Task store decision**: run docs-health HARVEST now so `TODO_LIST.md`/`ROADMAP.md` become the single source of truth for next-work (reports become pure snapshots), or keep the reports' §f lists as the working task store and skip harvesting?
+   _**Resolved (2026-09-10):** HARVEST ran — `TODO_LIST.md`/`ROADMAP.md` are the task store; reports are pure snapshots (recorded in AGENTS.md Repo Workflow Notes)._
 
 ## h. SELF-REVIEW DIGEST (brutal-self-review skill, verbatim answers)
 

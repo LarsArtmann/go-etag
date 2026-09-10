@@ -1,5 +1,7 @@
 # OTEL-Ready Observability Hooks — Execution Plan
 
+> **FULLY EXECUTED — archived 2026-09-10.** Shipped at `5f7a97b` (v0.2.0): all three hooks live, specs green, docs updated, gates passed. Every checklist item below is ticked. The parked `go-etag/otel` sub-module lives on in `ROADMAP.md`.
+
 _Date: 2026-08-16 08:21 · Scope: core hooks only, `go-etag/otel` sub-module parked as demand-gated_
 
 ---

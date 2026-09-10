@@ -41,11 +41,11 @@ Session goal: run `art-dupl --type-aware --sort total-tokens -t 1` and eliminate
 
 ## c) NOT STARTED
 
-12. **AGENTS.md architecture table not updated.** The table lists unexported symbols (`hexEncode`, `writeHeaderToUnderlying`) but the new `matchesAnyTag` and `markFlushed` (both unexported) aren't mentioned. `serveGetWithIfNoneMatch` (test helper) also not documented.
+~~12. **AGENTS.md architecture table not updated.** The table lists unexported symbols (`hexEncode`, `writeHeaderToUnderlying`) but the new `matchesAnyTag` and `markFlushed` (both unexported) aren't mentioned. `serveGetWithIfNoneMatch` (test helper) also not documented.~~ done — table rebuilt at `bc5a551` (file-level exports only)
 
-13. **README.md / public docs not reviewed** for any mentions of the old test structure.
+~~13. **README.md / public docs not reviewed** for any mentions of the old test structure.~~ done at `b9eb32e` (README fully rewritten)
 
-14. **No baseline file created** via `art-dupl baseline` to lock in the zero-clone state for CI.
+~~14. **No baseline file created** via `art-dupl baseline` to lock in the zero-clone state for CI.~~ — open (low; no art-dupl enforcement was ever adopted)
 
 ---
 
@@ -58,6 +58,8 @@ Session goal: run `art-dupl --type-aware --sort total-tokens -t 1` and eliminate
     The auto-commit daemon's message frames this as an improvement ("a hijacker that inspects the response status sees the committed value"), and all tests pass — but **I did not explicitly verify this behavior change is correct or intended**. I stumbled into it while chasing the clone count to zero. The original code deliberately did NOT commit the header on Hijack, and I changed that without a test proving the new behavior is right.
 
     **This is the most serious issue from this session.** The change may be correct (committing before hijack is arguably more consistent with `Flush`), but I made it accidentally during dedup, not deliberately.
+
+    _**Resolved (2026-09-10):** the commit-before-hijack behavior was kept and has stood unchanged through every release since (v0.1.0 → HEAD); hijack delegate tests landed at `c759373`._
 
 ### Excessive thrashing on the etag.go refactor
 
@@ -79,15 +81,15 @@ Session goal: run `art-dupl --type-aware --sort total-tokens -t 1` and eliminate
 
 18. **Flag behavior changes explicitly.** When deduplication changes what code DOES (not just how it's structured), stop and verify. The Hijack header-commit change should have been a deliberate decision with a test, not a side effect.
 
-19. **Update AGENTS.md in the same session.** The memory protocol says update immediately on discovery. The new unexported helpers should be in the architecture table.
+~~19. **Update AGENTS.md in the same session.** The memory protocol says update immediately on discovery. The new unexported helpers should be in the architecture table.~~ done (AGENTS.md current since `bc5a551`)
 
 ### Code
 
-20. **`serveGetWithIfNoneMatch` hardcodes `"hello world"` and `http.StatusOK`.** Every test using it gets the same body and status. If future tests need different bodies, they'll need a variant or the helper needs parameters. Acceptable for now (all 7 cases want the same body), but worth noting.
+~~20. **`serveGetWithIfNoneMatch` hardcodes `"hello world"` and `http.StatusOK`.** Every test using it gets the same body and status. If future tests need different bodies, they'll need a variant or the helper needs parameters. Acceptable for now (all 7 cases want the same body), but worth noting.~~ **Won't implement — no variant was ever needed**
 
-21. **`markFlushed` is a 1-line method wrapping a 1-line assignment.** It exists purely to satisfy art-dupl's clone detector. The semantic value is marginal — `w.flushed = true` is already clear. This is a case where the tool drove the design rather than the other way around.
+~~21. **`markFlushed` is a 1-line method wrapping a 1-line assignment.** It exists purely to satisfy art-dupl's clone detector. The semantic value is marginal — `w.flushed = true` is already clear. This is a case where the tool drove the design rather than the other way around.~~ **Kept deliberately — survived every refactor since**
 
-22. **The `matchesAnyTag` helper introduces a closure** (`func(e ETag) bool { return comparator(tag, e) }`) to adapt the 2-argument comparator to `slices.ContainsFunc`'s 1-argument predicate. This is clean but adds a tiny allocation. The benchmark shows no regression, so it's fine.
+~~22. **The `matchesAnyTag` helper introduces a closure** (`func(e ETag) bool { return comparator(tag, e) }`) to adapt the 2-argument comparator to `slices.ContainsFunc`'s 1-argument predicate. This is clean but adds a tiny allocation. The benchmark shows no regression, so it's fine.~~ resolved (benchmarks unchanged across releases)
 
 ---
 
@@ -95,49 +97,49 @@ Session goal: run `art-dupl --type-aware --sort total-tokens -t 1` and eliminate
 
 ### Critical / verify-first
 
-1. **Verify the Hijack header-commit behavior change is correct.** Write a test that hijacks a connection after the handler set a status via `WriteHeader`, and assert the underlying writer received the status before hijack. If the old behavior (no commit) was intentional, revert.
-2. **Add a test specifically for Hijack-after-WriteHeader** to lock in whatever the correct behavior is.
-3. **Review the auto-commit message** (`b6bdb20`) for accuracy — it was generated by MiniMax-M3, not this session's model.
+~~1. **Verify the Hijack header-commit behavior change is correct.** Write a test that hijacks a connection after the handler set a status via `WriteHeader`, and assert the underlying writer received the status before hijack. If the old behavior (no commit) was intentional, revert.~~ resolved — commit-before-hijack kept; hijack delegate suite at `c759373`
+~~2. **Add a test specifically for Hijack-after-WriteHeader** to lock in whatever the correct behavior is.~~ done at `c759373` (`wrapper_test.go` hijack paths)
+~~3. **Review the auto-commit message** (`b6bdb20`) for accuracy — it was generated by MiniMax-M3, not this session's model.~~ resolved (moot — commit history immutable; the message was accurate)
 
 ### Documentation
 
-4. **Update AGENTS.md architecture table** to add `matchesAnyTag` and `markFlushed` rows.
-5. **Update AGENTS.md** to mention `serveGetWithIfNoneMatch` in the Testing Conventions section.
-6. **Review README.md** for any references to the old test names that were consolidated.
-7. **Create `art-dupl baseline`** to lock zero-clone state for CI enforcement.
+~~4. **Update AGENTS.md architecture table** to add `matchesAnyTag` and `markFlushed` rows.~~ done — table rebuilt at `bc5a551` (file-level scope)
+~~5. **Update AGENTS.md** to mention `serveGetWithIfNoneMatch` in the Testing Conventions section.~~ done (AGENTS.md Testing Conventions covers shared helpers)
+~~6. **Review README.md** for any references to the old test names that were consolidated.~~ done at `b9eb32e`
+7. **Create `art-dupl baseline`** to lock zero-clone state for CI enforcement. — open (no art-dupl CI enforcement adopted)
 
 ### Non-type-aware clone
 
-8. **Decide whether to address `return tags` clone** (entity_tag.go:154 vs 237). It's only visible without `--type-aware`. Either accept it (single-statement return) or refactor `ParseETagList` to not share the return pattern.
+8. **Decide whether to address `return tags` clone** (entity_tag.go:154 vs 237). It's only visible without `--type-aware`. Either accept it (single-statement return) or refactor `ParseETagList` to not share the return pattern. — open (low; `splitRawETags` still exists at `server/entity_tag.go:195`)
 
 ### Test improvements
 
-9. **Consider generalizing `serveGetWithIfNoneMatch`** to accept method, body, and status parameters for future reuse.
-10. **Add a test for `markFlushed` idempotency** — verify that calling `Flush` after `flush` (internal) doesn't double-commit.
-11. **Add a test for Hijack-after-Flush** ordering — verify the flushed guard works correctly across both streaming entry points.
-12. **Review whether `TestNew_IfNoneMatch_StrongClientWeakServer` could join the table** by parameterizing the config (currently uses `Weak` strength).
+~~9. **Consider generalizing `serveGetWithIfNoneMatch`** to accept method, body, and status parameters for future reuse.~~ **Won't implement — no variant was ever needed**
+~~10. **Add a test for `markFlushed` idempotency** — verify that calling `Flush` after `flush` (internal) doesn't double-commit.~~ done — flushed-flag transition pinned by the exactly-once hook specs at `5f7a97b`
+~~11. **Add a test for Hijack-after-Flush** ordering — verify the flushed guard works correctly across both streaming entry points.~~ done at `c759373` (wrapper hijack/flush delegate tests)
+~~12. **Review whether `TestNew_IfNoneMatch_StrongClientWeakServer` could join the table** by parameterizing the config (currently uses `Weak` strength).~~ **Won't implement — kept separate deliberately (custom config axis)**
 
 ### Code quality
 
-13. **Consider whether `markFlushed` should be inlined** — if the behavior-change risk is deemed too high, inline `w.flushed = true` at each site and accept the single-statement clone as idiomatic.
-14. **Audit all `w.flushed` reads/writes** for consistency — ensure no path can leave the flag in a stale state.
-15. **Review `commitResponse` naming** — the intermediate name appeared in the commit but the final code uses `markFlushed`. Ensure no stale references.
+~~13. **Consider whether `markFlushed` should be inlined** — if the behavior-change risk is deemed too high, inline `w.flushed = true` at each site and accept the single-statement clone as idiomatic.~~ resolved — kept (see e.21)
+~~14. **Audit all `w.flushed` reads/writes** for consistency — ensure no path can leave the flag in a stale state.~~ done — flag semantics stable; exactly-once hook specs pin the transition
+~~15. **Review `commitResponse` naming** — the intermediate name appeared in the commit but the final code uses `markFlushed`. Ensure no stale references.~~ done — no stale references (lint clean)
 
 ### art-dupl / CI
 
-16. **Add `art-dupl check` to CI** with a baseline file to prevent clone regression.
-17. **Configure art-dupl threshold** in CI config — decide if `-t 1` is the right gate or if `-t 5` (default) is more practical.
-18. **Add `.art-dupl.yml` config** to formalize exclusion patterns and detection methods.
+16. **Add `art-dupl check` to CI** with a baseline file to prevent clone regression. — open (never adopted)
+~~17. **Configure art-dupl threshold** in CI config — decide if `-t 1` is the right gate or if `-t 5` (default) is more practical.~~ **Won't implement — no art-dupl CI enforcement adopted**
+~~18. **Add `.art-dupl.yml` config** to formalize exclusion patterns and detection methods.~~ **Won't implement — same decision as #17**
 
 ### Broader hardening
 
-19. **Run `golangci-lint run --fix`** to catch any auto-fixable issues across the codebase.
-20. **Run benchmarks before/after comparison** — the current run shows no regression but a formal baseline would be more rigorous.
-21. **Review FNV-64a collision bounds** mentioned in entity_tag.go docs — verify the "~4.3 billion" claim is accurate for the birthday bound.
-22. **Check if `splitRawETags` and `ParseETagList` could share more logic** — both iterate comma-separated lists; the `return tags` clone hints at structural similarity.
-23. **Audit error classification** — verify `markFlushed` + `writeHeaderToUnderlying` in Hijack doesn't suppress or misclassify errors.
-24. **Review HEAD request handling** after the `markFlushed` change — HEAD sets Content-Length before commit; verify ordering is still correct.
-25. **Consider fuzzing the parser** — `ParseETag`, `ParseETagList`, `splitRawETags` are string parsers that could benefit from fuzz tests.
+~~19. **Run `golangci-lint run --fix`** to catch any auto-fixable issues across the codebase.~~ done (lint config reworked at `0e8ac6d`; 0 issues re-verified 2026-09-10)
+20. **Run benchmarks before/after comparison** — the current run shows no regression but a formal baseline would be more rigorous. — open (TODO_LIST #19 captures baseline discipline)
+~~21. **Review FNV-64a collision bounds** mentioned in entity_tag.go docs — verify the "~4.3 billion" claim is accurate for the birthday bound.~~ done — claim verified and documented
+22. **Check if `splitRawETags` and `ParseETagList` could share more logic** — both iterate comma-separated lists; the `return tags` clone hints at structural similarity. — open (same as #8)
+~~23. **Audit error classification** — verify `markFlushed` + `writeHeaderToUnderlying` in Hijack doesn't suppress or misclassify errors.~~ done — AGENTS.md classification table is the reviewed record
+~~24. **Review HEAD request handling** after the `markFlushed` change — HEAD sets Content-Length before commit; verify ordering is still correct.~~ done — `TestNew_HeadRequest_NoBody` + `TestSpec_RFC7232_HeadRequest` pin it
+~~25. **Consider fuzzing the parser** — `ParseETag`, `ParseETagList`, `splitRawETags` are string parsers that could benefit from fuzz tests.~~ done at `e0fe51f`
 
 ---
 
@@ -145,6 +147,10 @@ Session goal: run `art-dupl --type-aware --sort total-tokens -t 1` and eliminate
 
 1. **Was the original `Hijack()` deliberately skipping `writeHeaderToUnderlying()`?** The original code set `w.flushed = true` but did NOT commit the buffered header before delegating to `responseWrapper.Hijack()`. My refactor now commits it. This changes observable behavior for any code that hijacks after the handler called `WriteHeader`. Should I keep the new behavior (commit before hijack) or revert to the old (skip commit on hijack)?
 
+   _**Resolved:** keep — commit-before-hijack stood through every release since; delegate tests landed at `c759373`._
 2. **Should art-dupl be enforced at `-t 1` or a higher threshold in CI?** This session drove clones to zero at `-t 1 --type-aware`, but maintaining that bar may force micro-helpers (like `markFlushed`) that add indirection without semantic value. What's the right enforcement threshold?
 
+   _**Resolved:** no CI enforcement adopted — zero-clone was a one-time pass, not a standing gate._
 3. **Is the `markFlushed` method worth keeping, or should I inline it back?** It exists to satisfy the clone detector but wraps a single `w.flushed = true`. If you'd rather accept the single-statement clone as idiomatic, I'll revert it and leave a `//art-dupl:accept` directive with rationale.
+
+   _**Resolved:** kept — unchanged in the codebase since._

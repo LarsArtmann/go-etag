@@ -3,7 +3,6 @@
 > Two-sided RFC 7232 HTTP ETag library for Go — server middleware that generates entity-tags and answers `If-None-Match` with `304 Not Modified`, plus a client transport that caches conditional GETs for any `http.Client`.
 
 [![Go Version](https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white)](https://go.dev)
-[![Coverage](https://img.shields.io/badge/coverage-98.9%25-brightgreen)](#benchmarks)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/go-etag/server.svg)](https://pkg.go.dev/github.com/larsartmann/go-etag/server)
 
@@ -232,7 +231,7 @@ cfg.OnETagGenerated = func(etag.ETag) { etagWrites.Add(1) }
 cfg.On304 = func(etag.ETag) { cacheHits.Add(1) }
 ```
 
-See `ExampleNew_observabilityHooks` in the [GoDoc](https://pkg.go.dev/github.com/larsartmann/go-etag)
+See `ExampleNew_observabilityHooks` in the [server package GoDoc](https://pkg.go.dev/github.com/larsartmann/go-etag/server)
 for a runnable version deriving a hit ratio from plain counters.
 
 ## Strong vs Weak Validators
@@ -368,8 +367,7 @@ go get github.com/larsartmann/go-etag/client   # client transport (package etagc
 
 ### Upgrading from v0.1.x
 
-The root package `github.com/larsartmann/go-etag` is now a deprecated alias
-
+> The root package `github.com/larsartmann/go-etag` is now a deprecated alias
 > shim for the server package. Existing code keeps compiling unchanged
 > (deprecation warnings only); migration is a pure import-path swap:
 >
