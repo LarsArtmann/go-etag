@@ -15,12 +15,15 @@ type Stats struct {
 	Entries int
 }
 
-// cacheEntry is one stored response: its validator, header map, and body.
+// cacheEntry is one stored response: its validator, header map, body, and
+// whether net/http transparently decompressed that body (which exempts
+// Content-Encoding from freshening; RFC 9111 §3.2).
 type cacheEntry struct {
-	etag   string
-	status int
-	header http.Header
-	body   []byte
+	etag         string
+	status       int
+	header       http.Header
+	body         []byte
+	uncompressed bool
 }
 
 // responseCache is an in-memory conditional GET store, safe for concurrent
@@ -70,6 +73,40 @@ func (c *responseCache) set(key string, entry cacheEntry) {
 
 	c.entries[key] = entry
 	c.stored++
+}
+
+// freshen replaces a stored entry when the key still maps to the response
+// that was validated, so the concurrent store of a newer 200 is never
+// overwritten by the freshening of an older one (RFC 9111 §4.3.4 updates
+// the stored response, not whichever response landed last).
+func (c *responseCache) freshen(key, validatedEtag string, entry cacheEntry) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	current, ok := c.entries[key]
+	if !ok || current.etag != validatedEtag {
+		return
+	}
+
+	c.entries[key] = entry
+}
+
+// invalidate removes a stored entry entirely: a non-error response to an
+// unsafe request method invalidates the target URI (RFC 9111 §4.4), so the
+// next GET must fetch and store afresh instead of revalidating stale state.
+func (c *responseCache) invalidate(key string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	delete(c.entries, key)
+
+	for i, existing := range c.order {
+		if existing == key {
+			c.order = append(c.order[:i], c.order[i+1:]...)
+
+			break
+		}
+	}
 }
 
 func (c *responseCache) countHit() {

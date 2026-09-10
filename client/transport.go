@@ -5,11 +5,16 @@ import (
 	"io"
 	"net/http"
 	"net/textproto"
+	"strings"
 )
 
 const (
-	headerETag        = "ETag"
-	headerIfNoneMatch = "If-None-Match"
+	headerETag         = "ETag"
+	headerIfNoneMatch  = "If-None-Match"
+	headerCacheControl = "Cache-Control"
+	headerConnection   = "Connection"
+
+	weakTagPrefix = "W/"
 
 	statusTextOK = "200 OK"
 	markerValue  = "1"
@@ -23,7 +28,9 @@ const (
 // caching. GET requests carrying a stored validator are sent with
 // If-None-Match; the resulting 304 is rebuilt into the cached 200 the caller
 // expects; fresh 200s are stored for the next round trip. Non-GET methods and
-// non-200 responses pass through untouched.
+// non-200 responses pass through untouched; responses carrying
+// Cache-Control: no-store are never stored (RFC 9111 §3); and a non-error
+// response to an unsafe method invalidates the stored entry (RFC 9111 §4.4).
 type Transport struct {
 	next  http.RoundTripper
 	cache *responseCache
@@ -53,18 +60,25 @@ func (t *Transport) Stats() Stats {
 
 // RoundTrip implements http.RoundTripper.
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if req.Method != http.MethodGet {
-		return t.next.RoundTrip(req) //nolint:wrapcheck // passthrough preserves the underlying error
-	}
-
 	key := t.opts.KeyFunc(req)
 
+	if req.Method != http.MethodGet {
+		return t.roundTripUnsafe(req, key)
+	}
+
 	entry, cached := t.cache.get(key)
-	if cached {
-		// The RoundTripper contract forbids mutating the caller's request,
-		// so the validator rides on a clone.
+
+	// The RoundTripper contract forbids mutating the caller's request, so the
+	// validator rides on a clone. A caller-supplied If-None-Match is their own
+	// conditional (RFC 9110 §13.1.2) and is never clobbered: a 304 answering
+	// it belongs to the caller, so it passes through instead of being rebuilt.
+	injected := false
+
+	if cached && req.Header.Get(headerIfNoneMatch) == "" {
 		req = req.Clone(req.Context())
 		req.Header.Set(headerIfNoneMatch, entry.etag)
+
+		injected = true
 	}
 
 	resp, err := t.next.RoundTrip(req)
@@ -73,36 +87,48 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	}
 
 	switch {
-	case resp.StatusCode == http.StatusNotModified && cached:
-		return t.rebuildFromCache(resp, entry), nil
+	case injected && resp.StatusCode == http.StatusNotModified:
+		return t.rebuildFromCache(resp, key, entry), nil
 
-	case resp.StatusCode == http.StatusOK && resp.Header.Get(headerETag) != "":
+	case resp.StatusCode == http.StatusOK &&
+		resp.Header.Get(headerETag) != "" &&
+		!hasNoStoreDirective(resp.Header):
 		t.store(resp, key, resp.Header.Get(headerETag))
 	}
 
 	return resp, nil
 }
 
+// roundTripUnsafe passes a non-GET request through untouched, invalidating
+// the stored entry for its URI when the response is a non-error answer to an
+// unsafe method (RFC 9111 §4.4), so a mutation cannot leave a pre-mutation
+// body waiting to be rebuilt for the next GET.
+func (t *Transport) roundTripUnsafe(req *http.Request, key string) (*http.Response, error) {
+	resp, err := t.next.RoundTrip(req)
+	if err == nil && resp != nil && isUnsafeMethod(req.Method) && isNonErrorStatus(resp.StatusCode) {
+		t.cache.invalidate(key)
+	}
+
+	return resp, err //nolint:wrapcheck // passthrough preserves the underlying error
+}
+
 // rebuildFromCache synthesizes the 200 the caller expects: cached body and
-// headers, with the 304's fresh values merged for the PreserveOn304 headers
-// (Date by default, per RFC 7232 §4.1).
-func (t *Transport) rebuildFromCache(notModified *http.Response, entry cacheEntry) *http.Response {
+// headers, freshened with the fields the 304 provides (RFC 9111 §4.3.4 via
+// the §3.2 update rules, unless PreserveOn304 restricts it), and persists
+// the freshened metadata back onto the stored entry.
+func (t *Transport) rebuildFromCache(notModified *http.Response, key string, entry cacheEntry) *http.Response {
 	t.cache.countHit()
 
 	drainAndClose(notModified)
 
-	header := entry.header.Clone()
-	if header == nil {
-		header = make(http.Header)
-	}
-
-	for _, name := range t.opts.PreserveOn304 {
-		mergeHeader(header, notModified.Header, name)
-	}
+	header := t.rebuiltHeader(entry, notModified)
+	restoreMismatchedValidator(header, notModified, entry)
 
 	if t.opts.FromCacheHeader != "" {
 		header.Set(t.opts.FromCacheHeader, markerValue)
 	}
+
+	t.persistFreshened(key, entry, header)
 
 	return &http.Response{
 		Status:        statusTextOK,
@@ -114,7 +140,69 @@ func (t *Transport) rebuildFromCache(notModified *http.Response, entry cacheEntr
 		Body:          io.NopCloser(bytes.NewReader(entry.body)),
 		ContentLength: int64(len(entry.body)),
 		Request:       notModified.Request,
+		Uncompressed:  entry.uncompressed,
 	}
+}
+
+// rebuiltHeader builds the header set of the synthesized 200 from the stored
+// entry and the 304: RFC 9111 §4.3.4 freshening when PreserveOn304 is nil,
+// restricted to the named fields by a non-empty list, and untouched by an
+// empty non-nil slice.
+func (t *Transport) rebuiltHeader(entry cacheEntry, notModified *http.Response) http.Header {
+	if t.opts.PreserveOn304 == nil {
+		return freshenedHeader(entry.header, notModified.Header, entry.uncompressed)
+	}
+
+	header := entry.header.Clone()
+	if header == nil {
+		header = make(http.Header)
+	}
+
+	for _, name := range t.opts.PreserveOn304 {
+		mergeHeader(header, notModified.Header, name)
+	}
+
+	return header
+}
+
+// restoreMismatchedValidator guards RFC 9111 §4.3.4's validator filtering: a
+// 304 declaring a validator that does not weak-match the one it just
+// validated names a different representation, so neither the rebuilt
+// response nor the store adopts the claim — the stored validator stays and
+// the next revalidation presents the validator the server actually answered.
+func restoreMismatchedValidator(header http.Header, notModified *http.Response, entry cacheEntry) {
+	candidate := notModified.Header.Get(headerETag)
+	if candidate != "" && !weaklyMatchesValidator(candidate, entry.etag) {
+		header.Set(headerETag, entry.etag)
+	}
+}
+
+// persistFreshened writes the merged header back onto the stored entry
+// (RFC 9111 §4.3.4 requires updating the stored response, not only the
+// synthesized one), so later revalidations present the validator the 304
+// returned and later rebuilds wear the freshened values. The from-cache
+// marker is diagnostic output, never cache state, so it is stripped first.
+func (t *Transport) persistFreshened(key string, entry cacheEntry, header http.Header) {
+	persisted := header.Clone()
+
+	if t.opts.FromCacheHeader != "" {
+		persisted.Del(t.opts.FromCacheHeader)
+	}
+
+	// Whatever did not flow from the 304 keeps the stored validator; a
+	// mismatched 304's claim never reaches here (restored before persisting).
+	etag := persisted.Get(headerETag)
+	if etag == "" {
+		etag = entry.etag
+	}
+
+	t.cache.freshen(key, entry.etag, cacheEntry{
+		etag:         etag,
+		status:       entry.status,
+		header:       persisted,
+		body:         entry.body,
+		uncompressed: entry.uncompressed,
+	})
 }
 
 // store reads the response body and caches it when a validator is present and
@@ -152,15 +240,18 @@ func (t *Transport) store(resp *http.Response, key, etag string) {
 		header = make(http.Header)
 	}
 
+	stripHopByHop(header)
+
 	if t.opts.FromCacheHeader != "" {
 		header.Del(t.opts.FromCacheHeader)
 	}
 
 	t.cache.set(key, cacheEntry{
-		etag:   etag,
-		status: resp.StatusCode,
-		header: header,
-		body:   buffered,
+		etag:         etag,
+		status:       resp.StatusCode,
+		header:       header,
+		body:         buffered,
+		uncompressed: resp.Uncompressed,
 	})
 
 	resp.Body = io.NopCloser(bytes.NewReader(buffered))
@@ -188,6 +279,160 @@ func (c *chainedBody) Read(p []byte) (int, error) {
 
 func (c *chainedBody) Close() error {
 	return c.body.Close() //nolint:wrapcheck // passthrough preserves the underlying error
+}
+
+// freshenedHeader applies RFC 9111 §4.3.4 (freshening stored responses upon
+// validation) using the §3.2 update rules: every field the 304 provides is
+// added to the stored header set, replacing any stored value, except fields
+// excepted from storage (§3.1), Content-Length and Content-Range (§3.2), and
+// Content-Encoding when net/http transparently decoded the stored body (the
+// §3.2 integrity allowance for caches storing processed representations:
+// the stored bytes are the decoded ones, so the 304's encoding claim would
+// describe bytes the rebuilt response does not carry).
+func freshenedHeader(stored, notModified http.Header, uncompressed bool) http.Header {
+	header := stored.Clone()
+	if header == nil {
+		header = make(http.Header)
+	}
+
+	for name, values := range notModified {
+		if skippedByFreshening(name, uncompressed) {
+			continue
+		}
+
+		header[name] = values
+	}
+
+	return header
+}
+
+// skippedByFreshening reports whether a 304-provided field must not replace
+// the stored value: connection-scope fields are excepted from storage
+// (RFC 9111 §3.1), Content-Length and Content-Range from updates (§3.2), and
+// Content-Encoding when the stored body is the transparently decoded form
+// rather than the encoded wire bytes (§3.2).
+func skippedByFreshening(name string, uncompressed bool) bool {
+	if isHopByHop(name) {
+		return true
+	}
+
+	switch textproto.CanonicalMIMEHeaderKey(name) {
+	case "Content-Length", "Content-Range":
+		return true
+	case "Content-Encoding":
+		return uncompressed
+	default:
+		return false
+	}
+}
+
+// isHopByHop reports whether name is a connection-scope field, which a cache
+// neither stores nor replays (RFC 9111 §3.1).
+func isHopByHop(name string) bool {
+	switch textproto.CanonicalMIMEHeaderKey(name) {
+	case "Connection", "Keep-Alive", "Proxy-Authenticate", "Proxy-Authentication-Info",
+		"Proxy-Authorization", "TE", "Trailer", "Transfer-Encoding", "Upgrade":
+		return true
+	default:
+		return false
+	}
+}
+
+// stripHopByHop removes fields a stored response must not carry
+// (RFC 9111 §3.1): the connection-scope set, plus every field the Connection
+// header lists as hop-by-hop for this connection.
+func stripHopByHop(header http.Header) {
+	for _, value := range header.Values(headerConnection) {
+		for name := range strings.SplitSeq(value, ",") {
+			trimmed := strings.TrimSpace(name)
+			if trimmed != "" {
+				header.Del(textproto.CanonicalMIMEHeaderKey(trimmed))
+			}
+		}
+	}
+
+	for name := range header {
+		if isHopByHop(name) {
+			header.Del(name)
+		}
+	}
+}
+
+// isUnsafeMethod reports whether method can change origin state: GET, HEAD,
+// OPTIONS, and TRACE are safe per RFC 9110 §9.2.1, and anything else,
+// including unrecognized methods, is treated as unsafe.
+func isUnsafeMethod(method string) bool {
+	switch method {
+	case http.MethodGet, http.MethodHead, http.MethodOptions, http.MethodTrace:
+		return false
+	default:
+		return true
+	}
+}
+
+// isNonErrorStatus reports whether status is in the 2xx or 3xx range whose
+// response to an unsafe request method triggers invalidation (RFC 9111 §4.4
+// defines a non-error response as 2xx or 3xx).
+func isNonErrorStatus(status int) bool {
+	return status >= http.StatusOK && status < http.StatusBadRequest
+}
+
+// weaklyMatchesValidator reports whether two entity-tag field values carry
+// the same opaque tag, ignoring strength (the RFC 9110 §8.8.3.2 weak
+// comparison If-None-Match uses).
+func weaklyMatchesValidator(a, b string) bool {
+	return strings.TrimPrefix(a, weakTagPrefix) == strings.TrimPrefix(b, weakTagPrefix)
+}
+
+// hasNoStoreDirective reports whether a response carries the no-store cache
+// directive, which forbids storing any part of it (RFC 9111 §3, §5.2.2.5).
+func hasNoStoreDirective(header http.Header) bool {
+	for _, value := range header.Values(headerCacheControl) {
+		for _, directive := range cacheControlDirectives(value) {
+			name, _, _ := strings.Cut(directive, "=")
+			if strings.EqualFold(strings.TrimSpace(name), "no-store") {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// cacheControlDirectives splits a Cache-Control field value into its
+// directives, treating commas inside quoted arguments as part of the
+// argument so a quoted "no-store" never matches as a directive name.
+func cacheControlDirectives(value string) []string {
+	var (
+		directives []string
+		current    strings.Builder
+		quoted     bool
+		escaped    bool
+	)
+
+	for _, char := range value {
+		switch {
+		case escaped:
+			escaped = false
+
+			current.WriteRune(char)
+		case quoted && char == '\\':
+			escaped = true
+
+			current.WriteRune(char)
+		case char == '"':
+			quoted = !quoted
+
+			current.WriteRune(char)
+		case char == ',' && !quoted:
+			directives = append(directives, current.String())
+			current.Reset()
+		default:
+			current.WriteRune(char)
+		}
+	}
+
+	return append(directives, current.String())
 }
 
 // mergeHeader copies the header name from src to dst, preferring the exact

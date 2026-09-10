@@ -90,6 +90,18 @@ func newGetRequest(t *testing.T, url string) *http.Request {
 	return req
 }
 
+// newSpecRequest builds a request of any method bound to the test context.
+func newSpecRequest(t *testing.T, method, url string) *http.Request {
+	t.Helper()
+
+	req, err := http.NewRequestWithContext(t.Context(), method, url, nil)
+	if err != nil {
+		t.Fatalf("build %s request: %v", method, err)
+	}
+
+	return req
+}
+
 // fetch runs a GET through the transport and returns status, header, and
 // fully-read body, closing the response.
 func fetch(t *testing.T, transport *Transport, req *http.Request) (int, http.Header, string) {

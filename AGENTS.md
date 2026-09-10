@@ -83,9 +83,9 @@ One module (`github.com/larsartmann/go-etag`), three packages: the real code liv
 | `server/errors.go`     | `ErrCodeETagWriteFailed`, `ErrCodeHijackUnsupported`, `ErrCodeHijackFailed`, `ErrCodeInvalidConfig`, `ErrCodeHashWriteFailed`, `ErrInvalidConfig`, `RegisterErrorClassifications()` | Error codes + stdlib sentinel registration + message templates                                     |
 | `server/hex.go`        | (unexported `hexEncodeUint64`, `hexDigitsLower`)                                                                                                                                    | Zero-alloc stack-allocated hex encoding for uint64 FNV hashes                                      |
 | `server/doc.go`        | (package doc only)                                                                                                                                                                  | Package-level GoDoc documentation                                                                  |
-| `client/options.go`    | `Options` (KeyFunc / MaxEntries / MaxBodyBytes / PreserveOn304 / FromCacheHeader)                                                                                                   | Client transport options with defaults (256 entries / 1 MiB / `["Date"]`)                          |
+| `client/options.go`    | `Options` (KeyFunc / MaxEntries / MaxBodyBytes / PreserveOn304 / FromCacheHeader)                                                                                                   | Client transport options with defaults (256 entries / 1 MiB / nil = RFC 9111 §4.3.4 freshening)    |
 | `client/cache.go`      | `Stats` (Hits/Stored/Entries); unexported `responseCache` (map + order-slice FIFO under a mutex)                                                                                    | Bounded concurrency-safe cache with counters                                                       |
-| `client/transport.go`  | `NewTransport`, `Transport` (`RoundTrip`, `Stats`)                                                                                                                                  | Conditional GET transport: If-None-Match replay, 304→200 rebuild, body store with size skip        |
+| `client/transport.go`  | `NewTransport`, `Transport` (`RoundTrip`, `Stats`)                                                                                                                                  | Conditional GET transport: If-None-Match replay, 304→200 rebuild with §4.3.4 freshening, §4.4 invalidation, no-store guard, body store with size skip |
 | `client/doc.go`        | (package doc only)                                                                                                                                                                  | Package docs incl. the KeyFunc credential warning                                                  |
 | `deprecated.go`        | Full alias surface of `server/` (4 types, 7 consts, 1 var, 8 func wrappers), all `// Deprecated:`                                                                                   | Compatibility shim keeping v0.1.x imports compiling; removed at v1.0.0                             |
 | `doc.go`               | (package doc only)                                                                                                                                                                  | Tombstone package doc with migration snippet                                                       |
@@ -117,11 +117,20 @@ The `ETag` struct holds an opaque string and a `Strength` (Strong/Weak). It prov
 
 ### Client (package `etagclient`)
 
-`Options` has fields: `KeyFunc` (nil = request URL string; MUST scope by credential when responses vary by caller), `MaxEntries` (default 256, FIFO eviction), `MaxBodyBytes` (default 1 MiB; oversized bodies pass through uncached with bodies intact), `PreserveOn304` (default `["Date"]` per RFC 7232 §4.1; empty non-nil slice disables merging), `FromCacheHeader` (default empty = disabled). `Transport.Stats()` returns `Stats{Hits, Stored, Entries}`.
+`Options` has fields: `KeyFunc` (nil = request URL string; MUST scope by credential when responses vary by caller), `MaxEntries` (default 256, FIFO eviction), `MaxBodyBytes` (default 1 MiB; oversized bodies pass through uncached with bodies intact), `PreserveOn304` (nil = RFC 9111 §4.3.4 freshening — every 304-provided field replaces the stored value minus the §3.1/§3.2 exceptions; non-empty list restricts freshening to those fields; empty non-nil slice disables it), `FromCacheHeader` (default empty = disabled). `Transport.Stats()` returns `Stats{Hits, Stored, Entries}`.
 
 **Client gotchas:**
 
 - **RoundTrip never mutates the caller's request** — If-None-Match rides on a clone (net/http RoundTripper contract).
+- **Caller-supplied `If-None-Match` is never clobbered** — a caller who set their own conditional keeps it; a 304 answering it passes through unrebuilt (RFC 9110 §13.1.2 ownership).
+- **304 freshening is the RFC 9111 §4.3.4 default** — every field the 304 provides replaces the stored value, except hop-by-hop (§3.1), Content-Length/Content-Range (§3.2), and Content-Encoding when net/http transparently decoded the body (§3.2 integrity allowance; recorded via `resp.Uncompressed`).
+- **Freshening persists to the stored entry** — the 304's validator replaces the stored one for later revalidations; `responseCache.freshen` skips when a concurrent 200 already replaced the entry.
+- **Mismatched 304 validators are not adopted** — a 304 declaring an ETag that does not weak-match the one it validated (broken server naming a different representation) leaves both the stored validator and the rebuilt ETag alone (§4.3.4 filtering, `restoreMismatchedValidator`).
+- **§4.4 invalidation** — a non-error (2xx/3xx) response to an unsafe method (not GET/HEAD/OPTIONS/TRACE) drops the stored entry for that URI; error responses and safe methods keep it.
+- **Rebuilt responses carry `Uncompressed`** when the stored body is the transparently decoded form.
+- **Age is surfaced, and cannot run backwards** — a 200's Age passes through verbatim (§5.1 staleness signal); a 304's Age replaces the stored Age on rebuilds. An edge cache serving a stale copy is detectable by Age even though the ETag faithfully matches.
+- **`Cache-Control: no-store` responses are never stored** — RFC 9111 §3 MUST NOT; quote-aware, case-insensitive directive parsing (a quoted `"no-store"` argument does not match).
+- **Hop-by-hop fields are stripped at store time** — Connection-listed fields, Keep-Alive, Proxy-* (§3.1), so rebuilds cannot resurrect them.
 - **Oversized bodies keep streaming** — the buffered prefix is chained to the unread remainder; Close still reaches the original body.
 - **Go 1.26 canonical header form of `ETag` is `Etag`** — map literals with `"ETag"` keys are invisible to `Header.Get/Set` (Get canonicalizes on read). Build stub headers via `Header.Set` in tests; real transports canonicalize on both sides.
 
@@ -166,6 +175,8 @@ Flush-path write errors are forwarded to `ETagConfig.OnError` (a `func(*errorfam
 - **Same package** (`package etag` in `server/`, `package etagclient` in `client/`) — tests can access unexported symbols
 - **Plain `testing`** — no assertion libraries
 - **BDD-style specs** in `server/etag_bdd_test.go` — Describe/Context/It pattern using `t.Run`
+- **RFC-citing spec suite** in `client/spec_test.go` — pins the transport to RFC 9111 requirements (Age surfacing §5.1, freshening §4.3.4/§3.2, no-store ban §3, invalidation §4.4, HEAD bypass, caller-owned If-None-Match); every test cites its section
+- **Real-server integration test** in `client/integration_test.go` — httptest.Server + real http.Client round trip for canonical header forms and bodiless 304s
 - **`t.Errorf`** for non-fatal, **`t.Fatalf`** for fatal assertions
 - **`httptest.NewRecorder()`** + `httptest.NewRequest()` for server doubles; `roundTripperFunc` stubs for client doubles
 - **Shared test helpers** in `server/testutil_test.go`; client helpers live in `client/transport_test.go`

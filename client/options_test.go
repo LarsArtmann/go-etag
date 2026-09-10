@@ -17,8 +17,10 @@ func TestOptionsNormalizeDefaults(t *testing.T) {
 		t.Errorf("MaxBodyBytes = %d, want %d", normalized.MaxBodyBytes, defaultMaxBodyBytes)
 	}
 
-	if len(normalized.PreserveOn304) != 1 || normalized.PreserveOn304[0] != "Date" {
-		t.Errorf("PreserveOn304 = %v, want [Date]", normalized.PreserveOn304)
+	// nil is meaningful: it selects RFC 9111 §4.3.4 freshening wholesale, so
+	// normalize must not replace it with a default list.
+	if normalized.PreserveOn304 != nil {
+		t.Errorf("PreserveOn304 = %v, want nil (RFC 9111 §4.3.4 freshening)", normalized.PreserveOn304)
 	}
 
 	if normalized.KeyFunc == nil {

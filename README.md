@@ -31,7 +31,10 @@ On the client side, **`go-etag/client`** wraps any `http.Client` transport:
 
 - **Replays stored validators** as `If-None-Match`, turning unchanged re-fetches into free 304s.
 - **Rebuilds 304s as 200s** with the cached body, so SDKs and callers see no difference.
-- **Preserves fresh headers** (Date, rate limits) from the 304 onto the rebuilt response per `PreserveOn304`.
+- **Freshens rebuilt 200s per RFC 9111 §4.3.4** — every header field the 304 provides replaces the cached value (Date, Age, rate limits), so a stale edge cache cannot hide behind old metadata.
+- **Surfaces `Age`** verbatim, the RFC 9111 §5.1 signal that a 200 came from an edge copy the origin has not freshly validated.
+- **Invalidates after mutations** — a non-error response to an unsafe method (PUT/POST/…) drops the stored entry (RFC 9111 §4.4).
+- **Never stores `Cache-Control: no-store` responses** (RFC 9111 §3) and never clobbers a caller-supplied `If-None-Match`.
 - **Bounded memory** — FIFO eviction (`MaxEntries`) and a body-size cap (`MaxBodyBytes`).
 
 Zero configuration required on either side — wrap and go.
@@ -107,7 +110,7 @@ transport := etagclient.NewTransport(next, etagclient.Options{
     KeyFunc:         nil,                     // nil = request URL; see warning below
     MaxEntries:      256,                     // FIFO cache bound (default 256)
     MaxBodyBytes:    1024 * 1024,             // largest cached body (default 1 MiB)
-    PreserveOn304:   []string{"Date"},        // fresh headers merged onto rebuilt 200s
+    PreserveOn304:   nil,                     // nil = RFC 9111 §4.3.4 freshening; []string{} disables
     FromCacheHeader: "",                      // marker header set on rebuilt responses
 })
 ```
@@ -117,7 +120,7 @@ transport := etagclient.NewTransport(next, etagclient.Options{
 | `KeyFunc`         | `func(*http.Request) string` | URL string        | Derives the cache key. Must scope by credential when responses vary by caller                                |
 | `MaxEntries`      | `int`                        | `256`             | Cache bound; oldest entry evicted (FIFO)                                                                     |
 | `MaxBodyBytes`    | `int`                        | `1048576` (1 MiB) | Larger bodies pass through uncached, fully intact                                                            |
-| `PreserveOn304`   | `[]string`                   | `["Date"]`        | Headers copied fresh from the 304 onto the rebuilt 200 (RFC 7232 §4.1); empty non-nil slice disables merging |
+| `PreserveOn304`   | `[]string`                   | `nil`               | nil freshens every 304-provided field per RFC 9111 §4.3.4 (except hop-by-hop, Content-Length, Content-Range); a non-empty list restricts freshening to those fields; an empty non-nil slice disables it |
 | `FromCacheHeader` | `string`                     | `""`              | When set, rebuilt responses carry it with value `1` for diagnostics                                          |
 
 `transport.Stats()` reports `Stats{Hits, Stored, Entries}` for cache telemetry.
@@ -141,7 +144,7 @@ transport := etagclient.NewTransport(next, etagclient.Options{
 - **Hijack/Flush aware** — switches to streaming mode when the handler hijacks or flushes
 - **Classified errors** via `go-error-family` for retry decisions
 - **Zero-value safe** — `ETagConfig{}` clamps to defaults (no unbounded buffering)
-- **98.9% test coverage** with table-driven unit tests, fuzz tests, and BDD-style RFC specs
+- **High test coverage** with table-driven unit tests, fuzz tests, BDD-style RFC specs, and real-server integration tests
 
 ## The ETag Type
 

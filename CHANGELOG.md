@@ -9,11 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Nothing yet.
+- `client/spec_test.go`: an RFC 9111-grounded test suite for the client transport, motivated by a field report of a CDN serving a two-day-stale 200 (Age: 137882) whose ETag faithfully described the stale entity. Pins Age surfacing, §4.3.4 freshening, stored-validator persistence, the no-store storage ban (§3), §4.4 invalidation, HEAD bypass, and caller-owned `If-None-Match`.
+- RFC 9111 §4.4 conformance: a non-error (2xx/3xx) response to an unsafe request method (anything but GET/HEAD/OPTIONS/TRACE) now invalidates the stored entry for that URI, so a mutation cannot leave a pre-mutation body waiting to be rebuilt.
+- `client/integration_test.go`: a real `httptest.Server` + `http.Client` round trip verifying canonical header forms, the bodiless 304, and Age freshening against production net/http rather than stubs.
+
+### Changed
+
+- `etagclient.Options.PreserveOn304` now defaults to nil, which selects RFC 9111 §4.3.4 freshening: every header field the 304 provides replaces the stored value on the rebuilt 200 (per the §3.2 update rules, excepting hop-by-hop fields, Content-Length, Content-Range, and Content-Encoding of a transparently decoded body). Previously only `Date` merged by default. A non-empty list still restricts freshening to the named fields; an empty non-nil slice still disables it.
+- A revalidation 304 now freshens the stored entry itself (RFC 9111 §4.3.4), so the validator the 304 returns replaces the stored one for subsequent requests, and freshened metadata persists across rebuilds.
+- Rebuilt responses now carry `Uncompressed` when the stored body is the form net/http transparently decoded, so downstream consumers see honest body metadata.
 
 ### Fixed
 
-- Nothing yet.
+- Stale `Age` no longer survives 304 rebuilds: a 304 reporting a grown Age updates the rebuilt response, so an edge cache's age cannot run backwards through revalidation (the field report's masked symptom).
+- A 304 declaring a validator that does not weak-match the one it just validated (a broken server's claim of a different representation) no longer replaces the stored validator or the rebuilt response's ETag, per the RFC 9111 §4.3.4 validator filtering.
+- Responses carrying `Cache-Control: no-store` are no longer stored (RFC 9111 §3); their bodies still stream through intact.
+- A caller-supplied `If-None-Match` is no longer clobbered by the stored validator; a 304 answering the caller's own conditional passes through instead of being rebuilt from the transport's entry.
+- Hop-by-hop fields (Connection and its listed fields, Keep-Alive, Proxy-*) are stripped from stored responses per RFC 9111 §3.1, so they cannot be resurrected by later rebuilds.
 
 ## [0.2.0] - 2026-08-16
 

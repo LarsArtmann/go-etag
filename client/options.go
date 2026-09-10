@@ -23,12 +23,22 @@ type Options struct {
 	// with their bodies intact, so a huge payload cannot balloon memory.
 	MaxBodyBytes int
 
-	// PreserveOn304 lists response headers copied from the 304 onto the
-	// rebuilt 200, replacing the cached values. It defaults to Date: per RFC
-	// 7232 §4.1 a 304 carries a fresh Date that the rebuilt response must
-	// wear instead of the stale cached one. Use it for headers whose fresh
-	// value matters (rate limits, retry hints). An empty non-nil slice
-	// disables merging entirely.
+	// PreserveOn304 governs which header fields the 304 contributes to the
+	// rebuilt 200 and to the stored entry, as RFC 9111 §4.3.4 freshening
+	// (via the §3.2 update rules) prescribes.
+	//
+	// nil (the default) is the RFC behavior: every field provided in the 304
+	// replaces the stored value, except fields excepted from storage
+	// (Connection and friends), Content-Length, Content-Range, and the
+	// Content-Encoding of a transparently decoded body. That includes Age:
+	// when a revalidation 304 reports a grown Age, the rebuilt response wears
+	// it, so a stale edge cache cannot hide behind the Age the first 200
+	// carried.
+	//
+	// A non-empty list restricts freshening to the named fields (use it for
+	// headers whose fresh value matters, like rate limits). An empty non-nil
+	// slice disables freshening entirely: the stored values survive every
+	// rebuild.
 	PreserveOn304 []string
 
 	// FromCacheHeader, when non-empty, is set to "1" on responses rebuilt
@@ -40,7 +50,6 @@ type Options struct {
 const (
 	defaultMaxEntries   = 256
 	defaultMaxBodyBytes = 1024 * 1024
-	headerDate          = "Date"
 )
 
 // normalize applies defaults to a zero-valued or partially filled Options.
@@ -53,9 +62,9 @@ func (o Options) normalize() Options {
 		o.MaxBodyBytes = defaultMaxBodyBytes
 	}
 
-	if o.PreserveOn304 == nil {
-		o.PreserveOn304 = []string{headerDate}
-	}
+	// PreserveOn304 is deliberately not defaulted: nil selects the RFC
+	// 9111 §4.3.4 freshening behavior, while an empty non-nil slice (also
+	// valid) disables it.
 
 	if o.KeyFunc == nil {
 		o.KeyFunc = defaultKeyFunc
