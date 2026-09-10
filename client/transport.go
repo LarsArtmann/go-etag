@@ -65,8 +65,15 @@ func (t *Transport) Stats() Stats {
 // RoundTrip implements http.RoundTripper. The cache key is derived only when
 // a method can use it — GET for lookups, an invalidating non-GET after its
 // response arrives — so passthrough round trips never pay for key derivation.
+// A request carrying Cache-Control: no-store bypasses the cache entirely
+// (RFC 9111 §5.2.2.5 request directive): nothing about the exchange is
+// stored, while an unsafe method still invalidates (RFC 9111 §4.4).
 func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if req.Method == http.MethodHead {
+		if hasNoStoreDirective(req.Header) {
+			return t.passThrough(req)
+		}
+
 		return t.roundTripHead(req)
 	}
 
@@ -74,6 +81,18 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		return t.roundTripUnsafe(req)
 	}
 
+	if hasNoStoreDirective(req.Header) {
+		return t.passThrough(req)
+	}
+
+	return t.roundTripGet(req)
+}
+
+// roundTripGet serves a GET through the conditional cache: a stored validator
+// rides on a cloned request as If-None-Match, a 304 it produces is rebuilt
+// from the stored entry, and a fresh 200 with a validator is stored for the
+// next round trip.
+func (t *Transport) roundTripGet(req *http.Request) (*http.Response, error) {
 	key := t.opts.KeyFunc(req)
 
 	entry, cached := t.cache.get(key)
@@ -91,9 +110,9 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 		injected = true
 	}
 
-	resp, err := t.next.RoundTrip(req)
+	resp, err := t.passThrough(req)
 	if err != nil || resp == nil {
-		return resp, err //nolint:wrapcheck // passthrough preserves the underlying error
+		return resp, err
 	}
 
 	switch {
@@ -114,12 +133,17 @@ func (t *Transport) RoundTrip(req *http.Request) (*http.Response, error) {
 // unsafe method (RFC 9111 §4.4), so a mutation cannot leave a pre-mutation
 // body waiting to be rebuilt for the next GET.
 func (t *Transport) roundTripUnsafe(req *http.Request) (*http.Response, error) {
-	resp, err := t.next.RoundTrip(req)
+	resp, err := t.passThrough(req)
 	if err == nil && resp != nil && isUnsafeMethod(req.Method) && isNonErrorStatus(resp.StatusCode) {
 		t.cache.invalidate(t.opts.KeyFunc(req))
 	}
 
-	return resp, err //nolint:wrapcheck // passthrough preserves the underlying error
+	return resp, err
+}
+
+// passThrough sends the request untouched through the wrapped transport.
+func (t *Transport) passThrough(req *http.Request) (*http.Response, error) {
+	return t.next.RoundTrip(req) //nolint:wrapcheck // passthrough preserves the underlying error
 }
 
 // roundTripHead passes a HEAD request through untouched and uses its 200 to
@@ -132,9 +156,9 @@ func (t *Transport) roundTripUnsafe(req *http.Request) (*http.Response, error) {
 // storing parts of it is forbidden (RFC 9111 §3) and it gives no signal that
 // the stored representation changed.
 func (t *Transport) roundTripHead(req *http.Request) (*http.Response, error) {
-	resp, err := t.next.RoundTrip(req)
+	resp, err := t.passThrough(req)
 	if err != nil || resp == nil {
-		return resp, err //nolint:wrapcheck // passthrough preserves the underlying error
+		return resp, err
 	}
 
 	if resp.StatusCode != http.StatusOK || hasNoStoreDirective(resp.Header) {

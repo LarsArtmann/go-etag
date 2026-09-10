@@ -473,12 +473,12 @@ func TestSpecNoCacheResponseServesViaRevalidation(t *testing.T) {
 	}
 }
 
-// TestSpecHEADRequestsBypassTheCache documents the transport's opt-out from
-// RFC 9111 §4.3.5 (freshening with HEAD): the stored body belongs to GET
-// responses, and synthesizing a body-carrying 200 for HEAD would violate
-// HEAD's headers-only semantics. HEAD therefore never receives a stored
-// validator and is never answered from the cache.
-func TestSpecHEADRequestsBypassTheCache(t *testing.T) {
+// TestSpecHeadIsNeverConditional pins the caller-facing side of the
+// transport's HEAD handling: HEAD's headers-only semantics are the server's
+// to answer, so a HEAD never receives the stored validator and is never
+// rebuilt from cache. (Behind the scenes a matching HEAD 200 still freshens
+// the stored metadata — RFC 9111 §4.3.5, pinned by TestSpecHeadFreshening.)
+func TestSpecHeadIsNeverConditional(t *testing.T) {
 	t.Parallel()
 
 	stub := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
@@ -1326,5 +1326,83 @@ func TestSpecHeadErrorAndCacheMissesPassThrough(t *testing.T) {
 
 	if stats.Stored != 0 || stats.Entries != 0 || stats.Hits != 0 {
 		t.Errorf("stats = %+v, want all zero (HEAD responses are never stored)", stats)
+	}
+}
+
+// TestSpecRequestNoStoreBypassesTheCache pins RFC 9111 §5.2.2.5 (request
+// directive): "A cache MUST NOT store any part of either this request or any
+// response to it." A GET carrying Cache-Control: no-store must neither
+// consult nor populate the store — no validator injection, no rebuild, no
+// storage — and a HEAD carrying it must not freshen stored metadata either.
+// Deleting on an unsafe method is still permitted: invalidation stores
+// nothing.
+func TestSpecRequestNoStoreBypassesTheCache(t *testing.T) {
+	t.Parallel()
+
+	stub := &recordedStub{steps: []stubStep{
+		{
+			status: http.StatusOK,
+			header: stubHeader(headerPair{"ETag", `"v1"`}, headerPair{"Date", "date-one"}),
+			body:   "payload",
+		},
+		{
+			status: http.StatusOK,
+			header: stubHeader(headerPair{"ETag", `"v2"`}, headerPair{"Date", "date-two"}),
+			body:   "fresh payload",
+		},
+		{status: http.StatusNotModified, header: stubHeader(headerPair{"ETag", `"v1"`}), body: ""},
+		{
+			status: http.StatusOK,
+			header: stubHeader(headerPair{"ETag", `"v9"`}, headerPair{"Date", "date-nine"}),
+			body:   "",
+		},
+		{status: http.StatusNotModified, header: stubHeader(headerPair{"ETag", `"v1"`}), body: ""},
+	}}
+
+	transport := NewTransport(stub, Options{})
+	url := "https://api.dev.test/articles"
+
+	fetch(t, transport, newGetRequest(t, url))
+
+	noStoreGet := newGetRequest(t, url)
+	noStoreGet.Header.Set("Cache-Control", "no-store")
+
+	status, header, body := fetch(t, transport, noStoreGet)
+	if status != http.StatusOK || body != "fresh payload" || header.Get("ETag") != `"v2"` {
+		t.Fatalf(
+			"no-store GET = %d %q ETag %q, want the network answer passed through",
+			status,
+			body,
+			header.Get("ETag"),
+		)
+	}
+
+	if got := stub.lastValidator(); got != "" {
+		t.Errorf("no-store GET validator = %q, want none (the cache must not be consulted)", got)
+	}
+
+	stats := transport.Stats()
+	if stats.Stored != 1 || stats.Entries != 1 || stats.Hits != 0 {
+		t.Fatalf("stats after no-store GET = %+v, want only the original entry stored", stats)
+	}
+
+	status, _, body = fetch(t, transport, newGetRequest(t, url))
+	if status != http.StatusOK || body != "payload" {
+		t.Fatalf("next GET = %d %q, want the original entry rebuilt untouched", status, body)
+	}
+
+	noStoreHead := newSpecRequest(t, http.MethodHead, url)
+	noStoreHead.Header.Set("Cache-Control", "no-store")
+
+	fetch(t, transport, noStoreHead)
+
+	_, header, _ = fetch(t, transport, newGetRequest(t, url))
+
+	if got := stub.lastValidator(); got != `"v1"` {
+		t.Errorf("final GET validator = %q, want the original v1 (no-store HEAD must not touch the store)", got)
+	}
+
+	if got := header.Get("Date"); got != "date-one" {
+		t.Errorf("Date = %q, want the stored date-one (no-store HEAD must not freshen)", got)
 	}
 }
