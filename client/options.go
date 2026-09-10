@@ -23,28 +23,62 @@ type Options struct {
 	// with their bodies intact, so a huge payload cannot balloon memory.
 	MaxBodyBytes int
 
-	// PreserveOn304 governs which header fields the 304 contributes to the
-	// rebuilt 200 and to the stored entry, as RFC 9111 §4.3.4 freshening
-	// (via the §3.2 update rules) prescribes.
+	// FreshenOn304 governs which header fields a 304 Not Modified response
+	// contributes to the rebuilt 200 and to the stored entry (RFC 9111 §4.3.4
+	// freshening, via the §3.2 update rules). The zero value is the RFC
+	// behavior; the constructors [FreshenPerRFC], [FreshenFields], and
+	// [FreshenNone] select it or restrict it explicitly.
 	//
-	// nil (the default) is the RFC behavior: every field provided in the 304
-	// replaces the stored value, except fields excepted from storage
-	// (Connection and friends), Content-Length, Content-Range, and the
-	// Content-Encoding of a transparently decoded body. That includes Age:
-	// when a revalidation 304 reports a grown Age, the rebuilt response wears
-	// it, so a stale edge cache cannot hide behind the Age the first 200
-	// carried.
-	//
-	// A non-empty list restricts freshening to the named fields (use it for
-	// headers whose fresh value matters, like rate limits). An empty non-nil
-	// slice disables freshening entirely: the stored values survive every
-	// rebuild.
-	PreserveOn304 []string
+	// Under the RFC behavior every field provided in the 304 replaces the
+	// stored value, except fields excepted from storage (Connection and
+	// friends), Content-Length, Content-Range, and the Content-Encoding of a
+	// transparently decoded body. That includes Age: when a revalidation 304
+	// reports a grown Age, the rebuilt response wears it, so a stale edge
+	// cache cannot hide behind the Age the first 200 carried.
+	FreshenOn304 FreshenPolicy
 
 	// FromCacheHeader, when non-empty, is set to "1" on responses rebuilt
 	// from cache so tests and diagnostics can distinguish them from network
 	// 200s. Empty disables the marker.
 	FromCacheHeader string
+}
+
+// FreshenPolicy selects how a 304 Not Modified response updates the rebuilt
+// response and the stored entry (RFC 9111 §4.3.4 via the §3.2 update
+// rules). The zero value is the RFC behavior, so an untouched [Options]
+// field freshens per spec; the constructors make a chosen policy explicit.
+type FreshenPolicy struct {
+	kind   freshenKind
+	fields []string
+}
+
+type freshenKind int
+
+const (
+	freshenPerRFC freshenKind = iota
+	freshenNamedFields
+	freshenNothing
+)
+
+// FreshenPerRFC returns the default policy: every header field the 304
+// provides replaces the stored value, except fields excepted from storage
+// (RFC 9111 §3.1), Content-Length and Content-Range (§3.2), and the
+// Content-Encoding of a transparently decoded body (§3.2).
+func FreshenPerRFC() FreshenPolicy {
+	return FreshenPolicy{kind: freshenPerRFC, fields: nil}
+}
+
+// FreshenFields restricts freshening to the named header fields; every
+// other stored field survives each rebuild untouched. Use it for fields
+// whose fresh value matters, like rate limits or Retry-After.
+func FreshenFields(fields ...string) FreshenPolicy {
+	return FreshenPolicy{kind: freshenNamedFields, fields: fields}
+}
+
+// FreshenNone disables freshening entirely: the stored values survive every
+// rebuild, and only the validator flows through.
+func FreshenNone() FreshenPolicy {
+	return FreshenPolicy{kind: freshenNothing, fields: nil}
 }
 
 const (
@@ -62,9 +96,9 @@ func (o Options) normalize() Options {
 		o.MaxBodyBytes = defaultMaxBodyBytes
 	}
 
-	// PreserveOn304 is deliberately not defaulted: nil selects the RFC
-	// 9111 §4.3.4 freshening behavior, while an empty non-nil slice (also
-	// valid) disables it.
+	// FreshenOn304 is deliberately not defaulted: its zero value already
+	// selects the RFC 9111 §4.3.4 freshening behavior, so normalize keeps it
+	// exactly as provided.
 
 	if o.KeyFunc == nil {
 		o.KeyFunc = defaultKeyFunc

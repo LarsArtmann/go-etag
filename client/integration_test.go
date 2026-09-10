@@ -195,7 +195,7 @@ func TestIntegrationHeadFreshensStoredEntryThroughRealServer(t *testing.T) {
 		w.Header().Set("ETag", validator)
 
 		if r.Method == http.MethodHead {
-			w.Header().Set("X-RateLimit-Remaining", "41")
+			w.Header().Set("X-Ratelimit-Remaining", "41")
 			w.WriteHeader(http.StatusOK)
 
 			return
@@ -212,6 +212,18 @@ func TestIntegrationHeadFreshensStoredEntryThroughRealServer(t *testing.T) {
 	t.Cleanup(server.Close)
 
 	client := &http.Client{Transport: NewTransport(http.DefaultTransport, Options{})}
+
+	first, err := client.Get(server.URL + "/articles")
+	if err != nil {
+		t.Fatalf("first GET: %v", err)
+	}
+
+	_, _ = io.Copy(io.Discard, first.Body)
+	_ = first.Body.Close()
+
+	if first.StatusCode != http.StatusOK {
+		t.Fatalf("first GET status = %d, want the stored 200", first.StatusCode)
+	}
 
 	head, err := http.NewRequestWithContext(t.Context(), http.MethodHead, server.URL+"/articles", nil)
 	if err != nil {
@@ -245,8 +257,8 @@ func TestIntegrationHeadFreshensStoredEntryThroughRealServer(t *testing.T) {
 		t.Fatalf("rebuilt GET = %d %q, want the stored 200 %q", getResp.StatusCode, string(data), payload)
 	}
 
-	if got := getResp.Header.Get("X-RateLimit-Remaining"); got != "41" {
-		t.Errorf("X-RateLimit-Remaining = %q, want the HEAD-freshened 41 (RFC 9111 §4.3.5)", got)
+	if got := getResp.Header.Get("X-Ratelimit-Remaining"); got != "41" {
+		t.Errorf("X-Ratelimit-Remaining = %q, want the HEAD-freshened 41 (RFC 9111 §4.3.5)", got)
 	}
 
 	if got := getResp.Header.Get("ETag"); got != validator {

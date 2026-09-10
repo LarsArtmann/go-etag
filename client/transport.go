@@ -217,7 +217,7 @@ func (t *Transport) freshenFromHead(key string, entry cacheEntry, head http.Head
 
 // rebuildFromCache synthesizes the 200 the caller expects: cached body and
 // headers, freshened with the fields the 304 provides (RFC 9111 §4.3.4 via
-// the §3.2 update rules, unless PreserveOn304 restricts it), and persists
+// the §3.2 update rules, unless FreshenOn304 restricts it), and persists
 // the freshened metadata back onto the stored entry.
 func (t *Transport) rebuildFromCache(notModified *http.Response, key string, entry cacheEntry) *http.Response {
 	t.cache.countHit()
@@ -248,11 +248,10 @@ func (t *Transport) rebuildFromCache(notModified *http.Response, key string, ent
 }
 
 // rebuiltHeader builds the header set of the synthesized 200 from the stored
-// entry and the 304: RFC 9111 §4.3.4 freshening when PreserveOn304 is nil,
-// restricted to the named fields by a non-empty list, and untouched by an
-// empty non-nil slice.
+// entry and the 304: RFC 9111 §4.3.4 freshening by default, restricted to
+// the named fields by FreshenFields, and untouched by FreshenNone.
 func (t *Transport) rebuiltHeader(entry cacheEntry, notModified *http.Response) http.Header {
-	if t.opts.PreserveOn304 == nil {
+	if t.opts.FreshenOn304.kind == freshenPerRFC {
 		return freshenedHeader(entry.header, notModified.Header, entry.uncompressed)
 	}
 
@@ -261,8 +260,10 @@ func (t *Transport) rebuiltHeader(entry cacheEntry, notModified *http.Response) 
 		header = make(http.Header)
 	}
 
-	for _, name := range t.opts.PreserveOn304 {
-		mergeHeader(header, notModified.Header, name)
+	if t.opts.FreshenOn304.kind == freshenNamedFields {
+		for _, name := range t.opts.FreshenOn304.fields {
+			mergeHeader(header, notModified.Header, name)
+		}
 	}
 
 	return header

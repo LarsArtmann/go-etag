@@ -17,10 +17,10 @@ func TestOptionsNormalizeDefaults(t *testing.T) {
 		t.Errorf("MaxBodyBytes = %d, want %d", normalized.MaxBodyBytes, defaultMaxBodyBytes)
 	}
 
-	// nil is meaningful: it selects RFC 9111 §4.3.4 freshening wholesale, so
-	// normalize must not replace it with a default list.
-	if normalized.PreserveOn304 != nil {
-		t.Errorf("PreserveOn304 = %v, want nil (RFC 9111 §4.3.4 freshening)", normalized.PreserveOn304)
+	// The zero FreshenPolicy is meaningful: it selects RFC 9111 §4.3.4
+	// freshening wholesale, so normalize must keep it untouched.
+	if normalized.FreshenOn304 != (FreshenPolicy{}) {
+		t.Errorf("FreshenOn304 = %+v, want the zero policy (RFC 9111 §4.3.4 freshening)", normalized.FreshenOn304)
 	}
 
 	if normalized.KeyFunc == nil {
@@ -32,9 +32,9 @@ func TestOptionsNormalizeKeepsExplicitValues(t *testing.T) {
 	t.Parallel()
 
 	normalized := Options{
-		MaxEntries:    3,
-		MaxBodyBytes:  512,
-		PreserveOn304: []string{},
+		MaxEntries:   3,
+		MaxBodyBytes: 512,
+		FreshenOn304: FreshenFields("Date"),
 	}.normalize()
 
 	if normalized.MaxEntries != 3 {
@@ -45,8 +45,8 @@ func TestOptionsNormalizeKeepsExplicitValues(t *testing.T) {
 		t.Errorf("MaxBodyBytes = %d, want 512", normalized.MaxBodyBytes)
 	}
 
-	if normalized.PreserveOn304 == nil || len(normalized.PreserveOn304) != 0 {
-		t.Errorf("PreserveOn304 = %v, want empty non-nil slice (merge disabled)", normalized.PreserveOn304)
+	if normalized.FreshenOn304 != FreshenFields("Date") {
+		t.Errorf("FreshenOn304 = %+v, want the provided policy untouched", normalized.FreshenOn304)
 	}
 }
 

@@ -647,12 +647,11 @@ func TestSpecFresh200ReplacesStaleEntry(t *testing.T) {
 	}
 }
 
-// TestSpecRestrictedPreserveListLeavesOtherFields documents the explicit
-// opt-out from RFC 9111 §4.3.4 freshening: a non-empty PreserveOn304 list
-// restricts the 304's contribution to the named fields, so every other
-// stored value (including a stale Age) survives the rebuild. This is the
-// sharp edge the nil default exists to avoid.
-func TestSpecRestrictedPreserveListLeavesOtherFields(t *testing.T) {
+// TestSpecRestrictedFreshenListLeavesOtherFields documents the explicit
+// opt-out from RFC 9111 §4.3.4 freshening: a FreshenFields policy restricts
+// the 304's contribution to the named fields, so every other stored value
+// (including a stale Age) survives the rebuild.
+func TestSpecRestrictedFreshenListLeavesOtherFields(t *testing.T) {
 	t.Parallel()
 
 	stored := stubHeader(
@@ -674,7 +673,7 @@ func TestSpecRestrictedPreserveListLeavesOtherFields(t *testing.T) {
 		{status: http.StatusNotModified, header: notModified},
 	}}
 
-	transport := NewTransport(stub, Options{PreserveOn304: []string{"Date"}})
+	transport := NewTransport(stub, Options{FreshenOn304: FreshenFields("Date")})
 
 	fetch(t, transport, newGetRequest(t, "https://example.test/data"))
 	_, header, _ := fetch(t, transport, newGetRequest(t, "https://example.test/data"))

@@ -368,16 +368,16 @@ func TestRoundTripDefaultKeyIgnoresCredentials(t *testing.T) {
 	}
 }
 
-func TestRoundTripPreserveOn304(t *testing.T) {
+func TestRoundTripFreshenOn304(t *testing.T) {
 	t.Parallel()
 
-	t.Run("custom headers replace cached values", func(t *testing.T) {
+	t.Run("named fields replace cached values", func(t *testing.T) {
 		t.Parallel()
 
 		next, _ := conditionalStub(t, `"v"`, "body")
 
 		transport := NewTransport(next, Options{
-			PreserveOn304: []string{"Date", "X-Ratelimit-Remaining", "Retry-After"},
+			FreshenOn304: FreshenFields("Date", "X-Ratelimit-Remaining", "Retry-After"),
 		})
 
 		fetch(t, transport, newGetRequest(t, "https://example.test/rate"))
@@ -392,12 +392,12 @@ func TestRoundTripPreserveOn304(t *testing.T) {
 		}
 	})
 
-	t.Run("empty slice disables merging", func(t *testing.T) {
+	t.Run("FreshenNone disables freshening", func(t *testing.T) {
 		t.Parallel()
 
 		next, _ := conditionalStub(t, `"v"`, "body")
 
-		transport := NewTransport(next, Options{PreserveOn304: []string{}})
+		transport := NewTransport(next, Options{FreshenOn304: FreshenNone()})
 
 		fetch(t, transport, newGetRequest(t, "https://example.test/rate"))
 		_, header, _ := fetch(t, transport, newGetRequest(t, "https://example.test/rate"))
@@ -799,7 +799,7 @@ func TestWeaklyMatchesValidator(t *testing.T) {
 
 // TestMergeHeaderPrefersExactThenCanonical pins the dual lookup: a literal
 // non-canonical key in the source map wins, and a canonical name falls back
-// to the source's canonical entry, so restricted PreserveOn304 lists work
+// to the source's canonical entry, so restricted FreshenFields lists work
 // regardless of how the 304's header map was built.
 func TestMergeHeaderPrefersExactThenCanonical(t *testing.T) {
 	t.Parallel()
@@ -814,7 +814,7 @@ func TestMergeHeaderPrefersExactThenCanonical(t *testing.T) {
 
 		// The merged value lands under the literal key, invisible to Get's
 		// canonicalized lookup: the dual-key sharp edge for restricted
-		// PreserveOn304 lists built from non-canonical names.
+		// FreshenFields lists built from non-canonical names.
 		//nolint:staticcheck // SA1008: the non-canonical key is the subject under test
 		if got := dst["x-b"]; len(got) != 1 || got[0] != "src" {
 			t.Errorf("dst[x-b] = %v, want [src] via the exact key", got)
