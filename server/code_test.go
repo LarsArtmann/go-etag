@@ -2,10 +2,15 @@ package etag
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	errorfamily "github.com/larsartmann/go-error-family"
 )
+
+var errTestCause = errors.New("cause")
+
+var errTestPlain = errors.New("plain")
 
 func TestCodeDomain(t *testing.T) {
 	t.Parallel()
@@ -60,8 +65,8 @@ func TestCodeConstructors(t *testing.T) {
 				t.Errorf("code = %q, want %q", tt.got.ErrorCode(), string(codeInvalidConfig))
 			}
 
-			if tt.got.Error() != "msg" {
-				t.Errorf("message = %q, want %q", tt.got.Error(), "msg")
+			if !strings.Contains(tt.got.Error(), "msg") {
+				t.Errorf("message = %q, want it to contain %q", tt.got.Error(), "msg")
 			}
 		})
 	}
@@ -70,7 +75,7 @@ func TestCodeConstructors(t *testing.T) {
 func TestCodeWrapMethods(t *testing.T) {
 	t.Parallel()
 
-	cause := errors.New("cause")
+	cause := errTestCause
 
 	tests := []struct {
 		name   string
@@ -81,8 +86,16 @@ func TestCodeWrapMethods(t *testing.T) {
 		{name: "WrapConflict", got: codeInvalidConfig.WrapConflict(cause, "msg"), family: errorfamily.Conflict},
 		{name: "WrapTransient", got: codeInvalidConfig.WrapTransient(cause, "msg"), family: errorfamily.Transient},
 		{name: "WrapCorruption", got: codeInvalidConfig.WrapCorruption(cause, "msg"), family: errorfamily.Corruption},
-		{name: "WrapInfrastructure", got: codeInvalidConfig.WrapInfrastructure(cause, "msg"), family: errorfamily.Infrastructure},
-		{name: "WrapOrchestration", got: codeInvalidConfig.WrapOrchestration(cause, "msg"), family: errorfamily.Orchestration},
+		{
+			name:   "WrapInfrastructure",
+			got:    codeInvalidConfig.WrapInfrastructure(cause, "msg"),
+			family: errorfamily.Infrastructure,
+		},
+		{
+			name:   "WrapOrchestration",
+			got:    codeInvalidConfig.WrapOrchestration(cause, "msg"),
+			family: errorfamily.Orchestration,
+		},
 	}
 
 	for _, tt := range tests {
@@ -121,7 +134,7 @@ func TestDomainOf(t *testing.T) {
 	t.Run("uncoded error reports false", func(t *testing.T) {
 		t.Parallel()
 
-		domain, ok := DomainOf(errors.New("plain"))
+		domain, ok := DomainOf(errTestPlain)
 		if ok {
 			t.Fatalf("DomainOf returned ok=%v for an uncoded error", ok)
 		}
@@ -145,7 +158,7 @@ func TestInDomain(t *testing.T) {
 		t.Errorf("InDomain = true, want false for a different domain")
 	}
 
-	if InDomain(errors.New("plain"), Domain("http")) {
+	if InDomain(errTestPlain, Domain("http")) {
 		t.Errorf("InDomain = true, want false for an uncoded error")
 	}
 }

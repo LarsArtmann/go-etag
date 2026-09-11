@@ -23,7 +23,7 @@ Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 | Observability hooks (`OnETagGenerated` / `On304` / `OnBufferOverflow` / `OnError`) | FULLY_FUNCTIONAL | v0.2.0; exactly-once/ordering/nil-safety specs; no telemetry dependency              |
 | `ETag` domain type — parse, strength, strong/weak comparison                       | FULLY_FUNCTIONAL | `server/entity_tag.go`; BDD specs + fuzz round-trip (`entity_tag_fuzz_test.go`)      |
 | Conditional-request helpers (`MatchesIfNoneMatch`, `MatchesIfMatch`)               | FULLY_FUNCTIONAL | RFC 7232 §3.1/§3.2; lost-update example in README                                    |
-| Classified errors (`go-error-family`, 5 codes + sentinel)                          | FULLY_FUNCTIONAL | `server/errors.go`; `errors_test.go` (idempotent registration, templates)            |
+| Classified errors (`go-error-family`, 5 codes + sentinel + typed `Code`/`Domain` routing) | FULLY_FUNCTIONAL | `server/errors.go` + `server/code.go`; `errors_test.go` (registration, bidirectional template completeness), `code_test.go` |
 
 ## Client transport (`client/`, package `etagclient`)
 

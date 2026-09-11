@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Typed error-code surface in the server package (mirrors httputil): `Code` with six family constructors (`Rejection`, `Conflict`, `Transient`, `Corruption`, `Infrastructure`, `Orchestration`) plus matching `Wrap*` methods, a `Domain` type, and `DomainOf`/`InDomain` helpers so consumers can route classified errors by failing component without string parsing.
 - `ExampleFreshenPolicy`: a GoDoc example showing `FreshenFields` restricting 304 freshening to `Retry-After` while the stored `Date` survives and the validator flows through.
 - `ExampleETagConfig_Validate` (server): a GoDoc example pinning the sentinel contract — `Validate` returns a fresh context-bearing error that `errors.Is` matches against `ErrInvalidConfig` by code and family, never the sentinel instance itself.
 
