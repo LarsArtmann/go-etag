@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Nothing yet.
+- CI: the pinned GitHub Actions group (checkout, setup-go, upload-artifact) was bumped via Dependabot PR #1, clearing the Node 20 deprecation warnings; the merged run is green.
 
 ### Fixed
 

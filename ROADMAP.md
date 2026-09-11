@@ -12,8 +12,6 @@ The client transport is a conditional-GET accelerator: it always revalidates
 before serving a stored body. The remaining spec surface, in rough order of
 value:
 
-- §4.3.5 HEAD-based freshening (SHOULD) — short-term, already in TODO_LIST.
-- A MUST-by-MUST conformance table published in the docs.
 - True freshness-based serving (§4.2): parse `max-age`/`Expires`, serve stored
   responses without revalidating inside the freshness lifetime. This changes
   what the library _is_ (from accelerator to cache) — needs a deliberate
@@ -33,7 +31,6 @@ prevents. Directions (decision open — see Open Questions):
   subpackage.
 - `cacheEntry` evolves toward a `storedResponse` type with §4.3.4-aware
   validator-matching methods.
-- Typed `PreserveOn304` mode (short-term, in TODO_LIST while pre-1.0).
 
 ### 3. Scale, persistence, and observability
 
@@ -85,3 +82,10 @@ prevents. Directions (decision open — see Open Questions):
 4. **FNV-64a strength honesty (standing decision, revisitable):** the
    default `Strong` is pragmatic (birthday bound ~4.3B bodies) but not
    spec-purist. Documented; changing the default would be breaking.
+5. **Residual open-low backlog:** the ~25 annotated-open "low" items in the
+   August reports (isolated parser benchmarks, single-pass `ParseETagList`,
+   `Strength.String()`, obs-text validation, assorted boundary tests) are
+   deliberately noise-gated — open in historical reports, tracked in no
+   living doc. Promote them into TODO_LIST/ROADMAP cold storage, or let
+   them die with the archives? (Asked 2026-09-10 and 2026-09-11; owner
+   decision pending.)

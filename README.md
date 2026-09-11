@@ -393,6 +393,36 @@ go get github.com/larsartmann/go-etag/client   # client transport (package etagc
 > The package name stays `etag`, so no call-site changes are needed. The shim
 > is removed in v1.0.0.
 
+### Upgrading from v0.2.x
+
+> `Options.PreserveOn304 []string` is replaced by `Options.FreshenOn304 FreshenPolicy`.
+> The nil-vs-empty-slice overload is gone; each policy is now a named constructor:
+>
+> ```go
+> // Before (v0.2.x):
+> transport := etagclient.NewTransport(next, etagclient.Options{
+>     PreserveOn304: []string{"Date", "X-RateLimit-Remaining"}, // nil = "Date" only; empty = merge nothing
+> })
+>
+> // After (v0.3.x):
+> transport := etagclient.NewTransport(next, etagclient.Options{
+>     FreshenOn304: etagclient.FreshenFields("Date", "X-RateLimit-Remaining"),
+> })
+> ```
+>
+> | v0.2.x                              | v0.3.x                                     |
+> | ----------------------------------- | ------------------------------------------ |
+> | omitted / `nil`                     | `FreshenPerRFC()` (the zero value)         |
+> | `[]string{"Date", "X", …}`          | `FreshenFields("Date", "X", …)`            |
+> | `[]string{}` (freshen nothing)      | `FreshenNone()`                            |
+>
+> One behavior change rides along: under v0.2.0 a `nil` `PreserveOn304` merged
+> only `Date`; the `FreshenPerRFC()` default is RFC 9111 §4.3.4 — every field
+> the 304 provides replaces the stored value (except hop-by-hop fields,
+> `Content-Length`/`Content-Range`, and a transparently decoded body's
+> `Content-Encoding`). If you want the old narrow behavior, say it explicitly
+> with `FreshenFields("Date")`.
+
 ## License
 
 MIT

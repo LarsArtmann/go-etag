@@ -1,8 +1,9 @@
 # Features
 
 Honest inventory of what exists, by status. Evidence cites code; every
-FULLY_FUNCTIONAL row is exercised by the test suite (verified 2026-09-10:
-`go test -race ./...` green, server 99.0% / client 94.3% coverage).
+FULLY_FUNCTIONAL row is exercised by the test suite (verified 2026-09-11 at the
+v0.3.0 tree: `go test -race ./...` green, root 100.0% / server 99.0% / client
+97.7% coverage).
 
 Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 
@@ -30,9 +31,9 @@ Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 | --------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | Conditional GET transport — replay stored validators as `If-None-Match`                                                           | FULLY_FUNCTIONAL | `client/transport.go` (`RoundTrip`); `transport_test.go`                                                                  |
 | 304 → 200 rebuild from cache (callers see no difference)                                                                          | FULLY_FUNCTIONAL | `rebuildFromCache`; `TestRoundTripRebuilds304FromCache` + GoDoc example                                                   |
-| RFC 9111 §4.3.4 freshening (typed `FreshenPolicy`: default every-304-field / `FreshenFields` restricted / `FreshenNone` disabled) | FULLY_FUNCTIONAL | `freshenedHeader`, `Options.FreshenOn304`; `spec_test.go` freshening specs — unreleased, sits in CHANGELOG `[Unreleased]` |
-| RFC 9111 §4.3.5 HEAD-based freshening (update or invalidate stored entries from HEAD 200s)                                        | FULLY_FUNCTIONAL | `roundTripHead`, `headConfirmsStored`; `TestSpecHeadFreshening` suite + real-server integration test — unreleased         |
-| Request `no-store` bypass (§5.2.2.5 request directive: no read, no write)                                                         | FULLY_FUNCTIONAL | `TestSpecRequestNoStoreBypassesTheCache` — unreleased                                                                     |
+| RFC 9111 §4.3.4 freshening (typed `FreshenPolicy`: default every-304-field / `FreshenFields` restricted / `FreshenNone` disabled) | FULLY_FUNCTIONAL | `freshenedHeader`, `Options.FreshenOn304`; `spec_test.go` freshening specs — shipped in v0.3.0      |
+| RFC 9111 §4.3.5 HEAD-based freshening (update or invalidate stored entries from HEAD 200s)                                       | FULLY_FUNCTIONAL | `roundTripHead`, `headConfirmsStored`; `TestSpecHeadFreshening` suite + real-server integration test — shipped in v0.3.0 |
+| Request `no-store` bypass (§5.2.2.5 request directive: no read, no write)                                                        | FULLY_FUNCTIONAL | `TestSpecRequestNoStoreBypassesTheCache` — shipped in v0.3.0                                       |
 | §4.4 unsafe-method invalidation (2xx/3xx to unsafe method drops entry)                                                            | FULLY_FUNCTIONAL | `responseCache.invalidate`, `roundTripUnsafe`; `TestSpecUnsafeMethodInvalidatesEntry`                                     |
 | `Cache-Control: no-store` storage ban (quote-aware, case-insensitive)                                                             | FULLY_FUNCTIONAL | `hasNoStoreDirective`; `TestSpecNoStoreResponseIsNeverCached` incl. quoted-arg subtests                                   |
 | Caller-supplied `If-None-Match` is never clobbered                                                                                | FULLY_FUNCTIONAL | `TestSpecCallerSuppliedIfNoneMatchIsHonored`                                                                              |
@@ -49,7 +50,7 @@ Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 
 | Feature                                                          | Status           | Evidence / Notes                                                                                                                                                                                |
 | ---------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| v0.1.x compatibility shim — full alias surface, `// Deprecated:` | FULLY_FUNCTIONAL | `deprecated.go` (4 types, 7 consts, 1 var, 8 func wrappers); compile-verified against a scratch v0.1.1-style consumer at v0.2.0. No in-repo parity test yet (TODO_LIST #14). Removed at v1.0.0. |
+| v0.1.x compatibility shim — full alias surface, `// Deprecated:` | FULLY_FUNCTIONAL | `deprecated.go` (4 types, 7 consts, 1 var, 8 func wrappers); `deprecated_test.go` export-parity suite (shipped at `a5de386`) pins type identity + wrapper behavior, root coverage 100%. Removed at v1.0.0. |
 
 ## Planned (documented, no code)
 
