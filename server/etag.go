@@ -117,8 +117,7 @@ func defaultHashFunc(data []byte) string {
 
 	_, err := h.Write(data)
 	if err != nil {
-		panic(errorfamily.NewOrchestration(
-			ErrCodeHashWriteFailed,
+		panic(codeHashWriteFailed.Orchestration(
 			"fnv hash.Write returned an error, violating the hash.Hash contract that Write never fails",
 		))
 	}
@@ -223,7 +222,7 @@ func newETagWriter(resp http.ResponseWriter, cfg ETagConfig) *etagWriter {
 // to the client or returned from Write; this hook exists for observability
 // (logging, metrics, tracing).
 func (w *etagWriter) reportWriteErr(err error, message string) {
-	classified := errorfamily.WrapTransient(err, ErrCodeETagWriteFailed, message)
+	classified := codeETagWriteFailed.WrapTransient(err, message)
 
 	if w.onError != nil {
 		w.onError(classified)
@@ -236,9 +235,8 @@ func (w *etagWriter) Write(b []byte) (int, error) {
 	if w.flushed {
 		n, err := w.ResponseWriter.Write(b)
 		if err != nil {
-			return n, errorfamily.WrapTransient(
+			return n, codeETagWriteFailed.WrapTransient(
 				err,
-				ErrCodeETagWriteFailed,
 				"etag writer streaming write failed",
 			)
 		}
@@ -255,9 +253,8 @@ func (w *etagWriter) Write(b []byte) (int, error) {
 
 		n, err := w.ResponseWriter.Write(b)
 		if err != nil {
-			return n, errorfamily.WrapTransient(
+			return n, codeETagWriteFailed.WrapTransient(
 				err,
-				ErrCodeETagWriteFailed,
 				"etag writer overflow write failed",
 			)
 		}

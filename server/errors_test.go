@@ -55,6 +55,11 @@ func TestRegisterErrorClassifications_RegistersAllTemplates(t *testing.T) {
 		ErrCodeHashWriteFailed,
 	}
 
+	registered := make(map[string]struct{}, len(codes))
+	for _, code := range codes {
+		registered[code] = struct{}{}
+	}
+
 	for _, code := range codes {
 		t.Run(code, func(t *testing.T) {
 			t.Parallel()
@@ -80,5 +85,17 @@ func TestRegisterErrorClassifications_RegistersAllTemplates(t *testing.T) {
 				t.Errorf("template for %q has empty WayOut field", code)
 			}
 		})
+	}
+
+	for code := range errorTemplates {
+		if _, ok := registered[code]; !ok {
+			t.Errorf("errorTemplates has entry for unknown code %q", code)
+		}
+	}
+
+	for _, code := range codes {
+		if _, ok := errorTemplates[code]; !ok {
+			t.Errorf("errorTemplates is missing an entry for code %q", code)
+		}
 	}
 }

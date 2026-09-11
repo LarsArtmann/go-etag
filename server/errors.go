@@ -32,6 +32,18 @@ const (
 	ErrCodeHashWriteFailed = "http.etag_hash_write_failed"
 )
 
+// Typed mirrors of the exported untyped string codes above, used for
+// internal construction via the Code constructor and Wrap methods. The
+// exported constants remain untyped strings for backward compatibility;
+// these typed constants keep internal call sites compile-time grouped.
+const (
+	codeETagWriteFailed   = Code(ErrCodeETagWriteFailed)
+	codeHijackUnsupported = Code(ErrCodeHijackUnsupported)
+	codeHijackFailed      = Code(ErrCodeHijackFailed)
+	codeInvalidConfig     = Code(ErrCodeInvalidConfig)
+	codeHashWriteFailed   = Code(ErrCodeHashWriteFailed)
+)
+
 // msgInvalidConfig is the message shared by the ErrInvalidConfig sentinel and
 // every context-bearing error Validate derives from it.
 const msgInvalidConfig = "ETagConfig has an invalid field value"
@@ -42,14 +54,14 @@ const msgInvalidConfig = "ETagConfig has an invalid field value"
 // Validate returns a fresh classified error with the same code and family
 // carrying context (e.g. the offending field value), so errors.Is matches
 // by code and family.
-var ErrInvalidConfig error = errorfamily.NewRejection(ErrCodeInvalidConfig, msgInvalidConfig)
+var ErrInvalidConfig error = codeInvalidConfig.Rejection(msgInvalidConfig)
 
 // newInvalidConfig returns a fresh invalid-config error carrying the
 // sentinel's code and message; callers attach context with WithContextf.
 // Fresh instances keep the package-level sentinel immutable, and errors.Is
 // matches them against it by code and family.
 func newInvalidConfig() *errorfamily.Error {
-	return errorfamily.NewRejection(ErrCodeInvalidConfig, msgInvalidConfig)
+	return codeInvalidConfig.Rejection(msgInvalidConfig)
 }
 
 const (
@@ -59,13 +71,43 @@ const (
 	msgReportAsBug               = "This is likely a bug. Please report it if the problem persists."
 )
 
-func registerErrorTemplate(code, what, why, fix, wayOut string) {
-	errorfamily.RegisterTemplate(code, errorfamily.MessageTemplate{
-		What:   what,
-		Why:    why,
-		Fix:    fix,
-		WayOut: wayOut,
-	})
+// errorTemplates maps every error code this package can produce to its
+// user-facing message template. Templates use {key} placeholders filled
+// from the error's context. The completeness test in errors_test.go asserts
+// every etag error code has an entry here.
+//
+//nolint:gochecknoglobals // immutable data table: populated once, never mutated
+var errorTemplates = map[string]errorfamily.MessageTemplate{
+	ErrCodeETagWriteFailed: {
+		What:   "Failed to write ETag-buffered HTTP response",
+		Why:    "The underlying ResponseWriter.Write call returned an error while streaming ETag data.",
+		Fix:    "Check if the client disconnected or if the response buffer is full.",
+		WayOut: msgRetryMaySucceed,
+	},
+	ErrCodeHijackUnsupported: {
+		What:   "HTTP connection hijacking is not supported",
+		Why:    "The underlying ResponseWriter does not implement the http.Hijacker interface.",
+		Fix:    "Use a ResponseWriter that supports hijacking (e.g., net/http default writer).",
+		WayOut: msgInfrastructureUnsupported,
+	},
+	ErrCodeHijackFailed: {
+		What:   "Failed to hijack HTTP connection",
+		Why:    "The underlying Hijack() call returned an error.",
+		Fix:    "Check if the connection is still active and not already hijacked.",
+		WayOut: msgRetryMaySucceed,
+	},
+	ErrCodeInvalidConfig: {
+		What:   "ETag configuration is invalid",
+		Why:    "One or more fields of ETagConfig have invalid values.",
+		Fix:    "Review the ETagConfig field values and ensure MaxBufferSize is positive.",
+		WayOut: msgCheckYourConfig,
+	},
+	ErrCodeHashWriteFailed: {
+		What:   "Hash function failed to accept data",
+		Why:    "The hash.Write call returned an error, which violates the hash.Hash contract that Write never fails.",
+		Fix:    "This indicates a bug in the hash implementation. Report it to the library author.",
+		WayOut: msgReportAsBug,
+	},
 }
 
 // RegisterErrorClassifications maps stdlib HTTP sentinel errors relevant to
@@ -78,47 +120,7 @@ func RegisterErrorClassifications() {
 		http.ErrAbortHandler: errorfamily.Transient,
 	})
 
-	registerAllErrorTemplates()
-}
-
-func registerAllErrorTemplates() {
-	registerErrorTemplate(
-		ErrCodeETagWriteFailed,
-		"Failed to write ETag-buffered HTTP response",
-		"The underlying ResponseWriter.Write call returned an error while streaming ETag data.",
-		"Check if the client disconnected or if the response buffer is full.",
-		msgRetryMaySucceed,
-	)
-
-	registerErrorTemplate(
-		ErrCodeHijackUnsupported,
-		"HTTP connection hijacking is not supported",
-		"The underlying ResponseWriter does not implement the http.Hijacker interface.",
-		"Use a ResponseWriter that supports hijacking (e.g., net/http default writer).",
-		msgInfrastructureUnsupported,
-	)
-
-	registerErrorTemplate(
-		ErrCodeHijackFailed,
-		"Failed to hijack HTTP connection",
-		"The underlying Hijack() call returned an error.",
-		"Check if the connection is still active and not already hijacked.",
-		msgRetryMaySucceed,
-	)
-
-	registerErrorTemplate(
-		ErrCodeInvalidConfig,
-		"ETag configuration is invalid",
-		"One or more fields of ETagConfig have invalid values.",
-		"Review the ETagConfig field values and ensure MaxBufferSize is positive.",
-		msgCheckYourConfig,
-	)
-
-	registerErrorTemplate(
-		ErrCodeHashWriteFailed,
-		"Hash function failed to accept data",
-		"The hash.Write call returned an error, which violates the hash.Hash contract that Write never fails.",
-		"This indicates a bug in the hash implementation. Report it to the library author.",
-		msgReportAsBug,
-	)
+	for code, tmpl := range errorTemplates {
+		errorfamily.RegisterTemplate(code, tmpl)
+	}
 }
