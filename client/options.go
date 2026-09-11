@@ -75,8 +75,14 @@ func FreshenPerRFC() FreshenPolicy {
 
 // FreshenFields restricts freshening to the named header fields; every
 // other stored field survives each rebuild untouched. Use it for fields
-// whose fresh value matters, like rate limits or Retry-After.
+// whose fresh value matters, like rate limits or Retry-After. Calling it
+// with no fields returns the [FreshenNone] policy: naming zero fields
+// means zero fields are freshened.
 func FreshenFields(fields ...string) FreshenPolicy {
+	if len(fields) == 0 {
+		return FreshenNone()
+	}
+
 	return FreshenPolicy{kind: freshenNamedFields, fields: fields}
 }
 

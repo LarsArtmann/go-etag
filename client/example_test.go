@@ -121,3 +121,62 @@ func Example_ageAwareStalenessCheck() {
 	// Output:
 	// rejecting "two-day-old payload": Age 137882 exceeds 86400 seconds, the edge may hold stale content
 }
+
+// ExampleFreshenPolicy restricts 304 freshening to one field: the rebuilt
+// 200 wears the fresh Retry-After the revalidation provides, while Date
+// keeps the stored value and the validator flows through whatever the
+// policy is.
+func ExampleFreshenPolicy() {
+	next := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		if req.Header.Get("If-None-Match") == `"v1"` {
+			header := stubHeader(
+				headerPair{"ETag", `"v1"`},
+				headerPair{"Date", "later"},
+				headerPair{"Retry-After", "30"},
+			)
+
+			return stubResponse(http.StatusNotModified, header, ""), nil
+		}
+
+		header := stubHeader(
+			headerPair{"ETag", `"v1"`},
+			headerPair{"Date", "then"},
+			headerPair{"Retry-After", "120"},
+		)
+
+		return stubResponse(http.StatusOK, header, "job status"), nil
+	})
+
+	transport := NewTransport(next, Options{FreshenOn304: FreshenFields("Retry-After")})
+	client := &http.Client{Transport: transport}
+
+	for range 2 {
+		resp, err := client.Get("https://api.test/jobs/42")
+		if err != nil {
+			fmt.Println("error:", err)
+
+			return
+		}
+
+		body, readErr := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+
+		if readErr != nil {
+			fmt.Println("error:", readErr)
+
+			return
+		}
+
+		fmt.Println(
+			resp.StatusCode,
+			string(body),
+			"date="+resp.Header.Get("Date"),
+			"retry-after="+resp.Header.Get("Retry-After"),
+			"etag="+resp.Header.Get("ETag"),
+		)
+	}
+
+	// Output:
+	// 200 job status date=then retry-after=120 etag="v1"
+	// 200 job status date=then retry-after=30 etag="v1"
+}

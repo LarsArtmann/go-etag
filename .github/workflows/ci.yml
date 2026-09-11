@@ -9,16 +9,19 @@ on:
 permissions:
   contents: read
 
-# Pin the exact toolchain go.mod names: the setup-go manifest can lag go.dev,
-# and GOTOOLCHAIN forces the go command to fetch the precise version. Keep in
-# sync with the `go` directive in go.mod.
-env:
-  GOTOOLCHAIN: go1.26.7
+# Pin the exact toolchain go.mod names on the Go build/test/lint jobs: the
+# setup-go manifest can lag go.dev, and GOTOOLCHAIN forces the go command to
+# fetch the precise version. Keep in sync with the `go` directive in go.mod.
+# The govulncheck job is deliberately unpinned: it installs govulncheck@latest,
+# and a future release declaring a newer Go must be able to fetch that
+# toolchain instead of failing the install.
 
 jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: go1.26.7
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -51,6 +54,8 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: go1.26.7
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -67,6 +72,8 @@ jobs:
   fuzz:
     name: Fuzz
     runs-on: ubuntu-latest
+    env:
+      GOTOOLCHAIN: go1.26.7
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 

@@ -85,4 +85,11 @@ func TestFreshenPolicyConstructors(t *testing.T) {
 	if !slices.Equal(fields.fields, []string{"A", "B"}) {
 		t.Errorf("FreshenFields fields = %v, want [A B]", fields.fields)
 	}
+
+	// Naming zero fields means zero fields are freshened: the constructor
+	// normalizes to FreshenNone instead of an empty named-fields mode.
+	empty := FreshenFields()
+	if empty.kind != freshenNothing || empty.fields != nil {
+		t.Errorf("FreshenFields() = %+v, want the disabled policy (FreshenNone)", empty)
+	}
 }
