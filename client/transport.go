@@ -395,14 +395,6 @@ func (c *chainedBody) Close() error {
 	return c.body.Close() //nolint:wrapcheck // passthrough preserves the underlying error
 }
 
-// freshenedHeader applies RFC 9111 §4.3.4 (freshening stored responses upon
-// validation) using the §3.2 update rules: every field the 304 provides is
-// added to the stored header set, replacing any stored value, except fields
-// excepted from storage (§3.1), Content-Length and Content-Range (§3.2), and
-// Content-Encoding when net/http transparently decoded the stored body (the
-// §3.2 integrity allowance for caches storing processed representations:
-// the stored bytes are the decoded ones, so the 304's encoding claim would
-// describe bytes the rebuilt response does not carry).
 // cloneHeader returns a mutable copy of stored, substituting an empty
 // header when stored is nil: http.Header.Clone returns nil for a nil map,
 // which would panic on the first freshening write.
@@ -415,6 +407,14 @@ func cloneHeader(stored http.Header) http.Header {
 	return header
 }
 
+// freshenedHeader applies RFC 9111 §4.3.4 (freshening stored responses upon
+// validation) using the §3.2 update rules: every field the 304 provides is
+// added to the stored header set, replacing any stored value, except fields
+// excepted from storage (§3.1), Content-Length and Content-Range (§3.2), and
+// Content-Encoding when net/http transparently decoded the stored body (the
+// §3.2 integrity allowance for caches storing processed representations:
+// the stored bytes are the decoded ones, so the 304's encoding claim would
+// describe bytes the rebuilt response does not carry).
 func freshenedHeader(stored, notModified http.Header, uncompressed bool) http.Header {
 	header := cloneHeader(stored)
 
