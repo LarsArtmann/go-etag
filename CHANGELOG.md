@@ -9,15 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Nothing yet.
+- `ExampleFreshenPolicy`: a GoDoc example showing `FreshenFields` restricting 304 freshening to `Retry-After` while the stored `Date` survives and the validator flows through.
 
 ### Changed
 
-- Nothing yet.
+- CI: the `GOTOOLCHAIN` toolchain pin moved from workflow level to the test, lint, and fuzz jobs; the govulncheck job is deliberately unpinned so its `govulncheck@latest` install can fetch a newer Go toolchain instead of failing.
+- `docs/rfc9111-conformance.md`: a new "Interpretation decisions" section records the RFC judgment calls (304-`no-store` update ≠ storage, `no-store` HEAD neutrality, unprovable HEAD identity means stale, `FreshenOn304` is 304-scoped).
 
 ### Fixed
 
-- Nothing yet.
+- `FreshenFields()` with no arguments now returns the `FreshenNone` policy instead of a named-fields policy with an empty list (identical behavior, honest representation; documented on the constructor).
 
 ## [0.3.1] - 2026-09-11
 
