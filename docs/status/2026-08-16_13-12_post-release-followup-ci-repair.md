@@ -76,13 +76,13 @@ _Predecessor: `2026-08-16_12-28_v0.2.0-release-and-ecosystem-sweep.md` (sections
 9. kit: replace govulncheck's `go-version: 1.26.x` with the GOTOOLCHAIN env pin (same pattern as httputil) — manifest lag makes `1.26.x` resolve to whatever setup-go knows, not what's released.
    _**Status (2026-09-10):** foreign repo (deferred by owner per §h.3)._
 10. go-etag: consider GOTOOLCHAIN pin in its CI too (no govulncheck job exists there today — adding one is optional; the fuzz job fix already landed).
-    _**Status (2026-09-10):** open — TODO_LIST.md #11._
+    _**Status (2026-09-10):** open — TODO_LIST.md #11. **Done at `1bc839f`** — workflow-level `GOTOOLCHAIN: go1.26.7` pin + pinned govulncheck job shipped in v0.3.0; residual scoping (pin vs `@latest` installs) remains TODO_LIST item 4._
 11. go-etag docs-health pass: ROADMAP/TODO_LIST/FEATURES/README badge post-v0.2.0 (12-28 f.24-f.27).
-    _**Resolved (2026-09-10):_ done — TODO_LIST, ROADMAP, FEATURES, docs/DOMAIN_LANGUAGE built; README badge removed; AGENTS.md fixed (docs-health pass)._~
+    _**Resolved (2026-09-10):_ done — TODO_LIST, ROADMAP, FEATURES, docs/DOMAIN_LANGUAGE built; README badge removed; AGENTS.md fixed (docs-health pass)._
 12. ~~Benchmark archive v0.1.1→v0.2.0 into `reports/` (12-28 f.31).~~ **Won't implement — no `reports/` directory exists; benchmarks live in README** (ROADMAP non-goal)
 13. ~~Superseded-pointer notes in the 09-42/11-33 reports → 12-28 report (12-28 f.32) and 12-28 → this report.~~ done (2026-09-10 docs-health pass — every 2026-0* report annotated inline with resolutions)
 14. Ecosystem completeness search for public go-etag consumers beyond the known six (12-28 f.29).
-    _**Status (2026-09-10):** open — TODO_LIST.md #21._
+    _**Status (2026-09-10):** open — TODO_LIST.md #21. **Done at `12dd823`** — GitHub code search: no external consumers (v0.3.0 CHANGELOG)._
 15. cqrs-htmx middleware-showcase runtime-verify (start the example server once, 12-28 f.23).
     _**Status (2026-09-10):** foreign repo._
 16. DiscordSync go-cqrs-lite vendor breakage + pin drift — user chose "leave documented" (12-28 f.15-17 stay owner-handoff items; no action from me).

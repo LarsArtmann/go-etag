@@ -91,7 +91,7 @@
 
 3. ~~**No commit for the documentation updates**: `AGENTS.md` and `CHANGELOG.md` are modified but uncommitted. The auto-git daemon may or may not commit them.~~ done (committed by the daemon; history verified)
 
-4. **CONTRIBUTING.md is stale**: Still says `golangci-lint run ./...` — the actual commands in AGENTS.md are `golangci-lint run` (no `./...`). Minor but inconsistent. (Still open 2026-09-10 — TODO_LIST #20)
+4. ~~**CONTRIBUTING.md is stale**: Still says `golangci-lint run ./...` — the actual commands in AGENTS.md are `golangci-lint run` (no `./...`). Minor but inconsistent.~~ done at `721cfbd` (CONTRIBUTING.md fully rewritten, v0.3.0-era)
 
 5. ~~**Allocation regression unaddressed**: The old README claimed "Zero allocations on the hot path." We dropped that claim from the new README (correct — it's 13 allocs/op now), but we didn't _fix_ the allocation regression. The `hexEncode` function allocates a `strings.Builder` + `[]byte` on every response, where the old `encodeHex` wrote into a stack-allocated fixed-size array. **This is a real performance regression we introduced.**~~ done at `e0fe51f` (`hexEncodeUint64` — stack-allocated `[16]byte`)
 
@@ -138,7 +138,7 @@
 
 21. ~~**Migration guide**: Breaking changes need a `docs/migration/v0.2.md` guide.~~ done — written at `e0fe51f`, removed at `8890f8d` (nothing was released; fiction)
 22. ~~**Update `docs/review-and-roadmap.md`**: Mark B1/B2/B3/D1/D3/D4/D5/D6/D8 as done. Update priorities.~~ done at `e0fe51f`
-23. **CONTRIBUTING.md**: Update commands to match AGENTS.md. — open (TODO_LIST #20)
+23. ~~**CONTRIBUTING.md**: Update commands to match AGENTS.md.~~ done at `721cfbd`
 24. **GoDoc examples for `MatchesIfMatch`**: Show the lost-update prevention pattern. — open (README shows it; a GoDoc example does not exist)
 25. ~~**Document the `EntityTag` vs `ETag` naming**: The commit message calls it `EntityTag` but the code uses `ETag`. Align.~~ done — code and docs consistently use `ETag`
 
@@ -168,7 +168,7 @@
 | 10  | P1       | ~~Test: handler calls `WriteHeader` multiple times~~ done at `c759373`                                                                                | XS     |
 | 11  | P1       | ~~Property test: ETag round-trip (compute → String → Parse)~~ done at `e0fe51f` (fuzz round-trip)                                                     | S      |
 | 12  | P1       | ~~Write migration guide (`docs/migration/v0.2.md`)~~ done — written `e0fe51f`, removed `8890f8d` (fiction)                                            | M      |
-| 13  | P1       | Update CONTRIBUTING.md commands — open (TODO_LIST #20)                                                                                                | XS     |
+| 13  | P1       | ~~Update CONTRIBUTING.md commands~~ done at `721cfbd`                                                                                                  | XS     |
 | 14  | P2       | Reduce `ParseETagList` allocations via `sync.Pool` or pre-allocation — open                                                                           | M      |
 | 15  | P2       | Add benchmarks for large bodies (1 KB, 100 KB, 1 MB) — open                                                                                           | S      |
 | 16  | P2       | ~~Streaming hash support (`hash.Hash` interface option)~~ Won't implement — conflicts with buffer-and-compare architecture                            | M      |

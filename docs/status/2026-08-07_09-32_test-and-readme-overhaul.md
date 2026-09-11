@@ -169,7 +169,7 @@ Nothing. No regressions, no broken tests, no lint failures, no reverted work. Al
 ~~25. Add a comparison table vs other Go ETag libraries (if any exist)~~ **NOT-DO — no other maintained Go ETag libraries to compare against; ROADMAP Theme 4 keeps the idea**
 ~~26. Update CHANGELOG.md with test improvements and README rewrite~~ done (consolidated into the v0.1.0 entry)
 ~~27. Update AGENTS.md file table with new test files~~ done at `bc5a551`
-28. Add CONTRIBUTING.md improvements (mention `golangci-lint fmt`, fuzz testing, coverage gate) — open (TODO_LIST #20)
+28. ~~Add CONTRIBUTING.md improvements (mention `golangci-lint fmt`, fuzz testing, coverage gate)~~ done at `721cfbd` (full rewrite)
 29. Add CI badge once GitHub Actions is set up — open (low)
 ~~30. Addpkg.go.dev link verification (ensure docs render correctly)~~ done — pkg.go.dev renders
 

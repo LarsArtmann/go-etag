@@ -62,7 +62,7 @@ _Scope: strictly this session — resuming at the 13-12 report's §g waiting sta
 5. Kit GOTOOLCHAIN pin at next touch (deferred by g.3; 13-12 f.9 unchanged).
    _**Status (2026-09-10):** foreign repo — kit owner's call._
 6. go-etag GOTOOLCHAIN pin / optional govulncheck job (13-12 f.10).
-   _**Status (2026-09-10):** open — TODO_LIST.md #11._
+   _**Status (2026-09-10):** open — TODO_LIST.md #11. **Done at `1bc839f`** — both landed in v0.3.0; residual scoping is TODO_LIST item 4._
 7. cqrs-htmx: tidy ~20 submodules' indirect go-etag refs after the foreign session lands (13-12 f.5).
    _**Status (2026-09-10):** foreign repo._
 8. DiscordSync: `nix flake check` + foreign `stdenv.hostPlatform` hunk decision (13-12 f.6, owner).
@@ -75,7 +75,7 @@ _Scope: strictly this session — resuming at the 13-12 report's §g waiting sta
 12. ~~Benchmark archive v0.1.1→v0.2.0 into `reports/` (13-12 f.12).~~ **Won't implement — no `reports/` directory exists; benchmarks live in README** (ROADMAP non-goal)
 13. ~~Superseded-pointer annotations: 09-42/11-33 → 12-28 → 13-12 → this report (13-12 f.13; this report now also needs a pointer).~~ done (2026-09-10 docs-health pass — every 2026-0* report annotated inline; this file included)
 14. Ecosystem completeness search for public go-etag consumers beyond the known six (13-12 f.14).
-    _**Status (2026-09-10):** open — TODO_LIST.md #21._
+    _**Status (2026-09-10):** open — TODO_LIST.md #21. **Done at `12dd823`** — GitHub code search: no external consumers (v0.3.0 CHANGELOG)._
 15. cqrs-htmx middleware-showcase runtime-verify (13-12 f.15).
     _**Status (2026-09-10):** foreign repo._
 16. Check whether `server_timing/v0.10.0`/`v0.9.1` ever had release pages; decide the sub-module release convention once (noticed this session).

@@ -25,7 +25,7 @@ _Format: Markdown per explicit user request (status-report skill default is HTML
 2. ~~**go-github-kit next release** — impossible before the tag exists (its `replace ../go-etag` is local-only); sequencing after tag undecided.~~ done — kit v0.2.0 tagged and released (12-28 §a)
 3. ~~**httputil release train** — downstream consumers of published httputil still pull the deprecated root via the shim; needs its own version bump after the sweep.~~ done — httputil v0.12.0 (+ `server_timing/v0.12.0`) tagged, pushed, released (13-12 §a)
 4. **Optional polish** — in-repo shim export-parity test; client/ coverage % measurement (README's 98.9% badge is server-measured).
-   _**Status (2026-09-10):** coverage measured (client 94.3%, badge since removed); the shim parity test is open — TODO_LIST.md #14._
+   _**Status (2026-09-10):** coverage measured (client 94.3%, badge since removed); ~~the shim parity test is open — TODO_LIST.md #14.~~ done at `a5de386` (`deprecated_test.go`)._
 5. ~~**Flake revs → v0.2.0 tag commit** in DiscordSync/nsfw-classifier at sweep time.~~ done (12-28 §a — DiscordSync flake rev → `be19640`; nsfw-classifier pinned `v0.2.0`)
 
 ## d. Totally Fucked Up
@@ -59,15 +59,15 @@ _Format: Markdown per explicit user request (status-report skill default is HTML
 | 8  | ~~Sweep: nsfw-classifier — pseudo→v0.2.0, vendorHash rotate, nix build~~ done (12-28 §a, `754bb3f`)                                                                                                          | High     | M      | Cleanup       |
 | 9  | ~~Release go-github-kit once go-etag v0.2.0 exists~~ done (kit v0.2.0 at `3871941`, 12-28 §a)                                                                                                                | Medium   | M      | Release       |
 | 10 | ~~httputil release train for downstream vendored consumers~~ done (13-12 §a, v0.12.0)                                                                                                                        | Medium   | M      | Release       |
-| 11 | In-repo shim export-parity test (`deprecated.go` vs `server`) — open, TODO_LIST.md #14                                                                                                                       | Medium   | S      | Quality       |
+| 11 | ~~In-repo shim export-parity test (`deprecated.go` vs `server`)~~ done at `a5de386`                                                                                                                       | Medium   | S      | Quality       |
 | 12 | ~~Measure client/ coverage %; correct README badge claim~~ done (94.3% measured; badge removed 2026-09-10)                                                                                                   | Medium   | S      | Quality       |
 | 13 | nsfw BuildFlow env fix (go-licenses/vulnix in devShell; tailwind-build out of pre-commit budget) — foreign repo, owner                                                                                       | Medium   | M      | Tooling       |
 | 14 | nsfw nix-checker advice: extract inline vendorHash to vendorHash.nix — foreign repo, owner                                                                                                                   | Low      | S      | Tooling       |
 | 15 | Flag DiscordSync's foreign unstaged `flake.nix` overlay drift to its owner — foreign repo, owner decision pending                                                                                            | Low      | S      | Coordination  |
 | 16 | ~~Tick the release box in plan `2026-08-16_08-35_server-client-split.md` after tagging~~ done at `caed207`                                                                                                   | Low      | S      | Documentation |
-| 17 | Ecosystem-wide grep proving no `../go-etag` replaces survive post-sweep — superseded by TODO_LIST.md #21 (broader search); in-house sweep verified 12-28 §a                                                  | Low      | S      | Verification  |
+| 17 | Ecosystem-wide grep proving no `../go-etag` replaces survive post-sweep — superseded by TODO_LIST.md #21 (broader search; ~~done at `12dd823` — GitHub code search, no external consumers~~); in-house sweep verified 12-28 §a                                                  | Low      | S      | Verification  |
 | 18 | ~~docs-health HARVEST of this report's section f into TODO_LIST/ROADMAP if the project adopts those files~~ done (2026-09-10 docs-health pass)                                                               | Low      | S      | Documentation |
-| 19 | Re-run client benchmarks on final toolchain; refresh README numbers — open, TODO_LIST.md #19                                                                                                                 | Low      | S      | Quality       |
+| 19 | ~~Re-run client benchmarks on final toolchain; refresh README numbers~~ resolved — superseded by the `reports/bench/` discipline (client baselines archived 2026-09-11 incl. post-release v0.3.0)                                                                                                                 | Low      | S      | Quality       |
 | 20 | ~~Consider a short "temporary replace" note in consumer AGENTS.md/README files so the invisible debt is visible until the sweep~~ moot — sweep completed 2026-08-16 (12-28 §a); no temporary replaces remain | Low      | S      | Documentation |
 
 ## g. Questions (cannot self-determine)

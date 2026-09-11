@@ -40,12 +40,12 @@ Nothing mid-flight. All five consumers are migrated and committed; the release a
 1. ~~v0.2.0 release — **explicitly gated on user GO** (go-release skill: CHANGELOG cut, annotated tag, push, proxy + pkg.go.dev verify).~~ done — tagged `be19640`, proxy + pkg.go.dev verified (12-28 §a)
 2. ~~Post-release sweep: drop every temporary `replace`/pseudo-version in go-github-kit, httputil, library-policy, cqrs-htmx, DiscordSync and pin v0.2.0 (nsfw-classifier only drops the pseudo-version).~~ done — all six swept and pushed (12-28 §a + 13-12 §a)
 3. Optional polish: in-repo shim compile test; client coverage % (README's 98.9% badge is server-measured).
-   _**Status (2026-09-10):** shim compile-verified against a scratch consumer (13-12 §a); coverage measured at 94.3% (badge removed). The in-repo parity test remains open — TODO_LIST.md #14._
+   _**Status (2026-09-10):** shim compile-verified against a scratch consumer (13-12 §a); coverage measured at 94.3% (badge removed). ~~The in-repo parity test remains open — TODO_LIST.md #14.~~ done at `a5de386` (`deprecated_test.go` export-parity suite; root coverage 100%)._
 
 ## f. Follow-ups (minor, non-blocking)
 
 - Root shim `deprecated.go` has no in-repo test enforcing export parity (verified manually once via `go doc` diff + scratch consumer).
-  _**Status (2026-09-10):** still open — TODO_LIST.md #14 (scratch-consumer verification repeated at v0.2.0, 13-12 §a)._
+  _**Status (2026-09-10):** still open — TODO_LIST.md #14 (scratch-consumer verification repeated at v0.2.0, 13-12 §a). **Done at `a5de386`** — `deprecated_test.go` export-parity suite (compile-time type identity + wrapper smokes)._
 - go-github-kit `DefaultETagEntries` const is now informational (default enforced inside etagclient); harmless.
   _**Status (2026-09-10):** foreign repo — informational const still present on the rendered pkg.go.dev page; harmless as noted._
 - The auto-commit daemon committed kit work as `1afdd80` while the repo also carries unrelated staged state (`helpers_test.go`, `testutil_test.go` modified) — foreign, untouched.

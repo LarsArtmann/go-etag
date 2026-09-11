@@ -193,6 +193,7 @@ Flush-path write errors are forwarded to `ETagConfig.OnError` (a `func(*errorfam
 
 - **An auto-git daemon commits and re-formats continuously** — status reports and tables get re-touched within minutes of your edit. Always re-read a shared file immediately before re-editing it; never assume remembered file geometry.
 - **`docs/status/` and `docs/planning/` are point-in-time snapshots** — never rewrite their narrative; annotate resolved items inline (`~~item~~ done at`hash``) per the docs-health skill. The living backlog is `TODO_LIST.md`, never the reports.
+- **Consumer-migration recipe (per go-ecosystem-upgrade sweeps):** before bumping go-etag in a consumer repo, check its version surface first (`flake.nix` inputs, `vendorHash`, CI pins — DiscordSync's drift-guard test exists for exactly this); commit immediately after the gate so the auto-daemon doesn't capture the diff; run `nix build` whenever that repo's `go.sum` changed; verify workspace repos in BOTH modes (hermetic `GOWORK=off` + workspace MVS).
 
 ## Release Conventions (validated at v0.3.0)
 

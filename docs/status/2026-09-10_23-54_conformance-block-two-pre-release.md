@@ -57,22 +57,22 @@ _All §c items are open and routed: TODO_LIST.md (§4.3.5, §4.4 integration, fu
 
 ## f) UP TO 50 THINGS NEXT
 
-1. Compute the cache key lazily in `roundTripUnsafe`; benchmark non-GET passthrough.
-2. Re-run full benchmarks; compare against pre-§4.4 baselines.
-3. Branch-level coverage audit (`go tool cover -func`); list uncovered branches and close them.
-4. Fuzz `cacheControlDirectives` + `hasNoStoreDirective` (30s seeds in CI, mirroring server fuzz jobs).
+1. ~~Compute the cache key lazily in `roundTripUnsafe`; benchmark non-GET passthrough.~~ done at `5d062b8`, `a4c2245`, `2fdb8e3` (229.4 → 186.2 ns/op; `reports/bench/`)
+2. ~~Re-run full benchmarks; compare against pre-§4.4 baselines.~~ done — `-count=6` baselines under `reports/bench/` (2026-09-11, incl. post-release v0.3.0)
+3. ~~Branch-level coverage audit (`go tool cover -func`); list uncovered branches and close them.~~ done at `a5de386`, `5eb226b` (client 97.7%; gaps documented-intentional)
+4. ~~Fuzz `cacheControlDirectives` + `hasNoStoreDirective` (30s seeds in CI, mirroring server fuzz jobs).~~ done at `a5de386` (`FuzzHasNoStoreDirective` + CI fuzz job)
 5. `restoreMismatchedValidator`: avoid the dual-key edge; test restricted-mode + mismatch combination.
-6. Test `weaklyMatchesValidator` edge forms (`W/` vs `w/`, malformed tags).
+6. ~~Test `weaklyMatchesValidator` edge forms (`W/` vs `w/`, malformed tags).~~ done at `a5de386` (edge table)
 7. ~~AGENTS.md: correct/nuance the `ETag`/`Etag` canonicalization note (runtime vs `canonicalheader` linter).~~ done (2026-09-10 docs-health pass)
 8. **Release v0.3.0** (go-release flow): verify CHANGELOG, tag, push, watch the module proxy and pkg.go.dev, `go get` round trip.
 9. Draft the reply email to Alex; answer stands: Age surfaces verbatim on 200s, freshens from 304s on rebuilds; cache decision internal by design.
 10. Accept/decline Alex's header-capture fixtures; if accepted, land them in `client/testdata/` as replayed real-world cases.
-11. §4.3.5 HEAD freshening (SHOULD): HEAD 200 with matching ETag (+ Content-Length) freshens stored metadata; mismatch invalidates.
-12. §4.4 integration variant: PUT 200 through the real server, then GET must refetch.
+11. ~~§4.3.5 HEAD freshening (SHOULD): HEAD 200 with matching ETag (+ Content-Length) freshens stored metadata; mismatch invalidates.~~ done at `30d162a`
+12. ~~§4.4 integration variant: PUT 200 through the real server, then GET must refetch.~~ done — `TestIntegrationUnsafeMethodInvalidatesThroughRealServer` (v0.3.0)
 13. Vary parsing: at least warn in `Stats` or docs when a stored response carries `Vary` the KeyFunc ignores.
 14. ~~Create `TODO_LIST.md` + `ROADMAP.md`; harvest both status reports.~~ done (2026-09-10 docs-health pass — `TODO_LIST.md` 21 items, `ROADMAP.md` 4 themes)
 15. Decide the `ETag` domain-type sharing question (client strings vs server type).
-16. Typed `PreserveOn304` mode (FreshenPerRFC / FreshenFields / FreshenNone) to kill the nil-vs-empty overload.
+16. ~~Typed `PreserveOn304` mode (FreshenPerRFC / FreshenFields / FreshenNone) to kill the nil-vs-empty overload.~~ done at `2fdb8e3` (`FreshenOn304 FreshenPolicy`)
 17. `cacheEntry` → `storedResponse` with validator-matching methods (§4.3.4-aware).
 18. Observability hooks for the client (OnHit/OnStore/OnFreshen/OnInvalidate), mirroring the server's.
 19. True freshness-based serving (§4.2: max-age/Expires; serve stored without revalidating inside freshness lifetime).
@@ -86,17 +86,17 @@ _All §c items are open and routed: TODO_LIST.md (§4.3.5, §4.4 integration, fu
 27. Property test: Age monotonicity across N revalidations.
 28. Test: 304 with `Cache-Control: no-store` still rebuilds (validation reuse vs storage ban) — pin whichever reading we adopt, with the RFC citation.
 29. Exhaustive `isUnsafeMethod` table (CONNECT, PATCH, custom `X-FOO`).
-30. `exhaustruct` → `exhaustruct_v5` migration (deprecation warning).
+30. ~~`exhaustruct` → `exhaustruct_v5` migration (deprecation warning).~~ done at `1bc839f`
 31. Website/docs launch for the repo (sibling-repo pattern).
 32. ~~Unify `reports/` vs `docs/status/` locations.~~ **Won't implement — no `reports/` directory exists; `docs/status/` is the single snapshot location (recorded in ROADMAP non-goals).**
 33. ~~Review `docs/planning/2026-08-16_*server-client-split.md` for now-resolved items to mark done.~~ done (2026-09-10 docs-health pass — plan fully resolved and archived)
-34. CHANGELOG polish against Keep-a-Changelog before the tag.
-35. Consider a `CONTRIBUTING.md` refresh (it predates the client package and the lint/format commands in AGENTS.md).
+34. ~~CHANGELOG polish against Keep-a-Changelog before the tag.~~ done at `fe5dede`
+35. ~~Consider a `CONTRIBUTING.md` refresh (it predates the client package and the lint/format commands in AGENTS.md).~~ done at `721cfbd`
 
 ## g) QUESTIONS I CANNOT ANSWER MYSELF (max 3)
 
 1. **Ship it?** Everything is staged and verified for **v0.3.0** — say the word and I run the go-release flow (tag + push + proxy verification). Tag message/notes preferences, if any?
-   _**Status (2026-09-10):** still awaiting owner GO — tracked as TODO_LIST.md #1._
+   _**Status (2026-09-10):** still awaiting owner GO — tracked as TODO_LIST.md #1. **Resolved: v0.3.0 shipped at `fe5dede`** (report `2026-09-11_02-38`)._
 2. **Alex:** draft the reply email for you to send? And do we want his raw header captures as permanent fixtures in `client/testdata/`?
    _**Status (2026-09-10):** moved to ROADMAP.md Open Questions._
 3. **Domain type:** for post-release work — may the client import `server`'s `ETag` type, or should it be extracted to a shared package first? (Blocks items 15–17 either way.)
