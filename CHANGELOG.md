@@ -13,11 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- CI: the pinned GitHub Actions group (checkout, setup-go, upload-artifact) was bumped via Dependabot PR #1, clearing the Node 20 deprecation warnings; the merged run is green.
+- Nothing yet.
 
 ### Fixed
 
 - Nothing yet.
+
+## [0.3.1] - 2026-09-11
+
+### Changed
+
+- CI: the pinned GitHub Actions group (checkout, setup-go, upload-artifact) was bumped via Dependabot PR #1, clearing the Node 20 deprecation warnings; the merged run is green. Docs and CI only — `go.mod`, `go.sum`, and every `.go` file are byte-identical to v0.3.0.
 
 ## [0.3.0] - 2026-09-11
 
@@ -106,7 +112,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BDD-style spec suite (`etag_bdd_test.go`) mapping RFC 7232 sections to behavioral expectations.
 - Fuzz tests for `ParseETag` and `ParseETagList` verifying no panics and round-trip integrity on arbitrary input.
 
-[Unreleased]: https://github.com/Larsartmann/go-etag/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/Larsartmann/go-etag/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/Larsartmann/go-etag/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Larsartmann/go-etag/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Larsartmann/go-etag/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/larsartmann/go-etag/releases/tag/v0.1.1
