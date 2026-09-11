@@ -45,12 +45,14 @@
 
 ## c) NOT STARTED
 
-1. **CHANGELOG.md `[Unreleased]`** entry — consumer-visible change: `ErrInvalidConfig` declared type widened from `*errorfamily.Error` to `error` (server package **and** deprecated root shim). `errors.Is` matching unchanged (code+family). Only compile-breaking shape: a consumer assigning the sentinel to a `*errorfamily.Error` variable.
-2. **AGENTS.md memory updates** — Error Classification section (sentinel now `error`-interface for the erraudit sentinel guard; `newInvalidConfig` factory; drainAndClose nolint rationale) and Commands section (the erraudit invocation is recorded nowhere in-repo).
-3. **`golangci-lint fmt`** — repo rule says run after editing (wsl_v5/gofumpt/golines); not run.
-4. **`erraudit nolint-audit`** — validates the 2 new directives aren't stale; not run.
-5. **`docs/decisions/no-validation-error-interface.md`** line 14 wording drift ("`ErrInvalidConfig` sentinel — a `*errorfamily.Error`" — still true of the dynamic value; declared type is now `error`).
-6. **Direct unit test for `newInvalidConfig()`** — Is-matching against the sentinel currently covered only transitively via the `Validate` tests.
+All six items below were completed in the 2026-09-11 follow-up session (around `fc83490`):
+
+1. ~~**CHANGELOG.md `[Unreleased]`** entry~~ done — Changed entry (sentinel widening, both packages) + Added entry (`ExampleETagConfig_Validate`).
+2. ~~**AGENTS.md memory updates**~~ done — Error Classification (interface declaration, factory, code+family matching), client gotcha (drainAndClose rationale + `nolint-audit .` path gotcha), Commands (erraudit invocation recorded).
+3. ~~**`golangci-lint fmt`**~~ done — no-op on the tree; `golangci-lint run` 0 issues after.
+4. ~~**`erraudit nolint-audit`**~~ done — `nolint-audit .` reports 2 directives: 2 needed, 0 stale (note: it takes a path, not `./...`).
+5. ~~**`docs/decisions/no-validation-error-interface.md`** line 14 wording drift~~ done — Context rewritten (fresh derived error, `error`-interface sentinel), two-field Validate claim fixed, references de-drifted.
+6. ~~**Direct unit test for `newInvalidConfig()`**~~ done — `TestErrInvalidConfig_MatchesDerivedErrors` + GoDoc `ExampleETagConfig_Validate`.
 
 ## d) TOTALLY FUCKED UP
 
