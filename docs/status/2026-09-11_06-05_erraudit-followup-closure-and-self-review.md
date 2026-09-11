@@ -100,4 +100,4 @@ Nothing destructive: no reverts, no lost work, no broken builds, tree clean. The
 
 ---
 
-*Point-in-time snapshot. The living backlog is `TODO_LIST.md` — harvest section (f) there before acting on it.*
+_Point-in-time snapshot. The living backlog is `TODO_LIST.md` — harvest section (f) there before acting on it._

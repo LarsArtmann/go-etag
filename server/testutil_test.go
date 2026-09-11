@@ -88,6 +88,8 @@ func (*failingHijackRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 
 // nonHijackableRecorder is a minimal http.ResponseWriter that does NOT
 // implement http.Hijacker, exercising the "hijack unsupported" error path.
+// Its Write is deliberately the plain two-line recorder, not shared with the
+// production body buffering it exists to test in isolation.
 type nonHijackableRecorder struct {
 	header http.Header
 	status int

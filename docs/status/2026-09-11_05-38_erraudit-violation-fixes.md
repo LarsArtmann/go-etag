@@ -7,12 +7,12 @@
 
 ## Original findings (4 ERROR violations)
 
-| # | Type | Location | Finding |
-| --- | --- | --- | --- |
-| 1 | `sentinel_concrete_type` | `server/errors.go:39` | `ErrInvalidConfig` declared `*errorfamily.Error`; must be `error` interface |
-| 2 | `sentinel_concrete_type` | `deprecated.go:77` | same, in the deprecated root shim |
-| 3 | `ignored` | `client/transport.go:583` | `_, _ = io.Copy(io.Discard, resp.Body)` blank discard |
-| 4 | `ignored` | `client/transport.go:584` | `_ = resp.Body.Close()` blank discard |
+| # | Type                     | Location                  | Finding                                                                     |
+| - | ------------------------ | ------------------------- | --------------------------------------------------------------------------- |
+| 1 | `sentinel_concrete_type` | `server/errors.go:39`     | `ErrInvalidConfig` declared `*errorfamily.Error`; must be `error` interface |
+| 2 | `sentinel_concrete_type` | `deprecated.go:77`        | same, in the deprecated root shim                                           |
+| 3 | `ignored`                | `client/transport.go:583` | `_, _ = io.Copy(io.Discard, resp.Body)` blank discard                       |
+| 4 | `ignored`                | `client/transport.go:584` | `_ = resp.Body.Close()` blank discard                                       |
 
 ## a) FULLY DONE
 
@@ -73,7 +73,7 @@ Nothing destructive: no reverts, no broken builds, no lost work, tree clean. The
 3. ~~`golangci-lint fmt` + full lint re-run~~ done — 0 issues.
 4. ~~CHANGELOG `[Unreleased]` Changed entry (sentinel interface widening, both packages)~~ done.
 5. ~~AGENTS.md updates (Error Classification + record the erraudit command)~~ done.
-6. **Owner decision:** drainAndClose posture under `--no-suppress` — accept the 2 documented findings, or add `--disable ignored` to sweep invocations, or build a client `OnError` hook (new public API). *(Follow-up default adopted + documented in AGENTS.md: accept the documented findings — still overridable by owner.)*
+6. **Owner decision:** drainAndClose posture under `--no-suppress` — accept the 2 documented findings, or add `--disable ignored` to sweep invocations, or build a client `OnError` hook (new public API). _(Follow-up default adopted + documented in AGENTS.md: accept the documented findings — still overridable by owner.)_
 7. ~~Direct unit test: `errors.Is(newInvalidConfig().WithContextf(...), ErrInvalidConfig)` == true~~ done.
 8. ~~Consider a compile-time pin `var _ error = ErrInvalidConfig` in tests~~ resolved as redundant — the interface declaration itself is the pin; rejected belt-and-suspenders.
 9. ~~Update `docs/decisions/no-validation-error-interface.md` wording (declared type)~~ done.
@@ -81,11 +81,11 @@ Nothing destructive: no reverts, no broken builds, no lost work, tree clean. The
 11. Sweep sibling LarsArtmann Go repos for the same concrete-typed sentinel pattern (`var ErrX = errorfamily.New...`) — same erraudit finding class almost certainly exists there.
 12. ~~Old typed-errors-report open items #9 (GoDoc example) & #16 (Is across different context values)~~ done — `ExampleETagConfig_Validate` + `TestErrInvalidConfig_MatchesDerivedErrors`.
 13. Decide whether erraudit joins CI as a lint job (currently ad-hoc; invocation now documented in AGENTS.md Commands).
-14. v0.3.2 patch-release decision once items 1–6 land (go-release skill gates the tag). *(Items 1–6 landed; release decision still open — see (g)3.)*
+14. v0.3.2 patch-release decision once items 1–6 land (go-release skill gates the tag). _(Items 1–6 landed; release decision still open — see (g)3.)_
 15. Post-release: verify pkg.go.dev renders the new sentinel doc comment correctly.
 
 ## g) Questions I cannot answer myself
 
-1. **drainAndClose posture:** is "2 documented deliberate ignores surfaced by `--no-suppress` audit mode" acceptable (nolint is honored in default mode), or do you want zero under `--no-suppress` too — and if so, which trade: `--disable ignored` on sweep runs, or a new client `Options.OnError` hook (public API; breaks the client's passthrough error philosophy)? *(Follow-up session adopted and documented the first option as the working default in AGENTS.md; owner can still override.)*
+1. **drainAndClose posture:** is "2 documented deliberate ignores surfaced by `--no-suppress` audit mode" acceptable (nolint is honored in default mode), or do you want zero under `--no-suppress` too — and if so, which trade: `--disable ignored` on sweep runs, or a new client `Options.OnError` hook (public API; breaks the client's passthrough error philosophy)? _(Follow-up session adopted and documented the first option as the working default in AGENTS.md; owner can still override.)_
 2. ~~**Consumer breakage check:**~~ **closed by sweep at `fc83490` follow-up** — grepped every local project under `/home/lars/projects` for go-etag importers referencing `ErrInvalidConfig`: **zero files**. No local consumer uses the sentinel at all; the CHANGELOG entry covers hypothetical external consumers.
-3. **Release timing:** should the CHANGELOG entry ride `[Unreleased]` into a prompt v0.3.2 patch, or accumulate toward the next minor? *(Still open — blocking nothing; CI green on the exact tree.)*
+3. **Release timing:** should the CHANGELOG entry ride `[Unreleased]` into a prompt v0.3.2 patch, or accumulate toward the next minor? _(Still open — blocking nothing; CI green on the exact tree.)_

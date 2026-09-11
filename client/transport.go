@@ -223,20 +223,7 @@ func headConfirmsStored(head http.Header, entry cacheEntry) bool {
 // HEAD provides). The stored body, status, and decompression record are the
 // validated ones and never change.
 func (t *Transport) freshenFromHead(key string, entry cacheEntry, head http.Header) {
-	header := freshenedHeader(entry.header, head, entry.uncompressed)
-
-	etag := header.Get(headerETag)
-	if etag == "" {
-		etag = entry.etag
-	}
-
-	t.cache.freshen(key, entry.etag, cacheEntry{
-		etag:         etag,
-		status:       entry.status,
-		header:       header,
-		body:         entry.body,
-		uncompressed: entry.uncompressed,
-	})
+	t.persistFreshened(key, entry, freshenedHeader(entry.header, head, entry.uncompressed))
 }
 
 // rebuildFromCache synthesizes the 200 the caller expects: cached body and
@@ -279,10 +266,7 @@ func (t *Transport) rebuiltHeader(entry cacheEntry, notModified *http.Response) 
 		return freshenedHeader(entry.header, notModified.Header, entry.uncompressed)
 	}
 
-	header := entry.header.Clone()
-	if header == nil {
-		header = make(http.Header)
-	}
+	header := cloneHeader(entry.header)
 
 	if t.opts.FreshenOn304.kind == freshenNamedFields {
 		for _, name := range t.opts.FreshenOn304.fields {
@@ -305,11 +289,12 @@ func restoreMismatchedValidator(header http.Header, notModified *http.Response, 
 	}
 }
 
-// persistFreshened writes the merged header back onto the stored entry
+// persistFreshened writes a freshened header back onto the stored entry
 // (RFC 9111 §4.3.4 requires updating the stored response, not only the
-// synthesized one), so later revalidations present the validator the 304
-// returned and later rebuilds wear the freshened values. The from-cache
-// marker is diagnostic output, never cache state, so it is stripped first.
+// synthesized one; §4.3.5 HEAD freshening commits through the same rules),
+// so later revalidations present the validator the server returned and
+// later rebuilds wear the freshened values. The from-cache marker is
+// diagnostic output, never cache state, so it is stripped first.
 func (t *Transport) persistFreshened(key string, entry cacheEntry, header http.Header) {
 	persisted := header.Clone()
 
@@ -317,8 +302,9 @@ func (t *Transport) persistFreshened(key string, entry cacheEntry, header http.H
 		persisted.Del(t.opts.FromCacheHeader)
 	}
 
-	// Whatever did not flow from the 304 keeps the stored validator; a
-	// mismatched 304's claim never reaches here (restored before persisting).
+	// Whatever did not flow from the freshening response keeps the stored
+	// validator; a mismatched 304's claim never reaches here (restored before
+	// persisting).
 	etag := persisted.Get(headerETag)
 	if etag == "" {
 		etag = entry.etag
@@ -417,11 +403,20 @@ func (c *chainedBody) Close() error {
 // §3.2 integrity allowance for caches storing processed representations:
 // the stored bytes are the decoded ones, so the 304's encoding claim would
 // describe bytes the rebuilt response does not carry).
-func freshenedHeader(stored, notModified http.Header, uncompressed bool) http.Header {
+// cloneHeader returns a mutable copy of stored, substituting an empty
+// header when stored is nil: http.Header.Clone returns nil for a nil map,
+// which would panic on the first freshening write.
+func cloneHeader(stored http.Header) http.Header {
 	header := stored.Clone()
 	if header == nil {
 		header = make(http.Header)
 	}
+
+	return header
+}
+
+func freshenedHeader(stored, notModified http.Header, uncompressed bool) http.Header {
+	header := cloneHeader(stored)
 
 	for name, values := range notModified {
 		if skippedByFreshening(name, uncompressed) {
