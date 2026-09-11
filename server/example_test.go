@@ -1,6 +1,7 @@
 package etag
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -63,4 +64,15 @@ func ExampleETag() {
 	// "abc123"
 	// false
 	// W/"abc123"
+}
+
+// ExampleETagConfig_Validate pins the sentinel contract: Validate returns a
+// fresh context-bearing error that errors.Is matches against ErrInvalidConfig
+// by code and family, never the sentinel instance itself.
+func ExampleETagConfig_Validate() {
+	err := ETagConfig{MaxBufferSize: -1}.Validate()
+
+	fmt.Println(errors.Is(err, ErrInvalidConfig))
+
+	// Output: true
 }
