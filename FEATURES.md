@@ -9,20 +9,20 @@ Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 
 ## Server middleware (`server/`, package `etag`)
 
-| Feature                                                                            | Status           | Evidence / Notes                                                                     |
-| ---------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------ |
-| Automatic ETag generation from response bodies (FNV-64a default)                   | FULLY_FUNCTIONAL | `server/etag.go` (`New`, `computeETag`); spec + unit tests                           |
-| `If-None-Match` → 304 Not Modified (weak comparison, 2xx only)                     | FULLY_FUNCTIONAL | `server/etag.go` (`shouldReturnNotModified`); `etag_bdd_test.go` RFC 7232 §3.2 specs |
-| HEAD compliance — Content-Length set, no body sent                                 | FULLY_FUNCTIONAL | RFC 7230 §3.3; `TestNew_HeadRequest_NoBody`, `TestSpec_RFC7232_HeadRequest`          |
-| 304 strips Content-Length, keeps ETag                                              | FULLY_FUNCTIONAL | RFC 7232 §4.1; `TestNew_304_ExcludesContentLength`                                   |
-| Handler-set ETag adoption (`SkipIfPresent`)                                        | FULLY_FUNCTIONAL | `server/etag.go` (`resolveETag`); 304-passthrough + fallback tests                   |
-| Per-route opt-out (`Skip` predicate)                                               | FULLY_FUNCTIONAL | `server/etag.go`; true/false path tests                                              |
-| Custom hash functions (`HashFunc func([]byte) string`)                             | FULLY_FUNCTIONAL | `TestNew_CustomHashFunc` (+ body-bytes test)                                         |
-| Buffer overflow → stream without ETag (`MaxBufferSize`)                            | FULLY_FUNCTIONAL | `TestNew_MemoryLimit_DisablesETag`, overflow write-error tests                       |
-| Hijack/Flush → streaming mode                                                      | FULLY_FUNCTIONAL | `server/wrapper.go`; hijack/flush delegate tests, streaming write tests              |
-| Observability hooks (`OnETagGenerated` / `On304` / `OnBufferOverflow` / `OnError`) | FULLY_FUNCTIONAL | v0.2.0; exactly-once/ordering/nil-safety specs; no telemetry dependency              |
-| `ETag` domain type — parse, strength, strong/weak comparison                       | FULLY_FUNCTIONAL | `server/entity_tag.go`; BDD specs + fuzz round-trip (`entity_tag_fuzz_test.go`)      |
-| Conditional-request helpers (`MatchesIfNoneMatch`, `MatchesIfMatch`)               | FULLY_FUNCTIONAL | RFC 7232 §3.1/§3.2; lost-update example in README                                    |
+| Feature                                                                                   | Status           | Evidence / Notes                                                                                                            |
+| ----------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Automatic ETag generation from response bodies (FNV-64a default)                          | FULLY_FUNCTIONAL | `server/etag.go` (`New`, `computeETag`); spec + unit tests                                                                  |
+| `If-None-Match` → 304 Not Modified (weak comparison, 2xx only)                            | FULLY_FUNCTIONAL | `server/etag.go` (`shouldReturnNotModified`); `etag_bdd_test.go` RFC 7232 §3.2 specs                                        |
+| HEAD compliance — Content-Length set, no body sent                                        | FULLY_FUNCTIONAL | RFC 7230 §3.3; `TestNew_HeadRequest_NoBody`, `TestSpec_RFC7232_HeadRequest`                                                 |
+| 304 strips Content-Length, keeps ETag                                                     | FULLY_FUNCTIONAL | RFC 7232 §4.1; `TestNew_304_ExcludesContentLength`                                                                          |
+| Handler-set ETag adoption (`SkipIfPresent`)                                               | FULLY_FUNCTIONAL | `server/etag.go` (`resolveETag`); 304-passthrough + fallback tests                                                          |
+| Per-route opt-out (`Skip` predicate)                                                      | FULLY_FUNCTIONAL | `server/etag.go`; true/false path tests                                                                                     |
+| Custom hash functions (`HashFunc func([]byte) string`)                                    | FULLY_FUNCTIONAL | `TestNew_CustomHashFunc` (+ body-bytes test)                                                                                |
+| Buffer overflow → stream without ETag (`MaxBufferSize`)                                   | FULLY_FUNCTIONAL | `TestNew_MemoryLimit_DisablesETag`, overflow write-error tests                                                              |
+| Hijack/Flush → streaming mode                                                             | FULLY_FUNCTIONAL | `server/wrapper.go`; hijack/flush delegate tests, streaming write tests                                                     |
+| Observability hooks (`OnETagGenerated` / `On304` / `OnBufferOverflow` / `OnError`)        | FULLY_FUNCTIONAL | v0.2.0; exactly-once/ordering/nil-safety specs; no telemetry dependency                                                     |
+| `ETag` domain type — parse, strength, strong/weak comparison                              | FULLY_FUNCTIONAL | `server/entity_tag.go`; BDD specs + fuzz round-trip (`entity_tag_fuzz_test.go`)                                             |
+| Conditional-request helpers (`MatchesIfNoneMatch`, `MatchesIfMatch`)                      | FULLY_FUNCTIONAL | RFC 7232 §3.1/§3.2; lost-update example in README                                                                           |
 | Classified errors (`go-error-family`, 5 codes + sentinel + typed `Code`/`Domain` routing) | FULLY_FUNCTIONAL | `server/errors.go` + `server/code.go`; `errors_test.go` (registration, bidirectional template completeness), `code_test.go` |
 
 ## Client transport (`client/`, package `etagclient`)
