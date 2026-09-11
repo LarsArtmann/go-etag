@@ -63,3 +63,26 @@ func TestDefaultKeyFuncUsesURL(t *testing.T) {
 		t.Errorf("defaultKeyFunc = %q, want the request URL", got)
 	}
 }
+
+func TestFreshenPolicyConstructors(t *testing.T) {
+	t.Parallel()
+
+	perRFC := FreshenPerRFC()
+	if perRFC.kind != freshenPerRFC || perRFC.fields != nil {
+		t.Errorf("FreshenPerRFC() = %+v, want the zero policy (RFC behavior)", perRFC)
+	}
+
+	none := FreshenNone()
+	if none.kind != freshenNothing || none.fields != nil {
+		t.Errorf("FreshenNone() = %+v, want the disabled policy", none)
+	}
+
+	fields := FreshenFields("A", "B")
+	if fields.kind != freshenNamedFields {
+		t.Errorf("FreshenFields kind = %d, want named-fields mode", fields.kind)
+	}
+
+	if !slices.Equal(fields.fields, []string{"A", "B"}) {
+		t.Errorf("FreshenFields fields = %v, want [A B]", fields.fields)
+	}
+}

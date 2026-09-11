@@ -98,3 +98,6 @@ graph TD
 - `client/transport.go` nil-header guards (`freshenedHeader`, `rebuiltHeader`, `persistFreshened`
   empty-ETag fallback): `store` always persists a cloned, ETag-bearing header, so the guards are
   unreachable through the public API.
+- Annotated 2026-09-11 (§4.3.5 HEAD freshening session): `freshenFromHead`'s empty-ETag fallback
+  joins the same class — the stored entry's header always carries the validator `store` cloned in,
+  so the fallback is unreachable through the public API.
