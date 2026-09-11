@@ -677,6 +677,24 @@ func TestETagConfig_Validate_InvalidStrength(t *testing.T) {
 	}
 }
 
+func TestErrInvalidConfig_MatchesDerivedErrors(t *testing.T) {
+	t.Parallel()
+
+	if ErrInvalidConfig == nil {
+		t.Fatal("ErrInvalidConfig sentinel is nil")
+	}
+
+	if !errors.Is(ErrInvalidConfig, ErrInvalidConfig) {
+		t.Error("errors.Is(ErrInvalidConfig, ErrInvalidConfig) = false, want true")
+	}
+
+	derived := newInvalidConfig().WithContextf("max_buffer_size", "%d", -1)
+
+	if !errors.Is(derived, ErrInvalidConfig) {
+		t.Errorf("errors.Is(derived, ErrInvalidConfig) = false for derived error %v, want true", derived)
+	}
+}
+
 // --- Error handling ---
 
 func TestNew_OnError_StreamingWriteFailure(t *testing.T) {

@@ -10,10 +10,13 @@
 
 During the typed-errors overhaul, `Validate()` was migrated from ad-hoc sentinel
 errors (`errNonPositiveMaxBufferSize` + `fmt.Errorf`) to the
-`go-error-family` classification system. It now returns a clone of the
-`ErrInvalidConfig` sentinel — a `*errorfamily.Error` classified as `Rejection`
-with code `http.etag_config_invalid` and diagnostic context
-(`max_buffer_size`).
+`go-error-family` classification system. It returns a fresh
+`*errorfamily.Error` carrying the same code and family as the
+`ErrInvalidConfig` sentinel — classified as `Rejection` with code
+`http.etag_config_invalid` and diagnostic context (`max_buffer_size`,
+`strength`). The sentinel itself is declared as the `error` interface (the
+erraudit sentinel guard rejects concrete-typed sentinels); `errors.Is`
+matches derived errors against it by code and family, not identity.
 
 A natural question arose: **should we introduce a dedicated `ValidationError`
 interface** (e.g. with `Field() string`, `Value() any` methods) to give
@@ -43,10 +46,10 @@ code + family.
 
 ### 2. An interface with one implementation is dead weight
 
-`Validate()` checks exactly one field (`MaxBufferSize`) and returns one
-sentinel clone. An interface earns its existence at ≥2 implementations with
-genuinely polymorphic behavior. One validation rule does not meet that bar — it
-is premature generalization.
+`Validate()` checks two fields (`MaxBufferSize`, `Strength`) and derives every
+error from one code and family. An interface earns its existence at ≥2
+implementations with genuinely polymorphic behavior. One validation rule does
+not meet that bar — it is premature generalization.
 
 ### 3. The name carries the anemic-model smell
 
@@ -80,7 +83,7 @@ Adding a parallel layer fragments the clean "everything is
 
 ## References
 
-- `errors.go` — `ErrInvalidConfig` sentinel, `ErrCodeInvalidConfig` constant
-- `etag.go:82` — `Validate()` implementation
+- `server/errors.go` — `ErrInvalidConfig` sentinel, `newInvalidConfig` factory, `ErrCodeInvalidConfig` constant
+- `server/etag.go` — `Validate()` implementation
 - [go-error-family](https://github.com/larsartmann/go-error-family) —
   `Rejection` family, `WithContextf`, `*Error.Is` matching by code + family

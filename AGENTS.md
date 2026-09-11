@@ -68,6 +68,7 @@ go test -bench=. ./...     # Benchmarks
 golangci-lint run          # Lint
 golangci-lint run --fix    # Auto-fix what's possible
 golangci-lint fmt          # Format (gofumpt + golines@120 + gci)
+GOEXPERIMENT=jsonv2 erraudit ./... --type-aware --enforce-go-error-family --enforce-samber-oops --enforce-generic-return --explain  # Error audit (default mode reports 0; --no-suppress surfaces suppressed findings by design; filter [feature:logger] debug lines from stdout)
 ```
 
 ## Architecture
@@ -137,6 +138,7 @@ The `ETag` struct holds an opaque string and a `Strength` (Strong/Weak). It prov
 - **Oversized bodies keep streaming** — the buffered prefix is chained to the unread remainder; Close still reaches the original body.
 - **Go 1.26 canonical header form of `ETag` is `Etag`** — map literals with `"ETag"` keys are invisible to `Header.Get/Set` (Get canonicalizes on read). Build stub headers via `Header.Set` in tests; real transports canonicalize on both sides.
 - **Runtime canonicalization vs the `canonicalheader` linter are different authorities** — the linter demands the literal `ETag` spelling in source (our `headerETag = "ETag"` constant); the runtime canonicalizes whatever you pass into `Etag` on the wire. Do not "fix" one to match the other.
+- **`drainAndClose` deliberately ignores drain/Close errors** — the 304 is discarded either way, and net/http closes an undrained connection, so the worst case is lost connection reuse. Suppressed with documented `//nolint:erraudit` directives (validate with `erraudit nolint-audit .` — it takes a path, NOT `./...`); `--no-suppress` audit mode surfaces them by design.
 
 ## Error Classification
 
@@ -151,7 +153,7 @@ Errors from `etagWriter` are classified using `go-error-family`:
 | `hash.Write` | `http.etag_hash_write_failed` | Orchestration  | No        | Hash.Write returned an error (contract violation) |
 
 All errors are `*errorfamily.Error` — classified, contextual, retryable-aware.
-`ErrInvalidConfig` is the package-level sentinel for `Validate`; `errors.Is` matches by code+family.
+`ErrInvalidConfig` is the package-level sentinel for `Validate`, declared as the `error` interface (erraudit's sentinel guard rejects concrete-typed sentinels); `errors.Is` matches by code+family, not identity. `Validate` derives context-bearing errors via `newInvalidConfig().WithContextf(...)` — fresh instances, so the package-level sentinel stays immutable — and the deprecated root shim re-exports the sentinel with the same interface type.
 Hijack errors include `writer_type` context via `WithContextf`.
 Flush-path write errors are forwarded to `ETagConfig.OnError` (a `func(*errorfamily.Error)`) for observability, since they cannot be surfaced to the client or returned from `Write`.
 
