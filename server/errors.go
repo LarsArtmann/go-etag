@@ -32,14 +32,25 @@ const (
 	ErrCodeHashWriteFailed = "http.etag_hash_write_failed"
 )
 
+// msgInvalidConfig is the message shared by the ErrInvalidConfig sentinel and
+// every context-bearing error Validate derives from it.
+const msgInvalidConfig = "ETagConfig has an invalid field value"
+
 // ErrInvalidConfig is the sentinel error returned by Validate when
-// ETagConfig has an invalid field value. The concrete error returned by
-// Validate is a clone of this sentinel with context (e.g. the offending
-// field value), so errors.Is(err, ErrInvalidConfig) matches by code and family.
-var ErrInvalidConfig = errorfamily.NewRejection(
-	ErrCodeInvalidConfig,
-	"ETagConfig has an invalid field value",
-)
+// ETagConfig has an invalid field value. Declared as the error interface so
+// errors.Is(err, ErrInvalidConfig) call sites match the sentinel guard.
+// Validate returns a fresh classified error with the same code and family
+// carrying context (e.g. the offending field value), so errors.Is matches
+// by code and family.
+var ErrInvalidConfig error = errorfamily.NewRejection(ErrCodeInvalidConfig, msgInvalidConfig)
+
+// newInvalidConfig returns a fresh invalid-config error carrying the
+// sentinel's code and message; callers attach context with WithContextf.
+// Fresh instances keep the package-level sentinel immutable, and errors.Is
+// matches them against it by code and family.
+func newInvalidConfig() *errorfamily.Error {
+	return errorfamily.NewRejection(ErrCodeInvalidConfig, msgInvalidConfig)
+}
 
 const (
 	msgRetryMaySucceed           = "This is a Transient error — retrying may succeed."

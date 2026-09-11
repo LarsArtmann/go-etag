@@ -579,7 +579,10 @@ func mergeHeader(dst, src http.Header, name string) {
 }
 
 // drainAndClose discards any residual 304 body and releases the connection.
+// Both failures are deliberately ignored: the 304 response is discarded
+// either way, and net/http closes a connection whose body was not fully
+// drained, so the worst case is losing connection reuse.
 func drainAndClose(resp *http.Response) {
-	_, _ = io.Copy(io.Discard, resp.Body)
-	_ = resp.Body.Close()
+	_, _ = io.Copy(io.Discard, resp.Body) //nolint:erraudit // best-effort drain of a body we are discarding
+	_ = resp.Body.Close()                 //nolint:erraudit // a failed teardown of a discarded response needs no handling
 }

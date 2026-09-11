@@ -74,7 +74,7 @@ const (
 //
 // Deprecated: import github.com/larsartmann/go-etag/server and use
 // etag.ErrInvalidConfig there. This shim is removed in v1.0.0.
-var ErrInvalidConfig = etagserver.ErrInvalidConfig
+var ErrInvalidConfig error = etagserver.ErrInvalidConfig
 
 // New returns middleware that generates ETag headers based on response body
 // content and handles If-None-Match conditional requests with 304 Not Modified.

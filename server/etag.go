@@ -130,11 +130,11 @@ func defaultHashFunc(data []byte) string {
 // Returns a *errorfamily.Error classified as Rejection on failure.
 func (c ETagConfig) Validate() error {
 	if c.MaxBufferSize <= 0 {
-		return ErrInvalidConfig.WithContextf("max_buffer_size", "%d", c.MaxBufferSize)
+		return newInvalidConfig().WithContextf("max_buffer_size", "%d", c.MaxBufferSize)
 	}
 
 	if !c.Strength.valid() {
-		return ErrInvalidConfig.WithContextf("strength", "%d", c.Strength)
+		return newInvalidConfig().WithContextf("strength", "%d", c.Strength)
 	}
 
 	return nil
