@@ -67,6 +67,18 @@ Status legend:
 | §5.2.2.3 | `max-age`/freshness lifetimes govern reuse without validation  | N/A    | The transport never serves a stored body without revalidating, so freshness lifetimes are never consulted (strictly stronger than the spec's allowance) |
 | §5.2.2.6 | `private`: shared caches MUST NOT store                        | N/A    | The cache is process-private in-memory state, not a shared cache                                                                                        |
 
+## Interpretation decisions
+
+Judgment calls where the RFC leaves room, recorded so future audits and issue
+triage do not re-litigate settled choices.
+
+| Decision                                                       | Ruling                                                                                                                                                    | Pinned by                                                            |
+| -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| A 304 carrying `no-store` still updates the stored response    | An update is not storage: §5.2.2.5 forbids storing the 304, not updating a response already validly stored; refusing would strand a validated entry with a dead validator | `TestSpecNoStoreOn304DoesNotBlockRebuild`                            |
+| A `no-store` HEAD neither freshens nor invalidates the entry   | Neutrality on weaker evidence: §4.3.5 makes the update optional and §3 forbids storage, and a HEAD gives no signal the representation changed, so we do nothing — contrast the 304, which is explicit proof the entry is still valid | `TestSpecHeadNoStoreLeavesTheEntryAlone`                             |
+| A HEAD 200 that cannot prove identity marks the entry stale    | §4.3.5 offers update-or-stale; on validator mismatch or no comparable validator we invalidate, because the HEAD may describe a different representation and keeping the entry risks replaying replaced content | `TestSpecHeadFreshening` (mismatch and no-comparable-validator cases) |
+| `Options.FreshenOn304` does not govern §4.3.5 HEAD updates     | The option's contract is 304-scoped by name; HEAD updates apply the §3.2 rules in full so the option cannot silently weaken origin-provided metadata       | `freshenFromHead` applies `freshenedHeader` unconditionally          |
+
 ## Known limitations (documented, not violations)
 
 - `Vary` is not negotiated — see §4.1 Deviation above and the credential
