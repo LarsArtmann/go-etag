@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Nothing yet.
+
+### Changed
+
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.3.0] - 2026-09-11
+
+### Added
+
 - `client/spec_test.go`: an RFC 9111-grounded test suite for the client transport, motivated by a field report of a CDN serving a two-day-stale 200 (Age: 137882) whose ETag faithfully described the stale entity. Pins Age surfacing, §4.3.4 freshening, stored-validator persistence, the no-store storage ban (§3), §4.4 invalidation, HEAD bypass, and caller-owned `If-None-Match`.
 - RFC 9111 §4.4 conformance: a non-error (2xx/3xx) response to an unsafe request method (anything but GET/HEAD/OPTIONS/TRACE) now invalidates the stored entry for that URI, so a mutation cannot leave a pre-mutation body waiting to be rebuilt.
 - `client/integration_test.go`: a real `httptest.Server` + `http.Client` round trip verifying canonical header forms, the bodiless 304, and Age freshening against production net/http rather than stubs.
@@ -92,7 +106,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BDD-style spec suite (`etag_bdd_test.go`) mapping RFC 7232 sections to behavioral expectations.
 - Fuzz tests for `ParseETag` and `ParseETagList` verifying no panics and round-trip integrity on arbitrary input.
 
-[Unreleased]: https://github.com/Larsartmann/go-etag/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Larsartmann/go-etag/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Larsartmann/go-etag/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Larsartmann/go-etag/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/larsartmann/go-etag/releases/tag/v0.1.1
 [0.1.0]: https://github.com/larsartmann/go-etag/releases/tag/v0.1.0
