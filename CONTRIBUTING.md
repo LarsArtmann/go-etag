@@ -33,12 +33,12 @@ go test -run '^$' -bench . -benchmem -count=6 ./...
 
 ## Project Layout
 
-| Path           | Package        | Purpose                                                   |
-| -------------- | -------------- | --------------------------------------------------------- |
-| `server/`      | `etag`         | RFC 7232 ETag domain type and response middleware         |
-| `client/`      | `etagclient`   | RFC 9111 conditional-GET cache transport                  |
-| `deprecated.go`| `etag` (root)  | Deprecated alias shim; removed at v1.0.0                  |
-| `docs/`        | —              | `rfc9111-conformance.md` (MUST-by-MUST table), planning and status reports |
+| Path            | Package       | Purpose                                                                    |
+| --------------- | ------------- | -------------------------------------------------------------------------- |
+| `server/`       | `etag`        | RFC 7232 ETag domain type and response middleware                          |
+| `client/`       | `etagclient`  | RFC 9111 conditional-GET cache transport                                   |
+| `deprecated.go` | `etag` (root) | Deprecated alias shim; removed at v1.0.0                                   |
+| `docs/`         | —             | `rfc9111-conformance.md` (MUST-by-MUST table), planning and status reports |
 
 ## Constraints Worth Knowing Before Your First Edit
 

@@ -128,8 +128,8 @@ Session goal: run `art-dupl --type-aware --sort total-tokens -t 1` and eliminate
 ### art-dupl / CI
 
 16. **Add `art-dupl check` to CI** with a baseline file to prevent clone regression. — open (never adopted)
-~~17. **Configure art-dupl threshold** in CI config — decide if `-t 1` is the right gate or if `-t 5` (default) is more practical.~~ **Won't implement — no art-dupl CI enforcement adopted**
-~~18. **Add `.art-dupl.yml` config** to formalize exclusion patterns and detection methods.~~ **Won't implement — same decision as #17**
+    ~~17. **Configure art-dupl threshold** in CI config — decide if `-t 1` is the right gate or if `-t 5` (default) is more practical.~~ **Won't implement — no art-dupl CI enforcement adopted**
+    ~~18. **Add `.art-dupl.yml` config** to formalize exclusion patterns and detection methods.~~ **Won't implement — same decision as #17**
 
 ### Broader hardening
 

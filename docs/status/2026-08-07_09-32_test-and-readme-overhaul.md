@@ -190,14 +190,14 @@ Nothing. No regressions, no broken tests, no lint failures, no reverted work. Al
 40. Add note about CDN/proxy ETag stripping in README — open (low)
 41. Add `context.Context` awareness test (middleware doesn't use context — is that correct?) — open
 42. Add test for `http.NewResponseController` compatibility (Go 1.20+ extension API) — open
-~~43. Consider adding `WeakETag` and `StrongETag` convenience constructors (avoid passing Strength every time)~~ **Won't implement — `NewETag(opaque, Strength)` is explicit**
-44. Add test for Unicode opaque tags (RFC 7232 allows any VCHAR except DQUOTE) — open
-~~45. Add fuzz test for the full middleware (body + If-None-Match → status code invariant) — partially done~~ done — `FuzzETag` exists (middleware-level fuzz)
-46. Add test for `Content-Type` header preservation through middleware — open
-~~47. Consider `ETagConfig.Clone()` method for safe mutation~~ **Won't implement — `ETagConfig` is a value type; copyable by assignment**
-~~48. Add godoc for `Middleware` type alias (currently minimal)~~ done — the alias carries a doc comment
-~~49. Review if `wrapper.go` should be merged into `etag.go` (it's only used by `etagWriter`)~~ **Won't implement — separate file is deliberate**
-50. Add test for handler panic recovery interaction (does middleware buffer then panic lose data?) — open
+    ~~43. Consider adding `WeakETag` and `StrongETag` convenience constructors (avoid passing Strength every time)~~ **Won't implement — `NewETag(opaque, Strength)` is explicit**
+43. Add test for Unicode opaque tags (RFC 7232 allows any VCHAR except DQUOTE) — open
+    ~~45. Add fuzz test for the full middleware (body + If-None-Match → status code invariant) — partially done~~ done — `FuzzETag` exists (middleware-level fuzz)
+44. Add test for `Content-Type` header preservation through middleware — open
+    ~~47. Consider `ETagConfig.Clone()` method for safe mutation~~ **Won't implement — `ETagConfig` is a value type; copyable by assignment**
+    ~~48. Add godoc for `Middleware` type alias (currently minimal)~~ done — the alias carries a doc comment
+    ~~49. Review if `wrapper.go` should be merged into `etag.go` (it's only used by `etagWriter`)~~ **Won't implement — separate file is deliberate**
+45. Add test for handler panic recovery interaction (does middleware buffer then panic lose data?) — open
 
 ---
 

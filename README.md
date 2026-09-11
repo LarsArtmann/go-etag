@@ -115,13 +115,13 @@ transport := etagclient.NewTransport(next, etagclient.Options{
 })
 ```
 
-| Field             | Type             | Default                        | Description                                                                                                  |
-| ----------------- | ---------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------ |
-| `KeyFunc`         | `func(*http.Request) string` | URL string         | Derives the cache key. Must scope by credential when responses vary by caller                                |
-| `MaxEntries`      | `int`            | `256`                          | Cache bound; oldest entry evicted (FIFO)                                                                     |
-| `MaxBodyBytes`    | `int`            | `1048576` (1 MiB)              | Larger bodies pass through uncached, fully intact. Counts decoded bytes when gzip is transparently decompressed |
-| `FreshenOn304`    | `FreshenPolicy`  | `FreshenPerRFC()`              | `FreshenPerRFC()` freshens every 304-provided field per RFC 9111 §4.3.4 (except hop-by-hop, Content-Length, Content-Range); `FreshenFields("X", …)` restricts freshening to those fields; `FreshenNone()` disables it |
-| `FromCacheHeader` | `string`         | `""`                           | When set, rebuilt responses carry it with value `1` for diagnostics                                          |
+| Field             | Type                         | Default           | Description                                                                                                                                                                                                           |
+| ----------------- | ---------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `KeyFunc`         | `func(*http.Request) string` | URL string        | Derives the cache key. Must scope by credential when responses vary by caller                                                                                                                                         |
+| `MaxEntries`      | `int`                        | `256`             | Cache bound; oldest entry evicted (FIFO)                                                                                                                                                                              |
+| `MaxBodyBytes`    | `int`                        | `1048576` (1 MiB) | Larger bodies pass through uncached, fully intact. Counts decoded bytes when gzip is transparently decompressed                                                                                                       |
+| `FreshenOn304`    | `FreshenPolicy`              | `FreshenPerRFC()` | `FreshenPerRFC()` freshens every 304-provided field per RFC 9111 §4.3.4 (except hop-by-hop, Content-Length, Content-Range); `FreshenFields("X", …)` restricts freshening to those fields; `FreshenNone()` disables it |
+| `FromCacheHeader` | `string`                     | `""`              | When set, rebuilt responses carry it with value `1` for diagnostics                                                                                                                                                   |
 
 `transport.Stats()` reports `Stats{Hits, Stored, Entries}` for cache telemetry.
 
