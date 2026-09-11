@@ -30,7 +30,9 @@ Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 | -------------------------------------------------------------------- | ------------------ | ----------------------------------------------------------------------------------------- |
 | Conditional GET transport — replay stored validators as `If-None-Match` | FULLY_FUNCTIONAL | `client/transport.go` (`RoundTrip`); `transport_test.go`                                  |
 | 304 → 200 rebuild from cache (callers see no difference)             | FULLY_FUNCTIONAL   | `rebuildFromCache`; `TestRoundTripRebuilds304FromCache` + GoDoc example                    |
-| RFC 9111 §4.3.4 freshening (default: every 304 field replaces stored; restricted / disabled modes) | FULLY_FUNCTIONAL | `freshenedHeader`; `spec_test.go` freshening specs — unreleased, sits in CHANGELOG `[Unreleased]` |
+| RFC 9111 §4.3.4 freshening (typed `FreshenPolicy`: default every-304-field / `FreshenFields` restricted / `FreshenNone` disabled) | FULLY_FUNCTIONAL | `freshenedHeader`, `Options.FreshenOn304`; `spec_test.go` freshening specs — unreleased, sits in CHANGELOG `[Unreleased]` |
+| RFC 9111 §4.3.5 HEAD-based freshening (update or invalidate stored entries from HEAD 200s) | FULLY_FUNCTIONAL | `roundTripHead`, `headConfirmsStored`; `TestSpecHeadFreshening` suite + real-server integration test — unreleased |
+| Request `no-store` bypass (§5.2.2.5 request directive: no read, no write) | FULLY_FUNCTIONAL | `TestSpecRequestNoStoreBypassesTheCache` — unreleased |
 | §4.4 unsafe-method invalidation (2xx/3xx to unsafe method drops entry) | FULLY_FUNCTIONAL  | `responseCache.invalidate`, `roundTripUnsafe`; `TestSpecUnsafeMethodInvalidatesEntry`      |
 | `Cache-Control: no-store` storage ban (quote-aware, case-insensitive) | FULLY_FUNCTIONAL  | `hasNoStoreDirective`; `TestSpecNoStoreResponseIsNeverCached` incl. quoted-arg subtests    |
 | Caller-supplied `If-None-Match` is never clobbered                   | FULLY_FUNCTIONAL   | `TestSpecCallerSuppliedIfNoneMatchIsHonored`                                               |
@@ -53,7 +55,6 @@ Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 
 | Feature                                             | Status   | Evidence / Notes                                                       |
 | --------------------------------------------------- | -------- | ---------------------------------------------------------------------- |
-| RFC 9111 §4.3.5 HEAD-based freshening               | PLANNED  | Deliberate opt-out, documented in `client/doc.go`; TODO_LIST #5        |
 | `Vary`-aware cache selection                        | PLANNED  | Sharp edge documented (`client/doc.go` §Vary); KeyFunc is the mitigation |
 | True freshness-based serving (§4.2 max-age/Expires) | PLANNED  | ROADMAP Theme 1 — changes the library's nature; needs opt-in design    |
 | Client observability hooks                          | PLANNED  | ROADMAP Theme 3 — demand-gated behind `Stats()`                         |

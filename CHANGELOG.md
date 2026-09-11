@@ -20,10 +20,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `server/integration_test.go`: real-wire server tests pinning Content-Length framing on 200s, HEAD body suppression with advertised length, and a bodiless 304 without Content-Length over TCP.
 - `TestIntegrationUnsafeMethodInvalidatesThroughRealServer`: §4.4 invalidation verified through a real server — a 204 PUT forces the next GET to refetch unconditionally.
 - `Example_ageAwareStalenessCheck`: documents rejecting edge-served stale entities via the surfaced Age header.
+- RFC 9111 §4.3.5 HEAD-based freshening: a HEAD 200 whose validators match the stored entry (ETag weakly, Last-Modified exactly) and whose Content-Length matches the stored body updates the stored metadata via the §3.2 update rules; any mismatch — or an incomparable validator — marks the entry stale so the next GET refetches; a `no-store` HEAD does neither. HEAD remains never conditional and never rebuilt. Pinned by a table-driven spec suite and a real-server integration test.
+- Request-side `Cache-Control: no-store` handling (RFC 9111 §5.2.2.5 request directive): a `no-store` GET bypasses the cache entirely (no validator injection, no rebuild, no storage), a `no-store` HEAD skips freshening, and unsafe methods still invalidate (deletion stores nothing).
+- `docs/rfc9111-conformance.md`: a requirement-by-requirement RFC 9111 conformance table (done / documented deviation / not-applicable) citing the pinning test for every row, linked from the README compliance section.
+- Benchmark baselines under `reports/bench/` (`-benchmem -count=6`): before/after the lazy-key change and a full post-§4.3.5 baseline, replacing smoke runs.
 
 ### Changed
 
-- `etagclient.Options.PreserveOn304` now defaults to nil, which selects RFC 9111 §4.3.4 freshening: every header field the 304 provides replaces the stored value on the rebuilt 200 (per the §3.2 update rules, excepting hop-by-hop fields, Content-Length, Content-Range, and Content-Encoding of a transparently decoded body). Previously only `Date` merged by default. A non-empty list still restricts freshening to the named fields; an empty non-nil slice still disables it.
+- **BREAKING (pre-1.0):** `Options.PreserveOn304 []string` is replaced by `Options.FreshenOn304 FreshenPolicy` with the constructors `FreshenPerRFC()` (the zero value, selecting the §4.3.4 default), `FreshenFields("X", …)` (restrict freshening to named fields), and `FreshenNone()` (disable it). The nil-vs-empty-slice overload is gone and the name no longer lies about what the option governs.
+- Cache keys are now derived lazily: `KeyFunc` runs only for GET lookups and for non-GET responses that actually trigger invalidation, so plain non-GET passthrough never pays key derivation (~19% faster, one fewer allocation per passthrough round trip).
+- CI hardening: `GOTOOLCHAIN: go1.26.7` env pin (the setup-go manifest can lag go.dev; keep in sync with go.mod), a pinned `govulncheck` job (`golang/govulncheck-action` v1.1.0), and golangci-lint bumped v2.12.2 → v2.13.2 in CI to match the local toolchain.
+- Linting migrated from the deprecated `exhaustruct` to `exhaustruct_v5` (deprecation-free runs; v5 settings use `ignore-patterns` regexes, and `//nolint:exhaustruct_v5` directives are required on intentional zero values).
+- README: client options updated for `FreshenOn304`; a new "Cache policy: who owns which headers" section (the transport owns validators; callers own `Cache-Control`/`Vary`; place the ETag middleware beneath compression so tags describe the final representation); HEAD-freshening and request-`no-store` bullets.
+- `CONTRIBUTING.md` rewritten for the current workflow: commands, lint constraints, testing conventions, benchmark discipline, and the CI job description.
+- `MaxBodyBytes` semantics documented: the cap counts decoded bytes when net/http transparently decompresses the body (`client/options.go`).
+- Age-omission semantics documented in `client/doc.go`: a 304 without `Age` freezes the last known age instead of resetting it.
+- Ecosystem sweep (GitHub code search): every known consumer remains in-house (six LarsArtmann repositories); no external consumers found.
 - A revalidation 304 now freshens the stored entry itself (RFC 9111 §4.3.4), so the validator the 304 returns replaces the stored one for subsequent requests, and freshened metadata persists across rebuilds.
 - Rebuilt responses now carry `Uncompressed` when the stored body is the form net/http transparently decoded, so downstream consumers see honest body metadata.
 
