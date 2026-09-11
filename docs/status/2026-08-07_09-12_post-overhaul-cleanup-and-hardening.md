@@ -119,9 +119,9 @@ Nothing is partially done. All items are either complete or not started.
 
 | # | Task                                                                                                                                                                                                                   | Effort |
 | - | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 1 | ~~Write integration test using `httptest.NewServer` to verify real HTTP behavior (client landed at `9204885`; server still open — TODO_LIST #15)~~ (Content-Length, chunked, HEAD body suppression through actual TCP) | M      |
+| 1 | ~~Write integration test using `httptest.NewServer` to verify real HTTP behavior (client landed at `9204885`; server still open — TODO_LIST #15)~~ (Content-Length, chunked, HEAD body suppression through actual TCP) — server side done at `a5de386` (`server/integration_test.go`) | M      |
 | 2 | ~~Generate coverage HTML report (superseded — coverage now 99.0%/94.3%)~~ (`go test -coverprofile=cover.out -covermode=atomic ./... && go tool cover -html=cover.out`) and identify the uncovered 7.9%                 | S      |
-| 3 | Add tests for every uncovered branch identified by the coverage report — open (TODO_LIST #7 branch audit)                                                                                                              | S-M    |
+| 3 | ~~Add tests for every uncovered branch identified by the coverage report~~ done at `a5de386`, `5eb226b` (branch-coverage suites; client 97.7%, gaps documented-intentional)                                                                                                            | S-M    |
 
 ### P1 — Performance
 

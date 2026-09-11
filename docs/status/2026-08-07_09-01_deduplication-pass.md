@@ -134,7 +134,7 @@ Session goal: run `art-dupl --type-aware --sort total-tokens -t 1` and eliminate
 ### Broader hardening
 
 ~~19. **Run `golangci-lint run --fix`** to catch any auto-fixable issues across the codebase.~~ done (lint config reworked at `0e8ac6d`; 0 issues re-verified 2026-09-10)
-20. **Run benchmarks before/after comparison** — the current run shows no regression but a formal baseline would be more rigorous. — open (TODO_LIST #19 captures baseline discipline)
+20. **Run benchmarks before/after comparison** — the current run shows no regression but a formal baseline would be more rigorous. — resolved: `-count=6` before/after baselines live under `reports/bench/` since 2026-09-11 (shipped at `1bc839f`, `5eb226b`)
 ~~21. **Review FNV-64a collision bounds** mentioned in entity_tag.go docs — verify the "~4.3 billion" claim is accurate for the birthday bound.~~ done — claim verified and documented
 22. **Check if `splitRawETags` and `ParseETagList` could share more logic** — both iterate comma-separated lists; the `return tags` clone hints at structural similarity. — open (same as #8)
 ~~23. **Audit error classification** — verify `markFlushed` + `writeHeaderToUnderlying` in Hijack doesn't suppress or misclassify errors.~~ done — AGENTS.md classification table is the reviewed record

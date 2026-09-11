@@ -1,5 +1,13 @@
 # Superb Test Hardening — Pareto Plan
 
+> **FULLY EXECUTED — archived 2026-09-11.** Every task (T1–T8, F1–F27) shipped:
+> `deprecated_test.go` export-parity suite, client branch-coverage specs, RFC 9111
+> spec pin-ups, `FuzzHasNoStoreDirective` + CI fuzz job, §4.4 real-server
+> integration, server real-wire integration (`server/integration_test.go`), the
+> Age-aware GoDoc example, and the living-docs sync. Coverage landed at root
+> 100.0% / server 99.0% / client 97.7% (targets met). Evidence: CHANGELOG
+> `[0.3.0]`, commit `a5de386` and successors.
+
 _Created: 2026-09-11 00:25 · Session goal: "I WANT US TO HAVE SUPERB TESTS!"_
 
 Baseline at planning time: server **99.0%**, client **94.3%**, root shim **0.0%** (8 exported

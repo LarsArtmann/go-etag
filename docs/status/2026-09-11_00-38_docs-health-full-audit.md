@@ -28,15 +28,15 @@
 
 | Item                                    | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Blocker                                            | Effort |
 | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------ |
-| **Old-report residue tracking**         | The 08-07/08-14-era reports carry ~25 genuinely-open "open (low)" annotations (isolated parser benchmarks, single-pass `ParseETagList`, `Strength.String()`, obs-text ABNF validation, several boundary/edge tests) that are NOT in TODO_LIST/ROADMAP — they live only as unmarked items in timestamped files. Deliberate noise-gating (harvest anti-pattern: don't dump 250 items), but it partially recreates the reports-as-graveyard pattern for low-priority work. | Decision confirmed-or-overridden by user (see g.2) | S      |
+| **Old-report residue tracking**         | The 08-07/08-14-era reports carry ~25 genuinely-open "open (low)" annotations (isolated parser benchmarks, single-pass `ParseETagList`, `Strength.String()`, obs-text ABNF validation, several boundary/edge tests) that are NOT in TODO_LIST/ROADMAP — they live only as unmarked items in timestamped files. Deliberate noise-gating (harvest anti-pattern: don't dump 250 items), but it partially recreates the reports-as-graveyard pattern for low-priority work. | Routed 2026-09-11: ROADMAP.md Open Question 5 (owner decision pending) | S      |
 | **Post-daemon annotation verification** | The daemon reformats tables within minutes of edits (observed live twice: AGENTS.md freshness failures; 11-33 row rewrites). My parity check ran at end-of-session and passed, but a later re-check after daemon commits is not yet done.                                                                                                                                                                                                                               | Time — next session touch                          | XS     |
 | **dprint over touched markdown**        | Not run. Inherited finding: binary absent locally + CHANGELOG excluded by `dprint.json` (verified by the 23-54 session, not re-verified by me).                                                                                                                                                                                                                                                                                                                         | Binary availability                                | XS     |
 
 ## c. NOT STARTED
 
-- **CONTRIBUTING.md refresh** — still the pre-client stub (TODO_LIST #20; not this session's scope).
-- **v0.3.0 release** — everything verified release-ready; owner-gated (TODO_LIST #1).
-- **Fixing the parallel session's 4 lint findings** (`bodyclose`, `err113`, `nilnil`, `prealloc` in its in-flight `transport_test.go`/`spec_test.go`) — deliberately not started: foreign work mid-flight (see g.3).
+- ~~**CONTRIBUTING.md refresh** — still the pre-client stub (TODO_LIST #20; not this session's scope).~~ done at `721cfbd` (full rewrite, v0.3.0-era)
+- ~~**v0.3.0 release** — everything verified release-ready; owner-gated (TODO_LIST #1).~~ done at `fe5dede` (report `2026-09-11_02-38`)
+- ~~**Fixing the parallel session's 4 lint findings** (`bodyclose`, `err113`, `nilnil`, `prealloc` in its in-flight `transport_test.go`/`spec_test.go`) — deliberately not started: foreign work mid-flight (see g.3).~~ done — lint 0 issues at the v0.3.0 gates (report `2026-09-11_02-38` §a.3)
 - **Annotating `docs/planning/2026-09-11_00-25_superb-test-hardening.md`** — created by the parallel session minutes into my run; live foreign work, correctly left alone.
 
 ## d. TOTALLY FUCKED UP (honest accounting)
@@ -58,22 +58,22 @@
 
 ## f. NEXT (up to 50 — actual: 12, ranked; TODO_LIST # cited where the item already lives there)
 
-1. **Owner GO: release v0.3.0** (TODO_LIST #1) — CHANGELOG ready, gates green, blocked solely on the word.
-2. Route-or-bury decision on the ~25 residual open-low items from 08-07/08-14 reports (see g.2) — then either extend TODO_LIST/ROADMAP or annotate them "deliberately untracked".
-3. Re-verify annotated files after daemon commits settle (strikethrough parity + no `UNMATCHED`/`||` artifacts) — the b.2 item.
-4. Fix or hand off the parallel session's 4 lint findings once its work lands (see g.3).
-5. Annotate/archive `docs/planning/2026-09-11_00-25_superb-test-hardening.md` when the parallel session finishes it.
-6. Lazy cache-key computation in the non-GET path + benchmark (TODO_LIST #2).
-7. Client parser fuzzing + CI fuzz job (TODO_LIST #3).
-8. `exhaustruct` → `exhaustruct_v5` (TODO_LIST #4).
-9. §4.3.5 HEAD freshening (TODO_LIST #5) and §4.4 real-server integration variant (TODO_LIST #6).
-10. README cache-policy + chain-position guidance (TODO_LIST #9); RFC 9111 conformance table (TODO_LIST #10).
-11. CONTRIBUTING.md refresh (TODO_LIST #20) — predates the client package entirely.
+1. ~~**Owner GO: release v0.3.0** (TODO_LIST #1) — CHANGELOG ready, gates green, blocked solely on the word.~~ done — shipped at `fe5dede` (report `2026-09-11_02-38`)
+2. ~~Route-or-bury decision on the ~25 residual open-low items from 08-07/08-14 reports (see g.2) — then either extend TODO_LIST/ROADMAP or annotate them "deliberately untracked".~~ done 2026-09-11 — routed to ROADMAP.md Open Question 5
+3. ~~Re-verify annotated files after daemon commits settle (strikethrough parity + no `UNMATCHED`/`||` artifacts) — the b.2 item.~~ done 2026-09-11 docs-health pass (all 2026-0* files re-read end to end)
+4. ~~Fix or hand off the parallel session's 4 lint findings once its work lands (see g.3).~~ done — lint 0 issues (02-38 §a.3)
+5. ~~Annotate/archive `docs/planning/2026-09-11_00-25_superb-test-hardening.md` when the parallel session finishes it.~~ done 2026-09-11 — plan fully executed, annotated, archived
+6. ~~Lazy cache-key computation in the non-GET path + benchmark (TODO_LIST #2).~~ done at `5d062b8`, `a4c2245`, `2fdb8e3`
+7. ~~Client parser fuzzing + CI fuzz job (TODO_LIST #3).~~ done at `a5de386`
+8. ~~`exhaustruct` → `exhaustruct_v5` (TODO_LIST #4).~~ done at `1bc839f`
+9. ~~§4.3.5 HEAD freshening (TODO_LIST #5) and §4.4 real-server integration variant (TODO_LIST #6).~~ done at `30d162a` + v0.3.0 integration suite
+10. ~~README cache-policy + chain-position guidance (TODO_LIST #9); RFC 9111 conformance table (TODO_LIST #10).~~ done at `721cfbd`
+11. ~~CONTRIBUTING.md refresh (TODO_LIST #20) — predates the client package entirely.~~ done at `721cfbd`
 12. Extend the docs-health convention into AGENTS.md memory of the global config if this annotation style is adopted repo-wide — currently only project-local.
 
 ## g. QUESTIONS (cannot resolve myself)
 
-1. **v0.3.0: ship it?** Everything is verified and staged (`CHANGELOG [Unreleased]`, gates green, both 2026-09-10 reports call it release-ready). The tag is the sole blocker for the whole next tier of work. Say the word and the go-release flow runs.
+1. ~~**v0.3.0: ship it?** Everything is verified and staged (`CHANGELOG [Unreleased]`, gates green, both 2026-09-10 reports call it release-ready). The tag is the sole blocker for the whole next tier of work. Say the word and the go-release flow runs.~~ **Resolved: shipped at `fe5dede`** (report `2026-09-11_02-38`).
 2. **Residual backlog philosophy:** the ~25 open-low items from the August reports (isolated parser benchmarks, single-pass `ParseETagList`, `Strength.String()`, obs-text validation, assorted boundary tests) are currently noise-gated — open in the historical reports, tracked nowhere living. Promote them into TODO_LIST/ROADMAP cold storage, or is untracked-and-annotated the right resting place for them?
 3. **Parallel session's lint findings:** its in-flight test files carry 4 findings (`bodyclose`, `err113`, `nilnil`, `prealloc` in `client/transport_test.go` + `client/spec_test.go`). If that session is done, they are now repo debt — fix them in a follow-up pass, or leave for the session that owns the files?
 

@@ -112,13 +112,12 @@ Each item: what + evidence (daemon commit hashes — the auto-commit daemon capt
 
 ## b) PARTIALLY DONE
 
-1. **#7 CI hardening — runtime-unverified.** Config-complete and input-checked, but no GitHub
-   Actions run has executed the new workflow. Known residual risk: the workflow-level
+1. ~~**#7 CI hardening — runtime-unverified.** Config-complete and input-checked, but no GitHub Actions run has executed the new workflow. Known residual risk: the workflow-level
    `GOTOOLCHAIN=go1.26.7` also applies to the govulncheck job, whose action installs
    `govulncheck@latest` — if a future/latest govulncheck declares `go > 1.26.7`, that install
    fails under the pin. Mitigation exists (scope the pin to test/fuzz jobs, or pin the govulncheck
    version); not yet applied because it trades pin strength for install resilience and that is a
-   policy call. Blocker: verifying requires pushing (see question 2). Effort: S.
+   policy call. Blocker: verifying requires pushing (see question 2). Effort: S.~~ resolved — CI green on the tagged commit and on the frozen tag run (02-38 verification chain); the residual scoping risk is TODO_LIST item 4
 2. **#11 Benchmark discipline — benchstat missing.** Raw `-count=6` baselines exist and the
    lazy-key comparison is cited in CHANGELOG, but `benchstat` could not be installed this session
    (`go install golang.org/x/perf/cmd/benchstat@latest` was rejected by the shell security
@@ -130,18 +129,18 @@ Each item: what + evidence (daemon commit hashes — the auto-commit daemon capt
 4. **`FreshenFields()` with zero arguments** — constructs named-fields mode with an empty list,
    which behaves identically to `FreshenNone()`. Harmless but undocumented; either normalize it to
    `FreshenNone` semantics or document the equivalence. Effort: XS.
-5. **FEATURES.md accuracy** — the v0.1.x-shim row still reads "No in-repo parity test yet
+5. ~~**FEATURES.md accuracy** — the v0.1.x-shim row still reads "No in-repo parity test yet
    (TODO_LIST #14)": both halves are stale (the parity suite shipped in `a5de386`; TODO_LIST #14
-   no longer exists after this session's trim). Noticed, not fixed. Effort: XS.
+   no longer exists after this session's trim). Noticed, not fixed. Effort: XS.~~ done 2026-09-11 docs-health pass (shim row corrected, unreleased markers resolved to v0.3.0)
 
 ## c) NOT STARTED
 
-1. **Release v0.3.0** (TODO #1) — owner-gated by the TODO_LIST itself; CHANGELOG is coherent and
+1. ~~**Release v0.3.0** (TODO #1) — owner-gated by the TODO_LIST itself; CHANGELOG is coherent and
    everything else is verified, but tag/push/proxy verification awaits an explicit GO. Priority:
-   the only thing gating a release.
-2. **Consumer migration for the breaking `FreshenOn304` change** — the six in-house consumers
+   the only thing gating a release.~~ done at `fe5dede` (report `2026-09-11_02-38`)
+2. ~~**Consumer migration for the breaking `FreshenOn304` change** — the six in-house consumers
    still compile against `PreserveOn304`; at v0.3.0 they break. Not started: needs the owner GO
-   and a decision (same-sweep migration vs lazy). Priority: High immediately after GO.
+   and a decision (same-sweep migration vs lazy). Priority: High immediately after GO.~~ done 2026-09-11 (report `2026-09-11_02-51` — premise corrected: only go-github-kit used the removed API; all six bumped and verified)
 3. **ROADMAP themes** (verified untouched): true freshness-based serving (§4.2 max-age/Expires),
    client observability hooks, `go-etag/otel` sub-module, `Vary`-aware cache selection. All
    deliberately parked; no code.
@@ -208,11 +207,11 @@ pending owner instruction (per "THEN WAIT", nothing was auto-harvested into TODO
 
 | #  | Task                                                                                                                                               | Impact   | Effort | Category      |
 | -- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ------------- |
-| 1  | Owner GO/no-GO on v0.3.0 release (tag, push, proxy + pkg.go.dev + `go get` round trip)                                                             | Critical | S      | Release       |
-| 2  | Migrate the six in-house consumers off removed `PreserveOn304` onto `FreshenOn304`                                                                 | Critical | M      | Feature       |
-| 3  | Probe the new CI workflow with a real run; fix whatever turns red                                                                                  | Critical | S      | Bug           |
+| 1  | ~~Owner GO/no-GO on v0.3.0 release (tag, push, proxy + pkg.go.dev + `go get` round trip)~~ done at `fe5dede`                                                             | Critical | S      | Release       |
+| 2  | ~~Migrate the six in-house consumers off removed `PreserveOn304` onto `FreshenOn304`~~ done (09a2b1f; premise corrected per report 2026-09-11_02-51)                                                                 | Critical | M      | Feature       |
+| 3  | ~~Probe the new CI workflow with a real run; fix whatever turns red~~ done — green on the release commit and frozen tag run; Dependabot actions PR #1 merged green                                                | Critical | S      | Bug           |
 | 4  | Scope GOTOOLCHAIN pin to test/fuzz jobs (or pin govulncheck version) so `@latest` installs can't break                                             | High     | S      | Bug           |
-| 5  | Fix FEATURES.md stale shim row (parity suite exists since a5de386) + dead TODO_LIST #14 reference                                                  | High     | XS     | Documentation |
+| 5  | ~~Fix FEATURES.md stale shim row (parity suite exists since a5de386) + dead TODO_LIST #14 reference~~ done 2026-09-11 docs-health pass                                                  | High     | XS     | Documentation |
 | 6  | Add GoDoc example for `FreshenPolicy` (Example with Output, per testableexamples)                                                                  | High     | S      | Documentation |
 | 7  | Decide + record the accepted coverage floor (98.3%) in the plan-doc annotation                                                                     | Medium   | XS     | Quality       |
 | 8  | Install benchstat via a sanctioned path; regenerate the three baselines as a comparison table                                                      | Medium   | S      | Quality       |
@@ -227,7 +226,7 @@ pending owner instruction (per "THEN WAIT", nothing was auto-harvested into TODO
 | 17 | Add "Interpretation decisions" column/section to docs/rfc9111-conformance.md                                                                       | Medium   | S      | Documentation |
 | 18 | Run govulncheck locally as a pre-release gate (currently only a CI job)                                                                            | High     | XS     | Quality       |
 | 19 | Check go-error-family for a newer minor and bump within go.mod policy (last verified v0.10.0)                                                      | Low      | S      | Cleanup       |
-| 20 | Grep all docs for remaining "TODO_LIST #N" numeric references; convert to slugs                                                                    | Medium   | S      | Documentation |
+| 20 | ~~Grep all docs for remaining "TODO_LIST #N" numeric references; convert to slugs~~ done 2026-09-11 docs-health pass (all stale numeric refs annotated)                                                                    | Medium   | S      | Documentation |
 | 21 | Verify dprint passes on the Markdown/YAML edited this session; wire dprint check into CI or devshell                                               | Low      | S      | Cleanup       |
 | 22 | Add flake.nix (build/test/lint devShell) per LarsArtmann convention, or record why this repo opts out                                              | Low      | M      | Cleanup       |
 | 23 | Add SECURITY.md, issue templates, PR template                                                                                                      | Low      | S      | Documentation |
@@ -240,9 +239,9 @@ pending owner instruction (per "THEN WAIT", nothing was auto-harvested into TODO
 | 30 | ROADMAP Theme 1: opt-in freshness-based serving (§4.2) design doc                                                                                  | Low      | M      | Feature       |
 | 31 | ROADMAP Theme 3: client observability hooks design (mirroring server hooks)                                                                        | Low      | M      | Feature       |
 | 32 | Parked: `go-etag/otel` sub-module (demand-gated; revisit after v0.3.0 adoption signal)                                                             | Low      | L      | Feature       |
-| 33 | Post-release: verify proxy/pkg.go.dev shows v0.3.0 and `go get` round-trips (part of go-release flow)                                              | Critical | S      | Release       |
-| 34 | Prepare GitHub Release body from CHANGELOG `[Unreleased]` (part of go-release flow)                                                                | Medium   | S      | Release       |
-| 35 | Post-release: update library-policy / consumers to v0.3.0 pins                                                                                     | Medium   | M      | Cleanup       |
+| 33 | ~~Post-release: verify proxy/pkg.go.dev shows v0.3.0 and `go get` round-trips (part of go-release flow)~~ done at `fe5dede` (02-38 verification chain)                                                            | Critical | S      | Release       |
+| 34 | ~~Prepare GitHub Release body from CHANGELOG `[Unreleased]` (part of go-release flow)~~ done at `fe5dede` (curated notes live)                                                            | Medium   | S      | Release       |
+| 35 | ~~Post-release: update library-policy / consumers to v0.3.0 pins~~ done (report `2026-09-11_02-51` — all six repos)                                                            | Medium   | M      | Cleanup       |
 | 36 | Consider `funcorder` linter (new in this golangci era) — evaluate fit vs churn                                                                     | Low      | S      | Quality       |
 | 37 | Evaluate `Stats` snapshot semantics under concurrent HEAD freshening (mutex scope review)                                                          | Low      | S      | Quality       |
 | 38 | HEAD freshening vs `PreserveOn304`-style escape hatch: decide whether one is ever wanted; document why not                                         | Low      | XS     | Documentation |
@@ -265,10 +264,10 @@ ROADMAP-grade; the rest are TODO_LIST on owner confirmation.
 
 ## g) Three questions I cannot answer myself
 
-1. **Release + breaking-change policy:** May I cut **v0.3.0 now** given that `FreshenOn304` is a
+1. ~~**Release + breaking-change policy:** May I cut **v0.3.0 now** given that `FreshenOn304` is a
    compile-breaking rename for all six in-house consumers — and if yes, should the consumer
    migration (item 2) land **before** the tag (safe, slower) or immediately **after** (fast,
-   temporarily broken in-house builds)?
+   temporarily broken in-house builds)?~~ **Resolved: shipped at `fe5dede`**; migration after (report `2026-09-11_02-51`).
 2. **CI probe authority:** Verifying the new workflow requires a push (my rules forbid pushing
    without explicit instruction). Do you want me to push the current state (or a
    `workflow_dispatch`-enabled probe commit) purely to exercise CI, or should the next routine

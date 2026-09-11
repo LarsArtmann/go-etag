@@ -94,13 +94,13 @@ is the biggest unverified surface this session leaves behind.
    httputil tag, no consumer of httputil can reach v0.3.0. Requires the
    go-release flow and the owner's GO.
 2. **cqrs-htmx family-train alignment** (43 modules) onto that future release.
-3. **README "Upgrading" migration diff** (`PreserveOn304` → `FreshenOn304`
-   before/after) — TODO_LIST item 2.
+3. ~~**README "Upgrading" migration diff** (`PreserveOn304` → `FreshenOn304`
+   before/after) — TODO_LIST item 2.~~ done 2026-09-11 docs-health pass (README "Upgrading from v0.2.x" section with mapping table)
 4. **GitHub Release notes append** for v0.3.0 — TODO_LIST item 3.
 5. **Benchmark re-run** at the v0.3.0 tree, archived under `reports/bench/`
    (`-benchmem -count=6`) — TODO_LIST item 4.
 6. **CI GOTOOLCHAIN/govulncheck pinning** — TODO_LIST item 5.
-7. **FEATURES.md shim-row fix** — TODO_LIST item 6.
+7. ~~**FEATURES.md shim-row fix** — TODO_LIST item 6.~~ done 2026-09-11 docs-health pass
 8. **Dependabot actions-group red CI** (run 34545953600) — renumbered TODO_LIST
    item 1.
 9. **Pushing any commit** — all 8 commits from this session (7 repos' work +
@@ -205,12 +205,12 @@ commitments).
     `-benchmem -count=6`.
 17. Scope the CI `GOTOOLCHAIN` pin or pin govulncheck so `@latest` can't break
     CI.
-18. Fix the stale FEATURES.md shim row (export-parity suite exists since
-    `a5de386`).
-19. Annotate report `2026-09-11_02-08` item 2 as done (docs-health inline
-    resolution) — its "not started" claim is now false.
-20. Verify the TODO_LIST renumbering broke no external references to old item
-    numbers.
+18. ~~Fix the stale FEATURES.md shim row (export-parity suite exists since
+    `a5de386`).~~ done 2026-09-11 docs-health pass
+19. ~~Annotate report `2026-09-11_02-08` item 2 as done (docs-health inline
+    resolution) — its "not started" claim is now false.~~ done 2026-09-11 docs-health pass
+20. ~~Verify the TODO_LIST renumbering broke no external references to old item
+    numbers.~~ done 2026-09-11 docs-health pass (every stale numeric ref annotated; harvest added to ROADMAP OQ5)
 
 **DiscordSync / consumer hardening:**
 21. Fix `TestEvaluateHealthChecks_LabelsResults` in DiscordSync (pre-existing;

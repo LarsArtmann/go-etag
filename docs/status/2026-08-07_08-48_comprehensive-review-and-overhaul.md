@@ -195,7 +195,7 @@
 | 37  | P3       | ~~Add `ETagConfig` defaults documentation to GoDoc~~ done at `b9eb32e` (README config table + field docs)                                             | XS     |
 | 38  | P3       | ~~Consider `WithStrength(Strength)` builder pattern~~ Won't implement — struct config is the house style                                              | S      |
 | 39  | P3       | ~~Add `Last-Modified` header support (companion to ETag)~~ Won't implement server-side; client second-validator idea lives in ROADMAP Theme 1         | M      |
-| 40  | P3       | ~~Consider `Cache-Control` integration~~ Won't implement — callers own Cache-Control (guidance TODO_LIST #9)                                          | M      |
+| 40  | P3       | ~~Consider `Cache-Control` integration~~ Won't implement — callers own Cache-Control (guidance shipped at `721cfbd`: README "Cache policy" section)                                          | M      |
 | 41  | P3       | ~~Add `ETag.IsEmpty()` vs `ETag.IsValid()` distinction~~ done — `IsValid()` shipped; zero-value is the empty case                                     | XS     |
 | 42  | P3       | ~~Document FNV-64a collision probability in GoDoc~~ done — documented in `entity_tag.go` + README                                                     | XS     |
 | 43  | P3       | Add `BenchmarkParseETagList` with realistic header sizes — open                                                                                       | XS     |
