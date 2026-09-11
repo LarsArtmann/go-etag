@@ -193,3 +193,11 @@ Flush-path write errors are forwarded to `ETagConfig.OnError` (a `func(*errorfam
 
 - **An auto-git daemon commits and re-formats continuously** — status reports and tables get re-touched within minutes of your edit. Always re-read a shared file immediately before re-editing it; never assume remembered file geometry.
 - **`docs/status/` and `docs/planning/` are point-in-time snapshots** — never rewrite their narrative; annotate resolved items inline (`~~item~~ done at`hash``) per the docs-health skill. The living backlog is `TODO_LIST.md`, never the reports.
+
+## Release Conventions (validated at v0.3.0)
+
+- **Release commit style:** `chore(release): cut CHANGELOG vX.Y.Z` (matches v0.2.0/v0.3.0), CHANGELOG cut BEFORE tagging; empty `[Unreleased]` placeholders + compare links stay behind.
+- **v0.x GitHub Releases are published as Latest, non-prerelease** — house precedent (v0.1.0 → v0.3.0), a deliberate deviation from the go-release skill's `--prerelease` suggestion.
+- **The consumer-facing gates are proxy.golang.org + sum.golang.org + a clean-room `go get`** — pkg.go.dev doc rendering lags by minutes and is NOT a release blocker; verify it eventually, not gate on it.
+- **Tag only after CI is green on the exact commit** (workflow triggers on both master pushes and `v*` tags, so the tag gets its own frozen run).
+- **The go-release skill lives at** `~/.config/crush/skills/go-release/` — load it for any release; it repays its reading cost in immutable-tag discipline.
