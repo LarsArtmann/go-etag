@@ -33,7 +33,8 @@ On the client side, **`go-etag/client`** wraps any `http.Client` transport:
 - **Freshens rebuilt 200s per RFC 9111 §4.3.4** — every header field the 304 provides replaces the cached value (Date, Age, rate limits), so a stale edge cache cannot hide behind old metadata.
 - **Surfaces `Age`** verbatim, the RFC 9111 §5.1 signal that a 200 came from an edge copy the origin has not freshly validated.
 - **Invalidates after mutations** — a non-error response to an unsafe method (PUT/POST/…) drops the stored entry (RFC 9111 §4.4).
-- **Never stores `Cache-Control: no-store` responses** (RFC 9111 §3) and never clobbers a caller-supplied `If-None-Match`.
+- **Freshens via HEAD** — a matching HEAD 200 updates stored metadata (or invalidates it) per RFC 9111 §4.3.5, without spending a GET.
+- **Never stores `Cache-Control: no-store` responses** (RFC 9111 §3), honors a `no-store` **request** by bypassing the cache (§5.2.2.5), and never clobbers a caller-supplied `If-None-Match`.
 - **Bounded memory** — FIFO eviction (`MaxEntries`) and a body-size cap (`MaxBodyBytes`).
 
 Zero configuration required on either side — wrap and go.
@@ -106,21 +107,21 @@ func main() {
 
 ```go
 transport := etagclient.NewTransport(next, etagclient.Options{
-    KeyFunc:         nil,                     // nil = request URL; see warning below
-    MaxEntries:      256,                     // FIFO cache bound (default 256)
-    MaxBodyBytes:    1024 * 1024,             // largest cached body (default 1 MiB)
-    PreserveOn304:   nil,                     // nil = RFC 9111 §4.3.4 freshening; []string{} disables
-    FromCacheHeader: "",                      // marker header set on rebuilt responses
+    KeyFunc:         nil,                        // nil = request URL; see warning below
+    MaxEntries:      256,                        // FIFO cache bound (default 256)
+    MaxBodyBytes:    1024 * 1024,                // largest cached body (default 1 MiB)
+    FreshenOn304:    etagclient.FreshenPerRFC(), // default; FreshenFields(...) restricts; FreshenNone() disables
+    FromCacheHeader: "",                         // marker header set on rebuilt responses
 })
 ```
 
-| Field             | Type                         | Default           | Description                                                                                                  |
-| ----------------- | ---------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------ |
-| `KeyFunc`         | `func(*http.Request) string` | URL string        | Derives the cache key. Must scope by credential when responses vary by caller                                |
-| `MaxEntries`      | `int`                        | `256`             | Cache bound; oldest entry evicted (FIFO)                                                                     |
-| `MaxBodyBytes`    | `int`                        | `1048576` (1 MiB) | Larger bodies pass through uncached, fully intact                                                            |
-| `PreserveOn304`   | `[]string`                   | `nil`               | nil freshens every 304-provided field per RFC 9111 §4.3.4 (except hop-by-hop, Content-Length, Content-Range); a non-empty list restricts freshening to those fields; an empty non-nil slice disables it |
-| `FromCacheHeader` | `string`                     | `""`              | When set, rebuilt responses carry it with value `1` for diagnostics                                          |
+| Field             | Type             | Default                        | Description                                                                                                  |
+| ----------------- | ---------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `KeyFunc`         | `func(*http.Request) string` | URL string         | Derives the cache key. Must scope by credential when responses vary by caller                                |
+| `MaxEntries`      | `int`            | `256`                          | Cache bound; oldest entry evicted (FIFO)                                                                     |
+| `MaxBodyBytes`    | `int`            | `1048576` (1 MiB)              | Larger bodies pass through uncached, fully intact. Counts decoded bytes when gzip is transparently decompressed |
+| `FreshenOn304`    | `FreshenPolicy`  | `FreshenPerRFC()`              | `FreshenPerRFC()` freshens every 304-provided field per RFC 9111 §4.3.4 (except hop-by-hop, Content-Length, Content-Range); `FreshenFields("X", …)` restricts freshening to those fields; `FreshenNone()` disables it |
+| `FromCacheHeader` | `string`         | `""`                           | When set, rebuilt responses carry it with value `1` for diagnostics                                          |
 
 `transport.Stats()` reports `Stats{Hits, Stored, Entries}` for cache telemetry.
 
@@ -128,6 +129,14 @@ transport := etagclient.NewTransport(next, etagclient.Options{
 > can return different responses for different callers (Authorization header,
 > cookies), supply a `KeyFunc` that includes a credential fingerprint, or one
 > principal's cached response may be served to another.
+
+### Cache policy: who owns which headers
+
+The transport keeps the validator story airtight; the rest of the cache policy stays yours:
+
+- **The transport owns `ETag` and `If-None-Match`.** A 304 keeps the stored validator (adopting the 304's when the server renames it, rejecting it when it names a different representation), and rebuilt responses never lose or invent one.
+- **You own `Cache-Control` and `Vary`.** The transport revalidates before every replay, so it never serves a stored body without asking — but it does not parse or negotiate `Vary`. When the same URL serves different representations by request header, encode those headers (and credentials) into `KeyFunc`, exactly as the credential warning above requires.
+- **Mind the middleware order.** The ETag middleware must see the final representation: place it beneath (closer to the handler than) compression, so the tag describes the uncompressed bytes. Wrapped outside compression, the ETag describes compressed bytes and silently varies with `Content-Encoding`, defeating revalidation. The same rule applies on the client: the caching transport caches whatever bytes the inner transport chain hands it.
 
 ## Features
 
@@ -316,6 +325,8 @@ Only `GET` and `HEAD` requests with cacheable status codes (200-299) are eligibl
 | RFC 7232 | §3.2    | `If-None-Match` weak comparison (304 handling) | Compliant |
 | RFC 7232 | §4.1    | 304 strips Content-Length, includes ETag       | Compliant |
 | RFC 7230 | §3.3    | HEAD sets Content-Length without a body        | Compliant |
+
+The client transport's requirement-by-requirement RFC 9111 conformance table — including the documented `Vary` deviation and what is deliberately not applicable — lives in [`docs/rfc9111-conformance.md`](docs/rfc9111-conformance.md).
 
 ## Error Classification
 
