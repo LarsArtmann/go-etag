@@ -31,7 +31,7 @@ is the biggest unverified surface this session leaves behind.
    no freshening. New mapping: omitted / `FreshenPerRFC()` / `FreshenFields(...)`
    / `FreshenNone()`. Exactly one wild usage existed (whitelist), mapping 1:1.
 2. **Full enumeration.** `rg` with `--no-ignore-vcs --hidden` over `~/projects`
-   found 77 `go.mod` matches; classified into exactly six *direct* requires
+   found 77 `go.mod` matches; classified into exactly six _direct_ requires
    (the five repos + cqrs-htmx's `examples/middleware-showcase` module; cqrs-htmx
    root is `// indirect` with zero source usage). Code-level grep proved only
    `go-github-kit/etag.go` used `PreserveOn304`.
@@ -67,12 +67,12 @@ is the biggest unverified surface this session leaves behind.
 
 1. **cqrs-htmx alignment** — only its one direct go-etag module (showcase) is
    migrated. The other 43 train-lag modules stay on go-etag v0.2.0 via the
-   *published* httputil tag; moving them requires an httputil release first.
+   _published_ httputil tag; moving them requires an httputil release first.
    Partial by design, but still partial.
 2. **Nix verification layer** — DiscordSync's flake input and lock are updated
    and the drift guard passes, but `nix build` was never run; and for every
    repo whose go.mod/go.sum I edited (all six), I never checked whether that
-   repo's *own* flake has a `vendorHash`/FOD hash now stale. library-policy's
+   repo's _own_ flake has a `vendorHash`/FOD hash now stale. library-policy's
    own recent commit literally says "vendorHash toolchain gotcha" — a signal I
    saw in its git log and failed to connect (see d3).
 3. **Lint gate** — no `golangci-lint`/`go vet` was run on go-github-kit after
@@ -110,7 +110,7 @@ is the biggest unverified surface this session leaves behind.
 
 ## d) TOTALLY FUCKED UP
 
-1. **I caused the DiscordSync flake drift and only caught it because *their*
+1. **I caused the DiscordSync flake drift and only caught it because _their_
    guard test did.** I bumped go.mod without first checking the repo's
    version surface (flake.nix input rev). The skill ships an entire reference
    (`version-surface.md`) for exactly this failure class and I never opened
@@ -140,7 +140,7 @@ is the biggest unverified surface this session leaves behind.
 
 1. **Check the version surface before mutating, not after a failure.** For any
    dependency bump in a repo: grep `flake.nix`/`flake.lock` for the dep,
-   check for `vendorHash`/FOD hashes, check CI pins — *then* bump. Fold into
+   check for `vendorHash`/FOD hashes, check CI pins — _then_ bump. Fold into
    Phase 0 of every future upgrade run.
 2. **Beat the daemon: commit within the same breath as verification.** The
    auto-git daemon races edits in these repos; the fix is mechanical —
@@ -175,6 +175,7 @@ are the go-etag backlog; 21+ are hardening/process ideas (ROADMAP fuel, not
 commitments).
 
 **This session's loose ends (highest impact per effort):**
+
 1. Run `nix build` in DiscordSync to prove the repinned go-etag input builds.
 2. Check library-policy's `flake.nix` for `vendorHash` staleness after my
    go.mod/go.sum edit (its AGENTS.md documents the gotcha); fix hash, run
@@ -198,66 +199,66 @@ commitments).
 11. Cut the httputil release carrying go-etag v0.3.0 (go-release flow).
 12. Align cqrs-htmx's 43 train-lag modules onto the new httputil tag.
 13. Diagnose the Dependabot actions-group red CI (run 34545953600); land the
-    Node 20 bumps.
+Node 20 bumps.
 14. README "Upgrading": add the `PreserveOn304`→`FreshenOn304` migration diff.
 15. Append the same diff to the v0.3.0 GitHub Release notes (`gh release edit`).
 16. Re-run benchmarks at the v0.3.0 tree; archive `reports/bench/<date>` with
-    `-benchmem -count=6`.
+`-benchmem -count=6`.
 17. Scope the CI `GOTOOLCHAIN` pin or pin govulncheck so `@latest` can't break
-    CI.
+CI.
 18. ~~Fix the stale FEATURES.md shim row (export-parity suite exists since
-    `a5de386`).~~ done 2026-09-11 docs-health pass
+`a5de386`).~~ done 2026-09-11 docs-health pass
 19. ~~Annotate report `2026-09-11_02-08` item 2 as done (docs-health inline
-    resolution) — its "not started" claim is now false.~~ done 2026-09-11 docs-health pass
+resolution) — its "not started" claim is now false.~~ done 2026-09-11 docs-health pass
 20. ~~Verify the TODO_LIST renumbering broke no external references to old item
-    numbers.~~ done 2026-09-11 docs-health pass (every stale numeric ref annotated; harvest added to ROADMAP OQ5)
+numbers.~~ done 2026-09-11 docs-health pass (every stale numeric ref annotated; harvest added to ROADMAP OQ5)
 
 **DiscordSync / consumer hardening:**
 21. Fix `TestEvaluateHealthChecks_LabelsResults` in DiscordSync (pre-existing;
-    its own session).
+its own session).
 22. Clone the flake-pin drift-guard test into the other five consumer repos.
 23. Sweep consumer repos for dep pins in CI workflow files / Dockerfiles
-    (remaining version-surface blind spots).
+(remaining version-surface blind spots).
 24. Run `govulncheck` on all six (BuildFlow's attempt died on disk space).
 25. `go test -race` on go-github-kit's etag path and DiscordSync's
-    `internal/api` (concurrent transport paths, never race-run here).
+`internal/api` (concurrent transport paths, never race-run here).
 26. Capture DiscordSync baselines with `-count` repetitions in future runs —
-    the 41s guard test suggests timing sensitivity worth quantifying.
+the 41s guard test suggests timing sensitivity worth quantifying.
 27. go-github-kit: consider exposing a `FreshenPolicy` pass-through in
-    `ETagOptions` instead of the hardcoded whitelist (API honesty; low).
+`ETagOptions` instead of the hardcoded whitelist (API honesty; low).
 28. Check whether any of the six repos reference `go-etag` version strings in
-    READMEs/badges (surfaced-version drift class).
+READMEs/badges (surfaced-version drift class).
 
 **Process / memory:**
 29. Write the consumer-migration recipe into go-etag AGENTS.md repo-workflow
-    notes: version-surface check before bump; commit-before-daemon; `nix
+notes: version-surface check before bump; commit-before-daemon; `nix
     build` gate; both GOWORK modes.
 30. Encode rule in the global memory: "dependency bump in a Nix-flaked repo ⇒
-    grep flake.nix for the dep + verify vendorHash + run nix build."
+grep flake.nix for the dep + verify vendorHash + run nix build."
 31. Prepare a committed per-repo checklist script for future multi-repo sweeps
-    instead of ad-hoc shell chains (re-runnable, auditable).
+instead of ad-hoc shell chains (re-runnable, auditable).
 32. docs-health sweep: other in-house libraries may have breaking changes
-    their consumers haven't absorbed (repeat this session's enumerate-vs-latest
-    pattern for the next-highest-risk lib).
+their consumers haven't absorbed (repeat this session's enumerate-vs-latest
+pattern for the next-highest-risk lib).
 33. benchstat installation path (nix profile or devshell) so benchmark claims
-    stop being eyeballed from raw files (carried from report `2026-09-11_02-08`
-    item 2).
+stop being eyeballed from raw files (carried from report `2026-09-11_02-08`
+item 2).
 34. Consider making the auto-daemon skip repos with a session-lock file, or
-    reserve `.config/metadata.yaml`-style paths, so authored commits stop
-    being pre-empted.
+reserve `.config/metadata.yaml`-style paths, so authored commits stop
+being pre-empted.
 35. Add `/tmp` headroom check to the pre-flight of any flow that triggers
-    BuildFlow pre-commit hooks.
+BuildFlow pre-commit hooks.
 36. go-github-kit: its 8 MiB default body cap vs the library's 1 MiB default is
-    intentional but undocumented in its README — one paragraph.
+intentional but undocumented in its README — one paragraph.
 37. Re-check the six repos' Dependabot configs: will dependabot now try
-    downgrading/no-op on go-etag? Confirm config handles v0.3.0.
+downgrading/no-op on go-etag? Confirm config handles v0.3.0.
 38. Sweep for other `.Work.sum`-style stale artifacts (DiscordSync has a
-    `go.work.sum` with no `go.work`) — cosmetic hygiene.
+`go.work.sum` with no `go.work`) — cosmetic hygiene.
 39. Confirm no consumer repo has a `replace github.com/larsartmann/go-etag`
-    pointing anywhere local (would have masked the bump; none seen in the six,
-    but the sweep was only of the six).
+pointing anywhere local (would have masked the bump; none seen in the six,
+but the sweep was only of the six).
 40. Post-release (after item 11): re-run the train checker in cqrs-htmx to
-    watch the 43 lag entries collapse to zero.
+watch the 43 lag entries collapse to zero.
 
 ## g) Questions I cannot figure out myself
 

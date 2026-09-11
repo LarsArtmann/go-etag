@@ -15,14 +15,14 @@ version-bump + verification only. The report `2026-09-11_02-08` item 2 claim
 
 ## Per-repo results
 
-| Consumer | Change | Build/Test | Commit |
-| --- | --- | --- | --- |
-| `go-github-kit` | v0.2.0→v0.3.0 + `PreserveOn304: []string{...}` → `FreshenOn304: FreshenFields(...)` (1:1 whitelist mapping) | pass | go-github-kit `f3ece58` |
-| `httputil` | v0.2.0→v0.3.0 (go.work renamed during `go get` per F2; vendor refreshed) | pass (workspace mode) | httputil `ff724e0` |
-| `cqrs-htmx/examples/middleware-showcase` | v0.2.0→v0.3.0 (repo go.work renamed during operation; vendor refreshed) | pass (hermetic GOWORK=off) | cqrs-htmx `533acf40` |
-| `DiscordSync` | v0.2.0→v0.3.0 + flake.nix/flake.lock go-etag input repinned to v0.3.0 tag commit `fe5dede` | pass except 1 pre-existing failure (below) | DiscordSync `42c9d06f` |
-| `nsfw-classifier` | v0.2.0→v0.3.0 | pass | nsfw-classifier `f910b03` |
-| `library-policy` | v0.2.0→v0.3.0 | pass | library-policy `9c47f43` |
+| Consumer                                 | Change                                                                                                      | Build/Test                                 | Commit                    |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------ | ------------------------- |
+| `go-github-kit`                          | v0.2.0→v0.3.0 + `PreserveOn304: []string{...}` → `FreshenOn304: FreshenFields(...)` (1:1 whitelist mapping) | pass                                       | go-github-kit `f3ece58`   |
+| `httputil`                               | v0.2.0→v0.3.0 (go.work renamed during `go get` per F2; vendor refreshed)                                    | pass (workspace mode)                      | httputil `ff724e0`        |
+| `cqrs-htmx/examples/middleware-showcase` | v0.2.0→v0.3.0 (repo go.work renamed during operation; vendor refreshed)                                     | pass (hermetic GOWORK=off)                 | cqrs-htmx `533acf40`      |
+| `DiscordSync`                            | v0.2.0→v0.3.0 + flake.nix/flake.lock go-etag input repinned to v0.3.0 tag commit `fe5dede`                  | pass except 1 pre-existing failure (below) | DiscordSync `42c9d06f`    |
+| `nsfw-classifier`                        | v0.2.0→v0.3.0                                                                                               | pass                                       | nsfw-classifier `f910b03` |
+| `library-policy`                         | v0.2.0→v0.3.0                                                                                               | pass                                       | library-policy `9c47f43`  |
 
 The `PreserveOn304` mapping used (from the old field doc, commit `9204885`):
 `nil` → RFC default (field omitted), non-empty whitelist → `FreshenFields(...)`,

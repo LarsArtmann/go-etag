@@ -205,58 +205,58 @@ honesty requires naming these:
 Ranked by impact; effort S (<30min), M (30min–2h), L (>2h). Harvest input for docs-health —
 pending owner instruction (per "THEN WAIT", nothing was auto-harvested into TODO_LIST).
 
-| #  | Task                                                                                                                                               | Impact   | Effort | Category      |
-| -- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ | ------------- |
-| 1  | ~~Owner GO/no-GO on v0.3.0 release (tag, push, proxy + pkg.go.dev + `go get` round trip)~~ done at `fe5dede`                                                             | Critical | S      | Release       |
-| 2  | ~~Migrate the six in-house consumers off removed `PreserveOn304` onto `FreshenOn304`~~ done (09a2b1f; premise corrected per report 2026-09-11_02-51)                                                                 | Critical | M      | Feature       |
-| 3  | ~~Probe the new CI workflow with a real run; fix whatever turns red~~ done — green on the release commit and frozen tag run; Dependabot actions PR #1 merged green                                                | Critical | S      | Bug           |
-| 4  | Scope GOTOOLCHAIN pin to test/fuzz jobs (or pin govulncheck version) so `@latest` installs can't break                                             | High     | S      | Bug           |
-| 5  | ~~Fix FEATURES.md stale shim row (parity suite exists since a5de386) + dead TODO_LIST #14 reference~~ done 2026-09-11 docs-health pass                                                  | High     | XS     | Documentation |
-| 6  | Add GoDoc example for `FreshenPolicy` (Example with Output, per testableexamples)                                                                  | High     | S      | Documentation |
-| 7  | Decide + record the accepted coverage floor (98.3%) in the plan-doc annotation                                                                     | Medium   | XS     | Quality       |
-| 8  | Install benchstat via a sanctioned path; regenerate the three baselines as a comparison table                                                      | Medium   | S      | Quality       |
-| 9  | Add a `Freshened`/`Invalidated` counter to `Stats` for HEAD/invalidation telemetry parity                                                          | Medium   | S      | Feature       |
-| 10 | Explicit subtest: caller-conditional HEAD receiving 304 passes through untouched                                                                   | Medium   | S      | Quality       |
-| 11 | HEAD-freshening test with `resp.Uncompressed` stored entry (Content-Encoding exception interplay)                                                  | Medium   | S      | Quality       |
-| 12 | Concurrency test: concurrent GET store vs HEAD freshen (freshen skip-guard on the HEAD path)                                                       | Medium   | S      | Quality       |
-| 13 | Request-side `no-cache` (§5.2.2.2 request directive) explicit pin test (force revalidation semantics)                                              | Medium   | S      | Quality       |
-| 14 | Integration test for request `no-store` through the real server (mirror of the stub spec)                                                          | Low      | S      | Quality       |
-| 15 | 304-omits-Age interplay with HEAD-freshened entries: pin the freeze semantics end to end                                                           | Low      | S      | Quality       |
-| 16 | Document/normalize `FreshenFields()` zero-arg behavior (silently equals `FreshenNone`)                                                             | Medium   | XS     | Documentation |
-| 17 | Add "Interpretation decisions" column/section to docs/rfc9111-conformance.md                                                                       | Medium   | S      | Documentation |
-| 18 | Run govulncheck locally as a pre-release gate (currently only a CI job)                                                                            | High     | XS     | Quality       |
-| 19 | Check go-error-family for a newer minor and bump within go.mod policy (last verified v0.10.0)                                                      | Low      | S      | Cleanup       |
-| 20 | ~~Grep all docs for remaining "TODO_LIST #N" numeric references; convert to slugs~~ done 2026-09-11 docs-health pass (all stale numeric refs annotated)                                                                    | Medium   | S      | Documentation |
-| 21 | Verify dprint passes on the Markdown/YAML edited this session; wire dprint check into CI or devshell                                               | Low      | S      | Cleanup       |
-| 22 | Add flake.nix (build/test/lint devShell) per LarsArtmann convention, or record why this repo opts out                                              | Low      | M      | Cleanup       |
-| 23 | Add SECURITY.md, issue templates, PR template                                                                                                      | Low      | S      | Documentation |
-| 24 | Dependabot or equivalent for SHA-pinned actions (checkout, setup-go, upload-artifact, govulncheck)                                                 | Low      | S      | Cleanup       |
-| 25 | Silence/align the stale LSP golangci warnings (server/integration_test.go bodyclose/varnamelen) that the CLI does not emit — they mislead sessions | Low      | S      | Cleanup       |
-| 26 | README client badge: consider a combined server+client pkg.go.dev badge set                                                                        | Low      | XS     | Documentation |
-| 27 | Keep-a-Changelog link references at the CHANGELOG bottom (Unreleased compare links)                                                                | Low      | XS     | Documentation |
-| 28 | Spike: `Vary`-aware cache key design (selected-header fingerprint in the key)                                                                      | Medium   | L      | Feature       |
-| 29 | Spike: Last-Modified-only validator storage (loosen the ETag-required store rule safely)                                                           | Medium   | L      | Feature       |
-| 30 | ROADMAP Theme 1: opt-in freshness-based serving (§4.2) design doc                                                                                  | Low      | M      | Feature       |
-| 31 | ROADMAP Theme 3: client observability hooks design (mirroring server hooks)                                                                        | Low      | M      | Feature       |
-| 32 | Parked: `go-etag/otel` sub-module (demand-gated; revisit after v0.3.0 adoption signal)                                                             | Low      | L      | Feature       |
-| 33 | ~~Post-release: verify proxy/pkg.go.dev shows v0.3.0 and `go get` round-trips (part of go-release flow)~~ done at `fe5dede` (02-38 verification chain)                                                            | Critical | S      | Release       |
-| 34 | ~~Prepare GitHub Release body from CHANGELOG `[Unreleased]` (part of go-release flow)~~ done at `fe5dede` (curated notes live)                                                            | Medium   | S      | Release       |
-| 35 | ~~Post-release: update library-policy / consumers to v0.3.0 pins~~ done (report `2026-09-11_02-51` — all six repos)                                                            | Medium   | M      | Cleanup       |
-| 36 | Consider `funcorder` linter (new in this golangci era) — evaluate fit vs churn                                                                     | Low      | S      | Quality       |
-| 37 | Evaluate `Stats` snapshot semantics under concurrent HEAD freshening (mutex scope review)                                                          | Low      | S      | Quality       |
-| 38 | HEAD freshening vs `PreserveOn304`-style escape hatch: decide whether one is ever wanted; document why not                                         | Low      | XS     | Documentation |
-| 39 | KeyFunc laziness doc note: custom KeyFuncs are now called at different times for non-GET                                                           | Low      | XS     | Documentation |
-| 40 | Fuzz `cacheControlDirectives` parsing separately from the no-store property (broader corpus)                                                       | Low      | S      | Quality       |
-| 41 | Add stale-docs grep to the docs-health checklist: any doc citing TODO_LIST numbers or "deliberate opt-out" language                                | Medium   | S      | Documentation |
-| 42 | Confirm `go.mod` / CI pin sync procedure is documented in CONTRIBUTING (it is — verify it survives edits)                                          | Low      | XS     | Documentation |
-| 43 | Example for request `no-store` bypass in client/example_test.go                                                                                    | Low      | S      | Documentation |
-| 44 | Consider exposing whether the last response came from HEAD-freshened metadata (diagnostic header or stat)                                          | Low      | S      | Feature       |
-| 45 | Audit `skippedByFreshening` against a re-read of §3.2 verbatim text (annual drift check)                                                           | Low      | S      | Quality       |
-| 46 | Add benchstat-style comparison instructions to CONTRIBUTING (exact commands, where files live)                                                     | Low      | XS     | Documentation |
-| 47 | Release checklist item: grep docs for "PLANNED"/"deliberately unimplemented" claims that a release just invalidated                                | Medium   | S      | Documentation |
-| 48 | Named-constant audit on the new HEAD path (Content-Length comparison uses strconv.Itoa — no magic numbers introduced; keep it that way)            | Low      | XS     | Quality       |
-| 49 | Consider `workflow_dispatch` trigger on ci.yml to enable manual probes (pairs with item 3/4)                                                       | Medium   | XS     | Cleanup       |
-| 50 | After GO: renumber/retire TODO_LIST items released in v0.3.0 and harvest this report's (f) survivors                                               | Medium   | S      | Documentation |
+| #  | Task                                                                                                                                                               | Impact   | Effort | Category      |
+| -- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------ | ------------- |
+| 1  | ~~Owner GO/no-GO on v0.3.0 release (tag, push, proxy + pkg.go.dev + `go get` round trip)~~ done at `fe5dede`                                                       | Critical | S      | Release       |
+| 2  | ~~Migrate the six in-house consumers off removed `PreserveOn304` onto `FreshenOn304`~~ done (09a2b1f; premise corrected per report 2026-09-11_02-51)               | Critical | M      | Feature       |
+| 3  | ~~Probe the new CI workflow with a real run; fix whatever turns red~~ done — green on the release commit and frozen tag run; Dependabot actions PR #1 merged green | Critical | S      | Bug           |
+| 4  | Scope GOTOOLCHAIN pin to test/fuzz jobs (or pin govulncheck version) so `@latest` installs can't break                                                             | High     | S      | Bug           |
+| 5  | ~~Fix FEATURES.md stale shim row (parity suite exists since a5de386) + dead TODO_LIST #14 reference~~ done 2026-09-11 docs-health pass                             | High     | XS     | Documentation |
+| 6  | Add GoDoc example for `FreshenPolicy` (Example with Output, per testableexamples)                                                                                  | High     | S      | Documentation |
+| 7  | Decide + record the accepted coverage floor (98.3%) in the plan-doc annotation                                                                                     | Medium   | XS     | Quality       |
+| 8  | Install benchstat via a sanctioned path; regenerate the three baselines as a comparison table                                                                      | Medium   | S      | Quality       |
+| 9  | Add a `Freshened`/`Invalidated` counter to `Stats` for HEAD/invalidation telemetry parity                                                                          | Medium   | S      | Feature       |
+| 10 | Explicit subtest: caller-conditional HEAD receiving 304 passes through untouched                                                                                   | Medium   | S      | Quality       |
+| 11 | HEAD-freshening test with `resp.Uncompressed` stored entry (Content-Encoding exception interplay)                                                                  | Medium   | S      | Quality       |
+| 12 | Concurrency test: concurrent GET store vs HEAD freshen (freshen skip-guard on the HEAD path)                                                                       | Medium   | S      | Quality       |
+| 13 | Request-side `no-cache` (§5.2.2.2 request directive) explicit pin test (force revalidation semantics)                                                              | Medium   | S      | Quality       |
+| 14 | Integration test for request `no-store` through the real server (mirror of the stub spec)                                                                          | Low      | S      | Quality       |
+| 15 | 304-omits-Age interplay with HEAD-freshened entries: pin the freeze semantics end to end                                                                           | Low      | S      | Quality       |
+| 16 | Document/normalize `FreshenFields()` zero-arg behavior (silently equals `FreshenNone`)                                                                             | Medium   | XS     | Documentation |
+| 17 | Add "Interpretation decisions" column/section to docs/rfc9111-conformance.md                                                                                       | Medium   | S      | Documentation |
+| 18 | Run govulncheck locally as a pre-release gate (currently only a CI job)                                                                                            | High     | XS     | Quality       |
+| 19 | Check go-error-family for a newer minor and bump within go.mod policy (last verified v0.10.0)                                                                      | Low      | S      | Cleanup       |
+| 20 | ~~Grep all docs for remaining "TODO_LIST #N" numeric references; convert to slugs~~ done 2026-09-11 docs-health pass (all stale numeric refs annotated)            | Medium   | S      | Documentation |
+| 21 | Verify dprint passes on the Markdown/YAML edited this session; wire dprint check into CI or devshell                                                               | Low      | S      | Cleanup       |
+| 22 | Add flake.nix (build/test/lint devShell) per LarsArtmann convention, or record why this repo opts out                                                              | Low      | M      | Cleanup       |
+| 23 | Add SECURITY.md, issue templates, PR template                                                                                                                      | Low      | S      | Documentation |
+| 24 | Dependabot or equivalent for SHA-pinned actions (checkout, setup-go, upload-artifact, govulncheck)                                                                 | Low      | S      | Cleanup       |
+| 25 | Silence/align the stale LSP golangci warnings (server/integration_test.go bodyclose/varnamelen) that the CLI does not emit — they mislead sessions                 | Low      | S      | Cleanup       |
+| 26 | README client badge: consider a combined server+client pkg.go.dev badge set                                                                                        | Low      | XS     | Documentation |
+| 27 | Keep-a-Changelog link references at the CHANGELOG bottom (Unreleased compare links)                                                                                | Low      | XS     | Documentation |
+| 28 | Spike: `Vary`-aware cache key design (selected-header fingerprint in the key)                                                                                      | Medium   | L      | Feature       |
+| 29 | Spike: Last-Modified-only validator storage (loosen the ETag-required store rule safely)                                                                           | Medium   | L      | Feature       |
+| 30 | ROADMAP Theme 1: opt-in freshness-based serving (§4.2) design doc                                                                                                  | Low      | M      | Feature       |
+| 31 | ROADMAP Theme 3: client observability hooks design (mirroring server hooks)                                                                                        | Low      | M      | Feature       |
+| 32 | Parked: `go-etag/otel` sub-module (demand-gated; revisit after v0.3.0 adoption signal)                                                                             | Low      | L      | Feature       |
+| 33 | ~~Post-release: verify proxy/pkg.go.dev shows v0.3.0 and `go get` round-trips (part of go-release flow)~~ done at `fe5dede` (02-38 verification chain)             | Critical | S      | Release       |
+| 34 | ~~Prepare GitHub Release body from CHANGELOG `[Unreleased]` (part of go-release flow)~~ done at `fe5dede` (curated notes live)                                     | Medium   | S      | Release       |
+| 35 | ~~Post-release: update library-policy / consumers to v0.3.0 pins~~ done (report `2026-09-11_02-51` — all six repos)                                                | Medium   | M      | Cleanup       |
+| 36 | Consider `funcorder` linter (new in this golangci era) — evaluate fit vs churn                                                                                     | Low      | S      | Quality       |
+| 37 | Evaluate `Stats` snapshot semantics under concurrent HEAD freshening (mutex scope review)                                                                          | Low      | S      | Quality       |
+| 38 | HEAD freshening vs `PreserveOn304`-style escape hatch: decide whether one is ever wanted; document why not                                                         | Low      | XS     | Documentation |
+| 39 | KeyFunc laziness doc note: custom KeyFuncs are now called at different times for non-GET                                                                           | Low      | XS     | Documentation |
+| 40 | Fuzz `cacheControlDirectives` parsing separately from the no-store property (broader corpus)                                                                       | Low      | S      | Quality       |
+| 41 | Add stale-docs grep to the docs-health checklist: any doc citing TODO_LIST numbers or "deliberate opt-out" language                                                | Medium   | S      | Documentation |
+| 42 | Confirm `go.mod` / CI pin sync procedure is documented in CONTRIBUTING (it is — verify it survives edits)                                                          | Low      | XS     | Documentation |
+| 43 | Example for request `no-store` bypass in client/example_test.go                                                                                                    | Low      | S      | Documentation |
+| 44 | Consider exposing whether the last response came from HEAD-freshened metadata (diagnostic header or stat)                                                          | Low      | S      | Feature       |
+| 45 | Audit `skippedByFreshening` against a re-read of §3.2 verbatim text (annual drift check)                                                                           | Low      | S      | Quality       |
+| 46 | Add benchstat-style comparison instructions to CONTRIBUTING (exact commands, where files live)                                                                     | Low      | XS     | Documentation |
+| 47 | Release checklist item: grep docs for "PLANNED"/"deliberately unimplemented" claims that a release just invalidated                                                | Medium   | S      | Documentation |
+| 48 | Named-constant audit on the new HEAD path (Content-Length comparison uses strconv.Itoa — no magic numbers introduced; keep it that way)                            | Low      | XS     | Quality       |
+| 49 | Consider `workflow_dispatch` trigger on ci.yml to enable manual probes (pairs with item 3/4)                                                                       | Medium   | XS     | Cleanup       |
+| 50 | After GO: renumber/retire TODO_LIST items released in v0.3.0 and harvest this report's (f) survivors                                                               | Medium   | S      | Documentation |
 
 **HARVEST note:** per the standing instruction ("THEN WAIT FOR INSTRUCTIONS") none of the above
 has been routed into TODO_LIST/ROADMAP yet. Items 1–5 are TODO_LIST-grade; 28–32 are

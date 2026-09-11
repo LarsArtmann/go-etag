@@ -168,7 +168,7 @@
 | 10  | P1       | ~~Test: handler calls `WriteHeader` multiple times~~ done at `c759373`                                                                                | XS     |
 | 11  | P1       | ~~Property test: ETag round-trip (compute → String → Parse)~~ done at `e0fe51f` (fuzz round-trip)                                                     | S      |
 | 12  | P1       | ~~Write migration guide (`docs/migration/v0.2.md`)~~ done — written `e0fe51f`, removed `8890f8d` (fiction)                                            | M      |
-| 13  | P1       | ~~Update CONTRIBUTING.md commands~~ done at `721cfbd`                                                                                                  | XS     |
+| 13  | P1       | ~~Update CONTRIBUTING.md commands~~ done at `721cfbd`                                                                                                 | XS     |
 | 14  | P2       | Reduce `ParseETagList` allocations via `sync.Pool` or pre-allocation — open                                                                           | M      |
 | 15  | P2       | Add benchmarks for large bodies (1 KB, 100 KB, 1 MB) — open                                                                                           | S      |
 | 16  | P2       | ~~Streaming hash support (`hash.Hash` interface option)~~ Won't implement — conflicts with buffer-and-compare architecture                            | M      |
@@ -195,7 +195,7 @@
 | 37  | P3       | ~~Add `ETagConfig` defaults documentation to GoDoc~~ done at `b9eb32e` (README config table + field docs)                                             | XS     |
 | 38  | P3       | ~~Consider `WithStrength(Strength)` builder pattern~~ Won't implement — struct config is the house style                                              | S      |
 | 39  | P3       | ~~Add `Last-Modified` header support (companion to ETag)~~ Won't implement server-side; client second-validator idea lives in ROADMAP Theme 1         | M      |
-| 40  | P3       | ~~Consider `Cache-Control` integration~~ Won't implement — callers own Cache-Control (guidance shipped at `721cfbd`: README "Cache policy" section)                                          | M      |
+| 40  | P3       | ~~Consider `Cache-Control` integration~~ Won't implement — callers own Cache-Control (guidance shipped at `721cfbd`: README "Cache policy" section)   | M      |
 | 41  | P3       | ~~Add `ETag.IsEmpty()` vs `ETag.IsValid()` distinction~~ done — `IsValid()` shipped; zero-value is the empty case                                     | XS     |
 | 42  | P3       | ~~Document FNV-64a collision probability in GoDoc~~ done — documented in `entity_tag.go` + README                                                     | XS     |
 | 43  | P3       | Add `BenchmarkParseETagList` with realistic header sizes — open                                                                                       | XS     |

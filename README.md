@@ -410,11 +410,11 @@ go get github.com/larsartmann/go-etag/client   # client transport (package etagc
 > })
 > ```
 >
-> | v0.2.x                              | v0.3.x                                     |
-> | ----------------------------------- | ------------------------------------------ |
-> | omitted / `nil`                     | `FreshenPerRFC()` (the zero value)         |
-> | `[]string{"Date", "X", …}`          | `FreshenFields("Date", "X", …)`            |
-> | `[]string{}` (freshen nothing)      | `FreshenNone()`                            |
+> | v0.2.x                         | v0.3.x                             |
+> | ------------------------------ | ---------------------------------- |
+> | omitted / `nil`                | `FreshenPerRFC()` (the zero value) |
+> | `[]string{"Date", "X", …}`     | `FreshenFields("Date", "X", …)`    |
+> | `[]string{}` (freshen nothing) | `FreshenNone()`                    |
 >
 > One behavior change rides along: under v0.2.0 a `nil` `PreserveOn304` merged
 > only `Date`; the `FreshenPerRFC()` default is RFC 9111 §4.3.4 — every field
