@@ -9,12 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Shared `entitytag` package: the RFC 7232 §2.3 entity-tag domain type (`ETag`, `Strength`, `Strong`/`Weak`, `NewETag`, `ParseETag`, `ParseETagList`, `MatchesIfNoneMatch`, `MatchesIfMatch`) moved out of the server package so the client cache and the server middleware share one typed validator with no `client → server` dependency. The server package re-exports the full surface via type aliases and wrapper functions, so `etag.ETag` and every existing import keeps compiling unchanged. New: `Strength.IsValid` (exported from the formerly unexported validity check used by `Validate`).
 - Typed error-code surface in the server package (mirrors httputil): `Code` with six family constructors (`Rejection`, `Conflict`, `Transient`, `Corruption`, `Infrastructure`, `Orchestration`) plus matching `Wrap*` methods, a `Domain` type, and `DomainOf`/`InDomain` helpers so consumers can route classified errors by failing component without string parsing.
 - `ExampleFreshenPolicy`: a GoDoc example showing `FreshenFields` restricting 304 freshening to `Retry-After` while the stored `Date` survives and the validator flows through.
 - `ExampleETagConfig_Validate` (server): a GoDoc example pinning the sentinel contract — `Validate` returns a fresh context-bearing error that `errors.Is` matches against `ErrInvalidConfig` by code and family, never the sentinel instance itself.
 
 ### Changed
 
+- Client validator comparison is typed: `weaklyMatchesValidator` now delegates to the shared `entitytag` parser and weak comparison instead of hand-rolled `W/`-prefix string stripping. Behavioral edge: a header value that does not parse as an RFC 7232 §2.3 entity-tag (unclosed quote, bare `*`, lowercase `w/`) can never weak-match anything, so HEAD-confirmation and 304 mismatch-restore treat it as a non-match instead of comparing raw strings. Benchmark-neutral (parse is allocation-free; `reports/bench/2026-09-18_{before,after}-typed-validator.txt`).
 - CI: the `GOTOOLCHAIN` toolchain pin moved from workflow level to the test, lint, and fuzz jobs; the govulncheck job is deliberately unpinned so its `govulncheck@latest` install can fetch a newer Go toolchain instead of failing.
 - Minimum Go is now 1.27.1 (go.mod directive) and `go-error-family` is bumped to v0.10.1; the test, lint, and fuzz CI pins were synced to `go1.27.1` to match. Consumers on older toolchains must upgrade Go to consume this version.
 - `docs/rfc9111-conformance.md`: a new "Interpretation decisions" section records the RFC judgment calls (304-`no-store` update ≠ storage, `no-store` HEAD neutrality, unprovable HEAD identity means stale, `FreshenOn304` is 304-scoped).

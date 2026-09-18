@@ -82,9 +82,13 @@ prevents. Directions (decision open — see Open Questions):
 
 ## Open questions
 
-1. **Domain-type direction (blocks Theme 2):** may the client import
+1. ~~**Domain-type direction (blocks Theme 2):** may the client import
    `server`'s `ETag` type (new intra-module coupling), or should the type
-   move to a shared subpackage first? Public-surface decision.
+   move to a shared subpackage first?~~ Resolved 2026-09-18: the type moved
+   to the shared `entitytag/` subpackage; `server/` re-exports the full
+   surface via aliases + wrappers, and the client compares validators through
+   `entitytag.ParseETag`/`WeakEqual` (no `client → server` edge). Theme 2's
+   remaining piece is the `cacheEntry` → `storedResponse` evolution.
 2. **Alex's field-report offer:** draft a reply email (Age answer +
    no-store/freshening changes are in), and accept his raw header captures
    as permanent fixtures in `client/testdata/`?

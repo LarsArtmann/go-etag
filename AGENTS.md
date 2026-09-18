@@ -60,6 +60,8 @@ Any function taking `*testing.T` that calls `t.Fatal`/`t.Error` must start with 
 
 ## Commands
 
+Local go is 1.26.7 with `GOTOOLCHAIN=local` persisted; go.mod requires 1.27.1, so prefix every go command with `GOTOOLCHAIN=auto` (downloads go1.27.1 once into the module cache). Do not change the persisted go env.
+
 ```bash
 go test ./...              # Run tests
 go test -race ./...        # Race detection (REQUIRED for tests with t.Parallel() or shared state)
@@ -73,11 +75,12 @@ GOEXPERIMENT=jsonv2 erraudit ./... --type-aware --enforce-go-error-family --enfo
 
 ## Architecture
 
-One module (`github.com/larsartmann/go-etag`), three packages: the real code lives in `server/` (package name `etag`) and `client/` (package `etagclient`); the root is a deprecated alias shim over the server package (deleted at v1.0.0). One external dependency: `github.com/larsartmann/go-error-family`. Go 1.27+.
+One module (`github.com/larsartmann/go-etag`), four packages: the shared domain type lives in `entitytag/` (package `entitytag`), the real code in `server/` (package name `etag`) and `client/` (package `etagclient`); the root is a deprecated alias shim over the server package (deleted at v1.0.0). Dependency direction: `server → entitytag ← client` — the client must never import `server`. One external dependency: `github.com/larsartmann/go-error-family`. Go 1.27+.
 
-| File                   | Exports                                                                                                                                                                             | Purpose                                                                                                                                               |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `server/entity_tag.go` | `ETag`, `Strength`, `Strong`, `Weak`, `NewETag`, `ParseETag`, `ParseETagList`, `MatchesIfNoneMatch`, `MatchesIfMatch`                                                               | RFC 7232 §2.3 entity-tag domain type: opaque value + strength, strong/weak comparison, ABNF parser                                                    |
+| File                      | Exports                                                                                                                                                                             | Purpose                                                                                                                                               |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entitytag/entity_tag.go` | `ETag`, `Strength`, `Strong`, `Weak`, `NewETag`, `ParseETag`, `ParseETagList`, `MatchesIfNoneMatch`, `MatchesIfMatch`, `Strength.IsValid`                                            | RFC 7232 §2.3 entity-tag domain type: opaque value + strength, strong/weak comparison, ABNF parser (moved here from `server/` 2026-09-18)             |
+| `server/entity_tag.go`    | same surface as `entitytag` (type aliases + wrapper functions)                                                                                                                       | Re-export shim keeping the historical `etag.ETag` surface compiling unchanged; add new domain logic to `entitytag/`, never here                       |
 | `server/etag.go`       | `ETagConfig`, `DefaultETagConfig()`, `Validate()`, `New()`                                                                                                                          | ETag middleware: FNV-64a generation, If-None-Match 304, buffer overflow, Hijack/Flush streaming                                                       |
 | `server/wrapper.go`    | (unexported `responseWrapper`)                                                                                                                                                      | Shared ResponseWriter wrapper: buffers WriteHeader, delegates Hijack/Flush                                                                            |
 | `server/middleware.go` | `Middleware`                                                                                                                                                                        | Type alias for `func(http.Handler) http.Handler`                                                                                                      |
@@ -124,6 +127,7 @@ The `ETag` struct holds an opaque string and a `Strength` (Strong/Weak). It prov
 **Client gotchas:**
 
 - **RoundTrip never mutates the caller's request** — If-None-Match rides on a clone (net/http RoundTripper contract).
+- **Validator comparison is typed** — `weaklyMatchesValidator` delegates to `entitytag.ParseETag` + `WeakEqual`; a field value that does not parse as an RFC 7232 §2.3 entity-tag (unclosed quote, bare `*`, lowercase `w/`) can never weak-match anything, so HEAD-confirmation and 304 mismatch-restore treat it as a non-match. Perf-neutral (parse is allocation-free; `reports/bench/2026-09-18_{before,after}-typed-validator.txt`).
 - **Caller-supplied `If-None-Match` is never clobbered** — a caller who set their own conditional keeps it; a 304 answering it passes through unrebuilt (RFC 9110 §13.1.2 ownership).
 - **304 freshening is the RFC 9111 §4.3.4 default** — every field the 304 provides replaces the stored value, except hop-by-hop (§3.1), Content-Length/Content-Range (§3.2), and Content-Encoding when net/http transparently decoded the body (§3.2 integrity allowance; recorded via `resp.Uncompressed`).
 - **Freshening persists to the stored entry** — the 304's validator replaces the stored one for later revalidations; `responseCache.freshen` skips when a concurrent 200 already replaced the entry.
