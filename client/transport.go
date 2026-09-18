@@ -7,6 +7,8 @@ import (
 	"net/textproto"
 	"strconv"
 	"strings"
+
+	"github.com/larsartmann/go-etag/entitytag"
 )
 
 const (
@@ -17,8 +19,6 @@ const (
 
 	headerLastModified  = "Last-Modified"
 	headerContentLength = "Content-Length"
-
-	weakTagPrefix = "W/"
 
 	statusTextOK = "200 OK"
 	markerValue  = "1"
@@ -502,9 +502,14 @@ func isNonErrorStatus(status int) bool {
 
 // weaklyMatchesValidator reports whether two entity-tag field values carry
 // the same opaque tag, ignoring strength (the RFC 9110 §8.8.3.2 weak
-// comparison If-None-Match uses).
+// comparison If-None-Match uses). Comparison is delegated to the shared
+// entity-tag domain type: a field value that does not parse as an RFC 7232
+// §2.3 entity-tag cannot be compared and never matches.
 func weaklyMatchesValidator(a, b string) bool {
-	return strings.TrimPrefix(a, weakTagPrefix) == strings.TrimPrefix(b, weakTagPrefix)
+	parsedA, okA := entitytag.ParseETag(a)
+	parsedB, okB := entitytag.ParseETag(b)
+
+	return okA && okB && parsedA.WeakEqual(parsedB)
 }
 
 // hasNoStoreDirective reports whether a response carries the no-store cache

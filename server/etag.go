@@ -132,7 +132,7 @@ func (c ETagConfig) Validate() error {
 		return newInvalidConfig().WithContextf("max_buffer_size", "%d", c.MaxBufferSize)
 	}
 
-	if !c.Strength.valid() {
+	if !c.Strength.IsValid() {
 		return newInvalidConfig().WithContextf("strength", "%d", c.Strength)
 	}
 

@@ -29,7 +29,8 @@ const (
 	Weak
 )
 
-func (s Strength) valid() bool {
+// IsValid reports whether s is one of the defined Strength values.
+func (s Strength) IsValid() bool {
 	return s == Strong || s == Weak
 }
 
