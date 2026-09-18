@@ -7,8 +7,6 @@ import (
 	"net/textproto"
 	"strconv"
 	"strings"
-
-	"github.com/larsartmann/go-etag/entitytag"
 )
 
 const (
@@ -105,7 +103,7 @@ func (t *Transport) roundTripGet(req *http.Request) (*http.Response, error) {
 
 	if cached && req.Header.Get(headerIfNoneMatch) == "" {
 		req = req.Clone(req.Context())
-		req.Header.Set(headerIfNoneMatch, entry.etag)
+		req.Header.Set(headerIfNoneMatch, entry.validator.wire)
 
 		injected = true
 	}
@@ -186,11 +184,11 @@ func (t *Transport) roundTripHead(req *http.Request) (*http.Response, error) {
 // carry must match (ETag weakly, Last-Modified exactly), at least one
 // validator must be comparable, and a Content-Length on the HEAD response
 // must equal the stored body's length.
-func headConfirmsStored(head http.Header, entry cacheEntry) bool {
+func headConfirmsStored(head http.Header, entry storedResponse) bool {
 	validatorMatched := false
 
-	if headEtag := head.Get(headerETag); entry.etag != "" && headEtag != "" {
-		if !weaklyMatchesValidator(headEtag, entry.etag) {
+	if headEtag := head.Get(headerETag); entry.validator.wire != "" && headEtag != "" {
+		if !entry.validator.weaklyMatches(headEtag) {
 			return false
 		}
 
@@ -222,7 +220,7 @@ func headConfirmsStored(head http.Header, entry cacheEntry) bool {
 // entry (RFC 9111 §4.3.5 mandates the §3.2 update rules for the fields the
 // HEAD provides). The stored body, status, and decompression record are the
 // validated ones and never change.
-func (t *Transport) freshenFromHead(key string, entry cacheEntry, head http.Header) {
+func (t *Transport) freshenFromHead(key string, entry storedResponse, head http.Header) {
 	t.persistFreshened(key, entry, freshenedHeader(entry.header, head, entry.uncompressed))
 }
 
@@ -230,7 +228,7 @@ func (t *Transport) freshenFromHead(key string, entry cacheEntry, head http.Head
 // headers, freshened with the fields the 304 provides (RFC 9111 §4.3.4 via
 // the §3.2 update rules, unless FreshenOn304 restricts it), and persists
 // the freshened metadata back onto the stored entry.
-func (t *Transport) rebuildFromCache(notModified *http.Response, key string, entry cacheEntry) *http.Response {
+func (t *Transport) rebuildFromCache(notModified *http.Response, key string, entry storedResponse) *http.Response {
 	t.cache.countHit()
 
 	drainAndClose(notModified)
@@ -261,7 +259,7 @@ func (t *Transport) rebuildFromCache(notModified *http.Response, key string, ent
 // rebuiltHeader builds the header set of the synthesized 200 from the stored
 // entry and the 304: RFC 9111 §4.3.4 freshening by default, restricted to
 // the named fields by FreshenFields, and untouched by FreshenNone.
-func (t *Transport) rebuiltHeader(entry cacheEntry, notModified *http.Response) http.Header {
+func (t *Transport) rebuiltHeader(entry storedResponse, notModified *http.Response) http.Header {
 	if t.opts.FreshenOn304.kind == freshenPerRFC {
 		return freshenedHeader(entry.header, notModified.Header, entry.uncompressed)
 	}
@@ -282,10 +280,10 @@ func (t *Transport) rebuiltHeader(entry cacheEntry, notModified *http.Response) 
 // validated names a different representation, so neither the rebuilt
 // response nor the store adopts the claim — the stored validator stays and
 // the next revalidation presents the validator the server actually answered.
-func restoreMismatchedValidator(header http.Header, notModified *http.Response, entry cacheEntry) {
+func restoreMismatchedValidator(header http.Header, notModified *http.Response, entry storedResponse) {
 	candidate := notModified.Header.Get(headerETag)
-	if candidate != "" && !weaklyMatchesValidator(candidate, entry.etag) {
-		header.Set(headerETag, entry.etag)
+	if candidate != "" && !entry.validator.weaklyMatches(candidate) {
+		header.Set(headerETag, entry.validator.wire)
 	}
 }
 
@@ -295,7 +293,7 @@ func restoreMismatchedValidator(header http.Header, notModified *http.Response, 
 // so later revalidations present the validator the server returned and
 // later rebuilds wear the freshened values. The from-cache marker is
 // diagnostic output, never cache state, so it is stripped first.
-func (t *Transport) persistFreshened(key string, entry cacheEntry, header http.Header) {
+func (t *Transport) persistFreshened(key string, entry storedResponse, header http.Header) {
 	persisted := header.Clone()
 
 	if t.opts.FromCacheHeader != "" {
@@ -305,13 +303,13 @@ func (t *Transport) persistFreshened(key string, entry cacheEntry, header http.H
 	// Whatever did not flow from the freshening response keeps the stored
 	// validator; a mismatched 304's claim never reaches here (restored before
 	// persisting).
-	etag := persisted.Get(headerETag)
-	if etag == "" {
-		etag = entry.etag
+	validatorWire := persisted.Get(headerETag)
+	if validatorWire == "" {
+		validatorWire = entry.validator.wire
 	}
 
-	t.cache.freshen(key, entry.etag, cacheEntry{
-		etag:         etag,
+	t.cache.freshen(key, entry.validator.wire, storedResponse{
+		validator:    newStoredValidator(validatorWire),
 		status:       entry.status,
 		header:       persisted,
 		body:         entry.body,
@@ -324,7 +322,7 @@ func (t *Transport) persistFreshened(key string, entry cacheEntry, header http.H
 // body with every original byte; oversized bodies keep streaming their
 // remainder, and read failures replay through the restored body instead of
 // breaking the response.
-func (t *Transport) store(resp *http.Response, key, etag string) {
+func (t *Transport) store(resp *http.Response, key, validatorWire string) {
 	limit := int64(t.opts.MaxBodyBytes) + oversizedProbeBytes
 
 	buffered, readErr := io.ReadAll(io.LimitReader(resp.Body, limit))
@@ -360,8 +358,8 @@ func (t *Transport) store(resp *http.Response, key, etag string) {
 		header.Del(t.opts.FromCacheHeader)
 	}
 
-	t.cache.set(key, cacheEntry{
-		etag:         etag,
+	t.cache.set(key, storedResponse{
+		validator:    newStoredValidator(validatorWire),
 		status:       resp.StatusCode,
 		header:       header,
 		body:         buffered,
@@ -498,18 +496,6 @@ func isUnsafeMethod(method string) bool {
 // defines a non-error response as 2xx or 3xx).
 func isNonErrorStatus(status int) bool {
 	return status >= http.StatusOK && status < http.StatusBadRequest
-}
-
-// weaklyMatchesValidator reports whether two entity-tag field values carry
-// the same opaque tag, ignoring strength (the RFC 9110 §8.8.3.2 weak
-// comparison If-None-Match uses). Comparison is delegated to the shared
-// entity-tag domain type: a field value that does not parse as an RFC 7232
-// §2.3 entity-tag cannot be compared and never matches.
-func weaklyMatchesValidator(a, b string) bool {
-	parsedA, okA := entitytag.ParseETag(a)
-	parsedB, okB := entitytag.ParseETag(b)
-
-	return okA && okB && parsedA.WeakEqual(parsedB)
 }
 
 // hasNoStoreDirective reports whether a response carries the no-store cache

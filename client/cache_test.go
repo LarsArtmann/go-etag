@@ -11,16 +11,16 @@ func TestResponseCacheEvictsOldest(t *testing.T) {
 	cache := newResponseCache(2)
 
 	for range 5 {
-		cache.set("key", cacheEntry{etag: `"v"`, body: []byte{0}})
+		cache.set("key", storedResponse{validator: newStoredValidator(`"v"`), body: []byte{0}})
 
 		if entries := cache.stats().Entries; entries > 2 {
 			t.Fatalf("entries = %d, exceeds max", entries)
 		}
 	}
 
-	cache.set("k1", cacheEntry{etag: `"1"`})
-	cache.set("k2", cacheEntry{etag: `"2"`})
-	cache.set("k3", cacheEntry{etag: `"3"`})
+	cache.set("k1", storedResponse{validator: newStoredValidator(`"1"`)})
+	cache.set("k2", storedResponse{validator: newStoredValidator(`"2"`)})
+	cache.set("k3", storedResponse{validator: newStoredValidator(`"3"`)})
 
 	if entries := cache.stats().Entries; entries != 2 {
 		t.Fatalf("entries = %d, want 2", entries)
@@ -40,9 +40,9 @@ func TestResponseCacheReplaceKeepsEntry(t *testing.T) {
 
 	cache := newResponseCache(2)
 
-	cache.set("k1", cacheEntry{etag: `"a"`})
-	cache.set("k2", cacheEntry{etag: `"b"`})
-	cache.set("k1", cacheEntry{etag: `"a2"`})
+	cache.set("k1", storedResponse{validator: newStoredValidator(`"a"`)})
+	cache.set("k2", storedResponse{validator: newStoredValidator(`"b"`)})
+	cache.set("k1", storedResponse{validator: newStoredValidator(`"a2"`)})
 
 	if entries := cache.stats().Entries; entries != 2 {
 		t.Fatalf("entries = %d, want 2 (replacement must not grow the cache)", entries)
@@ -53,8 +53,8 @@ func TestResponseCacheReplaceKeepsEntry(t *testing.T) {
 		t.Fatal("k1 must be present")
 	}
 
-	if entry.etag != `"a2"` {
-		t.Errorf("etag = %q, want the replaced value", entry.etag)
+	if entry.validator.wire != `"a2"` {
+		t.Errorf("validator = %q, want the replaced value", entry.validator.wire)
 	}
 }
 
@@ -63,8 +63,8 @@ func TestResponseCacheStats(t *testing.T) {
 
 	cache := newResponseCache(4)
 
-	cache.set("k1", cacheEntry{etag: `"a"`})
-	cache.set("k2", cacheEntry{etag: `"b"`})
+	cache.set("k1", storedResponse{validator: newStoredValidator(`"a"`)})
+	cache.set("k2", storedResponse{validator: newStoredValidator(`"b"`)})
 	cache.countHit()
 	cache.countHit()
 
@@ -91,8 +91,8 @@ func TestResponseCacheFreshenReplacesMatchingEntry(t *testing.T) {
 
 	cache := newResponseCache(2)
 
-	cache.set("k1", cacheEntry{etag: `"a"`, body: []byte("old")})
-	cache.freshen("k1", `"a"`, cacheEntry{etag: `"a"`, body: []byte("new")})
+	cache.set("k1", storedResponse{validator: newStoredValidator(`"a"`), body: []byte("old")})
+	cache.freshen("k1", `"a"`, storedResponse{validator: newStoredValidator(`"a"`), body: []byte("new")})
 
 	entry, ok := cache.get("k1")
 	if !ok {
@@ -112,17 +112,17 @@ func TestResponseCacheFreshenSkipsWhenValidatorMovedOn(t *testing.T) {
 	// not overwrite the newer response.
 	cache := newResponseCache(2)
 
-	cache.set("k1", cacheEntry{etag: `"old"`, body: []byte("validated entry")})
-	cache.set("k1", cacheEntry{etag: `"new"`, body: []byte("concurrent 200")})
-	cache.freshen("k1", `"old"`, cacheEntry{etag: `"old"`, body: []byte("stale freshening")})
+	cache.set("k1", storedResponse{validator: newStoredValidator(`"old"`), body: []byte("validated entry")})
+	cache.set("k1", storedResponse{validator: newStoredValidator(`"new"`), body: []byte("concurrent 200")})
+	cache.freshen("k1", `"old"`, storedResponse{validator: newStoredValidator(`"old"`), body: []byte("stale freshening")})
 
 	entry, ok := cache.get("k1")
 	if !ok {
 		t.Fatal("k1 must be present")
 	}
 
-	if entry.etag != `"new"` || string(entry.body) != "concurrent 200" {
-		t.Errorf("entry = %s %q, want the concurrent 200 to win", entry.etag, entry.body)
+	if entry.validator.wire != `"new"` || string(entry.body) != "concurrent 200" {
+		t.Errorf("entry = %s %q, want the concurrent 200 to win", entry.validator.wire, entry.body)
 	}
 }
 
@@ -131,7 +131,7 @@ func TestResponseCacheFreshenAbsentKeyIsInert(t *testing.T) {
 
 	cache := newResponseCache(2)
 
-	cache.freshen("missing", `"a"`, cacheEntry{etag: `"a"`})
+	cache.freshen("missing", `"a"`, storedResponse{validator: newStoredValidator(`"a"`)})
 
 	if got := cache.stats().Entries; got != 0 {
 		t.Errorf("entries = %d, want 0 (freshening must not create entries)", got)

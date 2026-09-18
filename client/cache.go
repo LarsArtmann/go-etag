@@ -3,6 +3,8 @@ package etagclient
 import (
 	"net/http"
 	"sync"
+
+	"github.com/larsartmann/go-etag/entitytag"
 )
 
 // Stats reports conditional-cache activity.
@@ -15,11 +17,45 @@ type Stats struct {
 	Entries int
 }
 
-// cacheEntry is one stored response: its validator, header map, body, and
-// whether net/http transparently decompressed that body (which exempts
-// Content-Encoding from freshening; RFC 9111 §3.2).
-type cacheEntry struct {
-	etag         string
+// storedValidator is the revalidation identity of a stored response: the
+// wire-format entity-tag value replayed verbatim as If-None-Match, plus the
+// parsed RFC 7232 §2.3 form computed once at store time. An unparseable
+// field value (a broken server) stays representable — it is replayed as-is
+// and never weak-matches another validator, so it can neither confirm stored
+// state (RFC 9111 §4.3.5) nor have its claim adopted from a 304 (§4.3.4).
+type storedValidator struct {
+	wire   string
+	parsed entitytag.ETag
+	valid  bool
+}
+
+// newStoredValidator parses a wire-format entity-tag value once so every
+// later comparison reuses the parsed form instead of re-parsing stored state.
+func newStoredValidator(wire string) storedValidator {
+	parsed, ok := entitytag.ParseETag(wire)
+
+	return storedValidator{wire: wire, parsed: parsed, valid: ok}
+}
+
+// weaklyMatches reports whether candidate, a wire-format entity-tag field
+// value, carries the same opaque tag as the stored validator, ignoring
+// strength (the RFC 9110 §8.8.3.2 weak comparison If-None-Match uses). A
+// value that does not parse as an RFC 7232 §2.3 entity-tag on either side
+// can never match.
+func (v storedValidator) weaklyMatches(candidate string) bool {
+	parsedCandidate, ok := entitytag.ParseETag(candidate)
+	if !ok || !v.valid {
+		return false
+	}
+
+	return v.parsed.WeakEqual(parsedCandidate)
+}
+
+// storedResponse is one cached response: its revalidation identity, header
+// map, body, and whether net/http transparently decompressed that body
+// (which exempts Content-Encoding from freshening; RFC 9111 §3.2).
+type storedResponse struct {
+	validator    storedValidator
 	status       int
 	header       http.Header
 	body         []byte
@@ -30,7 +66,7 @@ type cacheEntry struct {
 // use, bounded by FIFO eviction of the oldest entry.
 type responseCache struct {
 	mu      sync.Mutex
-	entries map[string]cacheEntry
+	entries map[string]storedResponse
 	order   []string
 	max     int
 	hits    int64
@@ -40,7 +76,7 @@ type responseCache struct {
 func newResponseCache(maxEntries int) *responseCache {
 	return &responseCache{
 		mu:      sync.Mutex{},
-		entries: make(map[string]cacheEntry, maxEntries),
+		entries: make(map[string]storedResponse, maxEntries),
 		order:   nil,
 		max:     maxEntries,
 		hits:    0,
@@ -48,7 +84,7 @@ func newResponseCache(maxEntries int) *responseCache {
 	}
 }
 
-func (c *responseCache) get(key string) (cacheEntry, bool) {
+func (c *responseCache) get(key string) (storedResponse, bool) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -57,7 +93,7 @@ func (c *responseCache) get(key string) (cacheEntry, bool) {
 	return entry, ok
 }
 
-func (c *responseCache) set(key string, entry cacheEntry) {
+func (c *responseCache) set(key string, entry storedResponse) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
@@ -79,12 +115,12 @@ func (c *responseCache) set(key string, entry cacheEntry) {
 // that was validated, so the concurrent store of a newer 200 is never
 // overwritten by the freshening of an older one (RFC 9111 §4.3.4 updates
 // the stored response, not whichever response landed last).
-func (c *responseCache) freshen(key, validatedEtag string, entry cacheEntry) {
+func (c *responseCache) freshen(key, validatedEtag string, entry storedResponse) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	current, ok := c.entries[key]
-	if !ok || current.etag != validatedEtag {
+	if !ok || current.validator.wire != validatedEtag {
 		return
 	}
 
