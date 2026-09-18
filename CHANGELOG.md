@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Nothing yet.
+
+### Changed
+
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.4.0] - 2026-09-18
+
+### Added
+
 - Shared `entitytag` package: the RFC 7232 §2.3 entity-tag domain type (`ETag`, `Strength`, `Strong`/`Weak`, `NewETag`, `ParseETag`, `ParseETagList`, `MatchesIfNoneMatch`, `MatchesIfMatch`) moved out of the server package so the client cache and the server middleware share one typed validator with no `client → server` dependency. The server package re-exports the full surface via type aliases and wrapper functions, so `etag.ETag` and every existing import keeps compiling unchanged. New: `Strength.IsValid` (exported from the formerly unexported validity check used by `Validate`).
 - Typed error-code surface in the server package (mirrors httputil): `Code` with six family constructors (`Rejection`, `Conflict`, `Transient`, `Corruption`, `Infrastructure`, `Orchestration`) plus matching `Wrap*` methods, a `Domain` type, and `DomainOf`/`InDomain` helpers so consumers can route classified errors by failing component without string parsing.
 - `ExampleFreshenPolicy`: a GoDoc example showing `FreshenFields` restricting 304 freshening to `Retry-After` while the stored `Date` survives and the validator flows through.
@@ -119,7 +133,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BDD-style spec suite (`etag_bdd_test.go`) mapping RFC 7232 sections to behavioral expectations.
 - Fuzz tests for `ParseETag` and `ParseETagList` verifying no panics and round-trip integrity on arbitrary input.
 
-[Unreleased]: https://github.com/Larsartmann/go-etag/compare/v0.3.1...HEAD
+[Unreleased]: https://github.com/Larsartmann/go-etag/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Larsartmann/go-etag/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/Larsartmann/go-etag/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Larsartmann/go-etag/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Larsartmann/go-etag/compare/v0.1.1...v0.2.0

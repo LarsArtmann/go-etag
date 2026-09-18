@@ -47,13 +47,7 @@ func TestRegisterErrorClassifications_RegistersAllTemplates(t *testing.T) {
 
 	RegisterErrorClassifications()
 
-	codes := []string{
-		ErrCodeETagWriteFailed,
-		ErrCodeHijackUnsupported,
-		ErrCodeHijackFailed,
-		ErrCodeInvalidConfig,
-		ErrCodeHashWriteFailed,
-	}
+	codes := allETagErrorCodes
 
 	registered := make(map[string]struct{}, len(codes))
 	for _, code := range codes {

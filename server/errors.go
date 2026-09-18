@@ -71,6 +71,21 @@ const (
 	msgReportAsBug               = "This is likely a bug. Please report it if the problem persists."
 )
 
+// allETagErrorCodes is the canonical list of every error code this package
+// can produce. The completeness test in errors_test.go drives registration
+// and template checks from it and pins errorTemplates bidirectionally
+// against it, so a new code must be added here and to errorTemplates
+// together.
+//
+//nolint:gochecknoglobals // immutable data table: populated once, never mutated
+var allETagErrorCodes = []string{
+	ErrCodeETagWriteFailed,
+	ErrCodeHijackUnsupported,
+	ErrCodeHijackFailed,
+	ErrCodeInvalidConfig,
+	ErrCodeHashWriteFailed,
+}
+
 // errorTemplates maps every error code this package can produce to its
 // user-facing message template. Templates use {key} placeholders filled
 // from the error's context. The completeness test in errors_test.go asserts

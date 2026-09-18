@@ -72,26 +72,26 @@ a re-read before landing).
 
 ## a) FULLY DONE (verifiable)
 
-| Item | Evidence |
-| ---- | -------- |
-| `entitytag/` package extracted: `ETag`, `Strength`, `Strong`/`Weak`, `NewETag`, `ParseETag`, `ParseETagList`, `MatchesIfNoneMatch`, `MatchesIfMatch`, tests + both fuzz targets moved verbatim; `Strength.IsValid` exported | `entitytag/entity_tag.go`, `entitytag/doc.go`; `git mv` history |
-| `server/entity_tag.go` rewritten as re-export shim (type aliases + 5 wrapper functions); zero consumer break | deprecated-shim parity suite passes unchanged; full `go test -race` green |
-| `server → entitytag ← client` direction established; client imports only `entitytag` | `client/transport.go` imports; `go build ./...` green |
-| Client validator comparison typed: parse + `WeakEqual` replaces `W/` prefix stripping; malformed validators (unclosed quote, bare `*`, lowercase `w/`) never weak-match | client/transport.go:509-518; two new table cases pinning the semantics |
-| All gates green: build, vet, `go test -race`, golangci-lint 0 issues, erraudit 0 violations, `golangci-lint fmt` | gate outputs, 2026-09-18 ~19:50 |
-| Fuzz smoke: `FuzzParseETag`, `FuzzParseETagList` (8s each), `FuzzHasNoStoreDirective` (8s) — all PASS | fuzz outputs |
-| Benchmark A/B (interleaved): 304-rebuild ~1050-1120 ns/op both arms, identical 21 allocs/op; baselines archived | `reports/bench/2026-09-18_{before,after}-typed-validator.txt` |
-| Docs: AGENTS.md (4-package architecture, dependency-direction rule, `GOTOOLCHAIN=auto` command note, typed-comparison gotcha), CHANGELOG (Added + Changed), ROADMAP OQ1 annotated resolved, TODO_LIST row 7 (storedResponse evolution) | file diffs; auto-commits b36f2f0…dec82f2 |
-| CI pins verified already synced to `go1.27.1` by the parallel session (was go1.26.7 at 19:11) | `.github/workflows/ci.yml:24,58,76` |
+| Item                                                                                                                                                                                                                                   | Evidence                                                                  |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `entitytag/` package extracted: `ETag`, `Strength`, `Strong`/`Weak`, `NewETag`, `ParseETag`, `ParseETagList`, `MatchesIfNoneMatch`, `MatchesIfMatch`, tests + both fuzz targets moved verbatim; `Strength.IsValid` exported            | `entitytag/entity_tag.go`, `entitytag/doc.go`; `git mv` history           |
+| `server/entity_tag.go` rewritten as re-export shim (type aliases + 5 wrapper functions); zero consumer break                                                                                                                           | deprecated-shim parity suite passes unchanged; full `go test -race` green |
+| `server → entitytag ← client` direction established; client imports only `entitytag`                                                                                                                                                   | `client/transport.go` imports; `go build ./...` green                     |
+| Client validator comparison typed: parse + `WeakEqual` replaces `W/` prefix stripping; malformed validators (unclosed quote, bare `*`, lowercase `w/`) never weak-match                                                                | client/transport.go:509-518; two new table cases pinning the semantics    |
+| All gates green: build, vet, `go test -race`, golangci-lint 0 issues, erraudit 0 violations, `golangci-lint fmt`                                                                                                                       | gate outputs, 2026-09-18 ~19:50                                           |
+| Fuzz smoke: `FuzzParseETag`, `FuzzParseETagList` (8s each), `FuzzHasNoStoreDirective` (8s) — all PASS                                                                                                                                  | fuzz outputs                                                              |
+| Benchmark A/B (interleaved): 304-rebuild ~1050-1120 ns/op both arms, identical 21 allocs/op; baselines archived                                                                                                                        | `reports/bench/2026-09-18_{before,after}-typed-validator.txt`             |
+| Docs: AGENTS.md (4-package architecture, dependency-direction rule, `GOTOOLCHAIN=auto` command note, typed-comparison gotcha), CHANGELOG (Added + Changed), ROADMAP OQ1 annotated resolved, TODO_LIST row 7 (storedResponse evolution) | file diffs; auto-commits b36f2f0…dec82f2                                  |
+| CI pins verified already synced to `go1.27.1` by the parallel session (was go1.26.7 at 19:11)                                                                                                                                          | `.github/workflows/ci.yml:24,58,76`                                       |
 
 ## b) PARTIALLY DONE
 
-| Item | Works | Open | Blocker | Effort |
-| ---- | ----- | ---- | ------- | ------ |
-| Theme 2 (typed client cache) | Shared type exists; comparisons typed; direction clean | `cacheEntry` still stores the validator as a raw string; parsed `ETag` should live on the entry (storedResponse evolution) — TODO_LIST row 7 | None | M |
-| Go 1.27.1 adoption | go.mod, CI pins, docs, and all gates green under `GOTOOLCHAIN=auto`; AGENTS.md documents the override | Local dev shells on go1.26.7 with `GOTOOLCHAIN=local` still fail — the persisted `go env` is deliberately untouched; also gopls/LSP dead all session for the same reason | User config / toolchain install decision | S |
-| Docs wiring | AGENTS/CHANGELOG/ROADMAP/TODO_LIST updated | FEATURES.md + README.md still describe the two-package world; no `entitytag` mention | None | S |
-| nolint removal on `ETag{}` | Lint is green with the directive removed | Root cause of why exhaustruct_v5 stopped flagging the alias zero-value is unknown; suppression is now absent if the situation changes | Investigation only | S |
+| Item                         | Works                                                                                                 | Open                                                                                                                                                                     | Blocker                                  | Effort |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | ------ |
+| Theme 2 (typed client cache) | Shared type exists; comparisons typed; direction clean                                                | `cacheEntry` still stores the validator as a raw string; parsed `ETag` should live on the entry (storedResponse evolution) — TODO_LIST row 7                             | None                                     | M      |
+| Go 1.27.1 adoption           | go.mod, CI pins, docs, and all gates green under `GOTOOLCHAIN=auto`; AGENTS.md documents the override | Local dev shells on go1.26.7 with `GOTOOLCHAIN=local` still fail — the persisted `go env` is deliberately untouched; also gopls/LSP dead all session for the same reason | User config / toolchain install decision | S      |
+| Docs wiring                  | AGENTS/CHANGELOG/ROADMAP/TODO_LIST updated                                                            | FEATURES.md + README.md still describe the two-package world; no `entitytag` mention                                                                                     | None                                     | S      |
+| nolint removal on `ETag{}`   | Lint is green with the directive removed                                                              | Root cause of why exhaustruct_v5 stopped flagging the alias zero-value is unknown; suppression is now absent if the situation changes                                    | Investigation only                       | S      |
 
 ## c) NOT STARTED (per living docs — none re-verified as started elsewhere)
 
@@ -166,58 +166,58 @@ a re-read before landing).
 Ranked by impact; brainstorm input for docs-health HARVEST (route to
 TODO_LIST only items 1-12; the rest are ROADMAP fuel).
 
-| # | Task | Impact | Effort | Category |
-| -- | ---- | ------ | ------ | -------- |
-| 1 | Resolve the local toolchain split: install go1.27.1 or set `GOTOOLCHAIN=auto` persistently (unblocks LSP, kills session noise) | High | S | Bug |
-| 2 | Update FEATURES.md and README.md for the `entitytag` package + `Strength.IsValid` (stale inventory) | High | S | Documentation |
-| 3 | Investigate why exhaustruct_v5 no longer flags `ETag{}` post-alias; record root cause in AGENTS.md, restore protection if needed | Medium | S | Quality |
-| 4 | TODO_LIST row 7: store parsed `entitytag.ETag` on `cacheEntry` (storedResponse evolution) | Medium | M | Feature |
-| 5 | Verify the deprecated-shim parity suite actually pins wrapper indirection (add explicit type-identity assertions if not) | Medium | S | Quality |
-| 6 | Cut v0.3.2 (typed `Code` surface + BREAKING sentinel change + min-Go 1.27.1 + entitytag package) with full release gates | High | M | Release |
-| 7 | TODO row 3: single-source error-code list via `allETagErrorCodes` | Medium | S | Quality |
-| 8 | TODO row 4: benchmark backfill for typed-code change (-benchmem -count=6 baselines) | Medium | S | Quality |
-| 9 | TODO row 5: GoDoc examples for `Code`/`DomainOf`/`InDomain` | Low | S | Documentation |
-| 10 | TODO row 6 + row on error docs: docs-health VERIFY/ANNOTATE passes | Low | S | Documentation |
-| 11 | Add `Example` functions for the `entitytag` package (ParseETag round-trip, weak vs strong) | Low | S | Documentation |
-| 12 | Decide OQ2: Alex reply email + `client/testdata/` fixtures | Medium | S | Decision |
-| 13 | Decide OQ3: tag-triggered Release workflow vs documented manual-only | Medium | S | Decision |
-| 14 | Decide OQ4: affirm FNV-64a `Strong` standing decision | Low | S | Decision |
-| 15 | Decide OQ5: ~25 archive open-low items promote-or-die | Low | S | Decision |
-| 16 | Decide OQ6: deprecated shim scope (typed surface in v0.3.x vs frozen) | Low | S | Decision |
-| 17 | Decide OQ7: keep all six error-family constructors or trim | Low | S | Decision |
-| 18 | Design opt-in freshness serving (§4.2 `max-age`/`Expires`) — default stays accelerator | High | L | Feature |
-| 19 | Implement §4.2 freshness serving behind the opt-in | High | L | Feature |
-| 20 | §4.2 spec tests + rfc9111-conformance.md updates | High | M | Quality |
-| 21 | `stale-while-revalidate` support | Medium | M | Feature |
-| 22 | `stale-if-error` support | Medium | M | Feature |
-| 23 | `Last-Modified`/`If-Modified-Since` as second validator type | Medium | L | Feature |
-| 24 | Client hooks `OnHit`/`OnStore`/`OnFreshen`/`OnInvalidate` | Medium | M | Feature |
-| 25 | Per-host key partitioning by default | Medium | M | Feature |
-| 26 | Opt-in disk persistence | Low | L | Feature |
-| 27 | Singleflight request coalescing | Medium | M | Feature |
-| 28 | Project website launch (Astro/Starlight sibling pattern) | Medium | L | Documentation |
-| 29 | Demo video for the website | Low | L | Documentation |
-| 30 | Comparison table vs other Go ETag/caching libraries | Medium | M | Documentation |
-| 31 | awesome-go submission | Low | S | Documentation |
-| 32 | OTEL/Prometheus wiring recipe on existing hooks | Medium | S | Documentation |
-| 33 | `go-etag/otel` sub-module (stays demand-gated) | Low | L | Feature |
-| 34 | Root shim deletion at v1.0.0 | Low | S | Cleanup |
-| 35 | Define v1.0.0 criteria | Medium | S | Documentation |
-| 36 | Extend client fuzz coverage to Cache-Control directive variants | Medium | M | Quality |
-| 37 | Design a build-gate so go.mod commits cannot land red (hook/sweep rule) | Medium | M | Quality |
-| 38 | Concurrent-session convention (announce file set; or session locks) | Medium | S | Process |
-| 39 | Benchmark A/B: codify the interleave + allocs-equality protocol in AGENTS.md benchmark discipline | Low | S | Process |
-| 40 | Post-change doc checklist (six living docs) to stop FEATURES/README drift | Medium | S | Process |
-| 41 | Sweep ROADMAP Theme 2 wording: mark the subpackage half done, point at TODO row 7 | Low | S | Documentation |
-| 42 | `Strength.String()` method (archive item) if OQ5 promotes it | Low | S | Feature |
-| 43 | obs-text validation in the parser (archive item) if OQ5 promotes it | Low | S | Feature |
-| 44 | Single-pass `ParseETagList` (archive item) if OQ5 promotes it | Low | S | Feature |
-| 45 | Isolated parser benchmarks (archive item) if OQ5 promotes it | Low | M | Quality |
-| 46 | erraudit `nolint-audit .` pass to revalidate the drainAndClose suppressions post-refactor | Low | S | Quality |
-| 47 | Re-run full fuzz jobs at CI duration (not 8s smoke) before the next tag | Medium | M | Quality |
-| 48 | Push cqrs-htmx's 7 alignment commits (carried from 19:11 report; still open there) | High | S | Feature |
-| 49 | Fix cqrs-htmx pre-existing `GOWORK=off` failures (carried) | Low | M | Bug |
-| 50 | Consumer sweep after v0.3.2: httputil/cqrs-htmx version surfaces + workspace both-modes verify | High | M | Quality |
+| #  | Task                                                                                                                             | Impact | Effort | Category      |
+| -- | -------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------- |
+| 1  | Resolve the local toolchain split: install go1.27.1 or set `GOTOOLCHAIN=auto` persistently (unblocks LSP, kills session noise)   | High   | S      | Bug           |
+| 2  | Update FEATURES.md and README.md for the `entitytag` package + `Strength.IsValid` (stale inventory)                              | High   | S      | Documentation |
+| 3  | Investigate why exhaustruct_v5 no longer flags `ETag{}` post-alias; record root cause in AGENTS.md, restore protection if needed | Medium | S      | Quality       |
+| 4  | TODO_LIST row 7: store parsed `entitytag.ETag` on `cacheEntry` (storedResponse evolution)                                        | Medium | M      | Feature       |
+| 5  | Verify the deprecated-shim parity suite actually pins wrapper indirection (add explicit type-identity assertions if not)         | Medium | S      | Quality       |
+| 6  | Cut v0.3.2 (typed `Code` surface + BREAKING sentinel change + min-Go 1.27.1 + entitytag package) with full release gates         | High   | M      | Release       |
+| 7  | TODO row 3: single-source error-code list via `allETagErrorCodes`                                                                | Medium | S      | Quality       |
+| 8  | TODO row 4: benchmark backfill for typed-code change (-benchmem -count=6 baselines)                                              | Medium | S      | Quality       |
+| 9  | TODO row 5: GoDoc examples for `Code`/`DomainOf`/`InDomain`                                                                      | Low    | S      | Documentation |
+| 10 | TODO row 6 + row on error docs: docs-health VERIFY/ANNOTATE passes                                                               | Low    | S      | Documentation |
+| 11 | Add `Example` functions for the `entitytag` package (ParseETag round-trip, weak vs strong)                                       | Low    | S      | Documentation |
+| 12 | Decide OQ2: Alex reply email + `client/testdata/` fixtures                                                                       | Medium | S      | Decision      |
+| 13 | Decide OQ3: tag-triggered Release workflow vs documented manual-only                                                             | Medium | S      | Decision      |
+| 14 | Decide OQ4: affirm FNV-64a `Strong` standing decision                                                                            | Low    | S      | Decision      |
+| 15 | Decide OQ5: ~25 archive open-low items promote-or-die                                                                            | Low    | S      | Decision      |
+| 16 | Decide OQ6: deprecated shim scope (typed surface in v0.3.x vs frozen)                                                            | Low    | S      | Decision      |
+| 17 | Decide OQ7: keep all six error-family constructors or trim                                                                       | Low    | S      | Decision      |
+| 18 | Design opt-in freshness serving (§4.2 `max-age`/`Expires`) — default stays accelerator                                           | High   | L      | Feature       |
+| 19 | Implement §4.2 freshness serving behind the opt-in                                                                               | High   | L      | Feature       |
+| 20 | §4.2 spec tests + rfc9111-conformance.md updates                                                                                 | High   | M      | Quality       |
+| 21 | `stale-while-revalidate` support                                                                                                 | Medium | M      | Feature       |
+| 22 | `stale-if-error` support                                                                                                         | Medium | M      | Feature       |
+| 23 | `Last-Modified`/`If-Modified-Since` as second validator type                                                                     | Medium | L      | Feature       |
+| 24 | Client hooks `OnHit`/`OnStore`/`OnFreshen`/`OnInvalidate`                                                                        | Medium | M      | Feature       |
+| 25 | Per-host key partitioning by default                                                                                             | Medium | M      | Feature       |
+| 26 | Opt-in disk persistence                                                                                                          | Low    | L      | Feature       |
+| 27 | Singleflight request coalescing                                                                                                  | Medium | M      | Feature       |
+| 28 | Project website launch (Astro/Starlight sibling pattern)                                                                         | Medium | L      | Documentation |
+| 29 | Demo video for the website                                                                                                       | Low    | L      | Documentation |
+| 30 | Comparison table vs other Go ETag/caching libraries                                                                              | Medium | M      | Documentation |
+| 31 | awesome-go submission                                                                                                            | Low    | S      | Documentation |
+| 32 | OTEL/Prometheus wiring recipe on existing hooks                                                                                  | Medium | S      | Documentation |
+| 33 | `go-etag/otel` sub-module (stays demand-gated)                                                                                   | Low    | L      | Feature       |
+| 34 | Root shim deletion at v1.0.0                                                                                                     | Low    | S      | Cleanup       |
+| 35 | Define v1.0.0 criteria                                                                                                           | Medium | S      | Documentation |
+| 36 | Extend client fuzz coverage to Cache-Control directive variants                                                                  | Medium | M      | Quality       |
+| 37 | Design a build-gate so go.mod commits cannot land red (hook/sweep rule)                                                          | Medium | M      | Quality       |
+| 38 | Concurrent-session convention (announce file set; or session locks)                                                              | Medium | S      | Process       |
+| 39 | Benchmark A/B: codify the interleave + allocs-equality protocol in AGENTS.md benchmark discipline                                | Low    | S      | Process       |
+| 40 | Post-change doc checklist (six living docs) to stop FEATURES/README drift                                                        | Medium | S      | Process       |
+| 41 | Sweep ROADMAP Theme 2 wording: mark the subpackage half done, point at TODO row 7                                                | Low    | S      | Documentation |
+| 42 | `Strength.String()` method (archive item) if OQ5 promotes it                                                                     | Low    | S      | Feature       |
+| 43 | obs-text validation in the parser (archive item) if OQ5 promotes it                                                              | Low    | S      | Feature       |
+| 44 | Single-pass `ParseETagList` (archive item) if OQ5 promotes it                                                                    | Low    | S      | Feature       |
+| 45 | Isolated parser benchmarks (archive item) if OQ5 promotes it                                                                     | Low    | M      | Quality       |
+| 46 | erraudit `nolint-audit .` pass to revalidate the drainAndClose suppressions post-refactor                                        | Low    | S      | Quality       |
+| 47 | Re-run full fuzz jobs at CI duration (not 8s smoke) before the next tag                                                          | Medium | M      | Quality       |
+| 48 | Push cqrs-htmx's 7 alignment commits (carried from 19:11 report; still open there)                                               | High   | S      | Feature       |
+| 49 | Fix cqrs-htmx pre-existing `GOWORK=off` failures (carried)                                                                       | Low    | M      | Bug           |
+| 50 | Consumer sweep after v0.3.2: httputil/cqrs-htmx version surfaces + workspace both-modes verify                                   | High   | M      | Quality       |
 
 ## g) Questions I cannot answer myself
 
@@ -236,6 +236,6 @@ TODO_LIST only items 1-12; the rest are ROADMAP fuel).
 
 ---
 
-*Point-in-time snapshot; goes stale. Section (f) is HARVEST input for
+_Point-in-time snapshot; goes stale. Section (f) is HARVEST input for
 `TODO_LIST.md` / `ROADMAP.md`. `.md` format honors the explicit user
-instruction over the skill's HTML default.*
+instruction over the skill's HTML default._
