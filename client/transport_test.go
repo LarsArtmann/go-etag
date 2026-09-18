@@ -784,6 +784,8 @@ func TestWeaklyMatchesValidator(t *testing.T) {
 		{name: "lowercase w is not a marker", a: `w/"v"`, b: `"v"`, want: false},
 		{name: "empty left", a: "", b: `"v"`, want: false},
 		{name: "empty right", a: `"v"`, b: "", want: false},
+		{name: "unclosed quote never matches", a: `"v`, b: `"v"`, want: false},
+		{name: "wildcard is not a comparable validator", a: "*", b: "*", want: false},
 	}
 
 	for _, tt := range tests {

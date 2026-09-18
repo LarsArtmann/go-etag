@@ -358,7 +358,7 @@ func (w *etagWriter) shouldReturnNotModified(req *http.Request, tag ETag) bool {
 
 func (w *etagWriter) computeETag() ETag {
 	if len(w.body) == 0 && !w.headerBuffered {
-		return ETag{} //nolint:exhaustruct_v5 // zero value signals no ETag
+		return ETag{}
 	}
 
 	opaque := w.hashFunc(w.body)
