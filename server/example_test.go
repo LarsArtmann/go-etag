@@ -3,8 +3,11 @@ package etag
 import (
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+
+	errorfamily "github.com/larsartmann/go-error-family"
 )
 
 func ExampleNew() {
@@ -75,4 +78,47 @@ func ExampleETagConfig_Validate() {
 	fmt.Println(errors.Is(err, ErrInvalidConfig))
 
 	// Output: true
+}
+
+// ExampleCode shows a family constructor building a classified error from a
+// typed code, and how callers read the classification back for retry and
+// routing decisions.
+func ExampleCode() {
+	err := Code("http.rate_limited").Transient("client retries exhausted")
+
+	fmt.Println(err.ErrorCode())
+	fmt.Println(err.ErrorFamily() == errorfamily.Transient)
+	fmt.Println(err.IsRetryable())
+
+	// Output:
+	// http.rate_limited
+	// true
+	// true
+}
+
+// ExampleDomainOf extracts the failing component from a classified error,
+// and reports false for errors that carry no machine-readable code.
+func ExampleDomainOf() {
+	err := Code("http.etag_write_failed").WrapTransient(io.ErrClosedPipe, "stream cut")
+
+	domain, ok := DomainOf(err)
+	fmt.Println(domain, ok)
+
+	_, ok = DomainOf(io.EOF)
+	fmt.Println(ok)
+
+	// Output:
+	// http true
+	// false
+}
+
+// ExampleInDomain routes errors by failing component without string parsing.
+func ExampleInDomain() {
+	err := Code("http.hijack_failed").Transient("connection already hijacked")
+
+	if InDomain(err, Domain("http")) {
+		fmt.Println("route to http-layer retry logic")
+	}
+
+	// Output: route to http-layer retry logic
 }
