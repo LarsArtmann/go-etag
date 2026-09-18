@@ -55,6 +55,18 @@ prevents. Directions (decision open — see Open Questions):
   capability. Unpark when hooks are battle-tested AND a real consumer asks.
   Full shape and prereqs: `docs/review-and-roadmap.md` §Parked.
 - **Root shim deletion** — scheduled for the v1.0.0 tag (not before).
+- **Per-component domain constants across larsartmann libraries** — every
+  library that classifies errors declares its own `Domain("…")` strings;
+  a shared convention (or package) would keep component domains consistent
+  across go-etag, httputil, go-output, and friends. Only pays off once a
+  second library actually routes by domain. Origin: report
+  `2026-09-11_09-28_error-system-parity-typed-code.md` f#27.
+- **go-error-family registry introspection (`ListTemplates`)** — a query
+  surface on the classification registry would let completeness tests
+  verify codes against the registry instead of mirroring a local literal
+  slice. Upstream feature request candidate; blocks on go-error-family
+  wanting the API. Origin: report
+  `2026-09-11_09-28_error-system-parity-typed-code.md` f#28, f#38.
 
 ## Non-goals
 
@@ -89,3 +101,13 @@ prevents. Directions (decision open — see Open Questions):
    living doc. Promote them into TODO_LIST/ROADMAP cold storage, or let
    them die with the archives? (Asked 2026-09-10 and 2026-09-11; owner
    decision pending.)
+6. **Deprecated shim scope:** should the root shim receive the new typed
+   surface (`Code`/`Domain`/`DomainOf`/`InDomain`) in a v0.3.x, or stay
+   frozen at the pinned v0.1.x surface until its v1.0.0 deletion? (Frozen
+   for now; that's a product/compat call, not a technical one. Origin:
+   report `2026-09-11_09-28_error-system-parity-typed-code.md` g#1.)
+7. **YAGNI vs house parity:** keep all six error-family constructors
+   (exact httputil mirror, two families unused by go-etag) or trim to the
+   four actually used? Same call pending for an exported `Domain("http")`
+   constant vs leaving it literal. (Origin: report
+   `2026-09-11_09-28_error-system-parity-typed-code.md` f#6, f#7, g#3.)
