@@ -1,0 +1,133 @@
+# Status Report — 2026-09-18 20:44 CEST — TODO Sweep: 1.27.1 Re-Green, Typed-Code Single-Source, Theme 2 `storedResponse`, Bench Baselines, Docs Health
+
+**Repo:** go-etag @ master (HEAD at report time: `6cd0c6b`, auto-daemon; working tree clean)
+**Session scope:** execute the open `TODO_LIST.md` items #1, #3, #4, #5, #6, #7 end-to-end; deliberately NOT the release item (needs tag/push = owner call). Full quality gate re-run after every code change.
+**Session evidence:** commits `16369cc` (allETagErrorCodes + doc sweep), `fb6efab` (GoDoc examples), `07fe65c` (storedResponse/storedValidator), `b885abf`/`6cd0c6b` (docs + bench baseline, daemon).
+
+> Format note: Markdown per the user's explicit request (`.md`), overriding the status-report skill's HTML default. Item count in (f) is "up to 50" per the user, overriding the skill's Top-25 default — it is a brainstorm, not a commitment list.
+
+---
+
+## a) FULLY DONE
+
+| #  | Item                                                                                                                                                        | Evidence                                                                                                                              |
+| -- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| a1 | **TODO #1 — Go 1.27.1 residue settled.** Fresh `GOTOOLCHAIN=auto go test -race -count=1 ./...` green on all 4 packages; `golangci-lint run` → 0 issues. The earlier "cached" pass was not trusted; a forced `-count=1` run verified it. | session terminal output; `AGENTS.md` GOTOOLCHAIN=auto convention                                                                     |
+| a2 | **TODO #3 — error-code list single-sourced.** Canonical `allETagErrorCodes` var now lives in production (`server/errors.go:74-91`); the completeness test drives registration + bidirectional `errorTemplates` checks from it (duplicate-literal drift risk removed, not just moved). | commit `16369cc`; `server/errors_test.go:50`                                                                                          |
+| a3 | **TODO #5 — GoDoc examples for the typed surface.** `ExampleCode` (family constructor + classification readout), `ExampleDomainOf`, `ExampleInDomain` — all with `// Output:` directives (testableexamples clean). `errorfamily.Error` API verified via `go doc` first; `Family` has no `String()`, so the examples compare against family constants instead of printing a number. All 7 examples in the package pass. | commit `fb6efab`; `server/example_test.go`; `go test -run Example ./server/ -v` all PASS                                              |
+| a4 | **TODO #7 — Theme 2 finished: parsed validator stored once.** `cacheEntry` → `storedResponse` carrying a `storedValidator` identity: the wire-format string (replayed verbatim as `If-None-Match`) plus the `entitytag.ETag` parsed once by `newStoredValidator` at store time. `storedValidator.weaklyMatches` parses only the incoming candidate, so §4.3.5 HEAD-confirmation and §4.3.4 304 mismatch-restore no longer re-parse stored state. The old `weaklyMatchesValidator` is deleted. Invariant made unrepresentable-to-break: the parsed form can never disagree with the wire string (one constructor builds both). Unparseable-validators-never-match semantics preserved exactly. | commit `07fe65c`; `client/cache.go` (`storedValidator`, `storedResponse`, `newStoredValidator`, `weaklyMatches`), `client/transport.go` (10 call sites) |
+| a5 | **Tests retargeted and extended for a4.** `TestWeaklyMatchesValidator` → `TestStoredValidatorWeaklyMatches` (same 10-case table incl. both unparseable sides, lowercase `w/`, wildcard); new `TestNewStoredValidatorReplaysWireVerbatim` pins that parse state never rewrites the stored identity. Full suite + `-race` + erraudit green after the change. | `client/cache_test.go`, `client/transport_test.go`; erraudit "No violations found"                                                     |
+| a6 | **TODO #4 — benchmark backfill.** Smoke run (`-benchtime=100x`) green across all 9 benchmarks (server 3 + sub-benches, client 4); full `-benchmem -count=6` baseline captured: `reports/bench/2026-09-18_baseline-typed-code-stored-validator.txt` (54 result lines; 304 rebuild ≈ 1.04–1.08 µs/op @ 21 allocs; `BenchmarkETag` ≈ 413–441 ns/op @ 13 allocs). | `reports/bench/2026-09-18_baseline-typed-code-stored-validator.txt`                                                                   |
+| a7 | **TODO #6 — docs-health VERIFY.** FEATURES.md typed-error row (line 26) verified claim-by-claim against `server/errors.go` + `server/code.go` (5 codes, sentinel, `Code`/`Domain` routing, tests). Domain-type row evidence corrected for the `entitytag` extraction (fuzz test now lives in `entitytag/`, shim in `server/`); header re-verified stamp added. | `FEATURES.md` rows 24/26 + header                                                                                                     |
+| a8 | **TODO #6 — docs-health ANNOTATE (inline, not appendix).** Three reports annotated in place with hashes: (1) `2026-08-07_07-00_typed-errors-overhaul.md` #46 — the "Won't implement — string codes are the go-error-family contract" verdict marked **reversed** at `2f315a8`; (2) `2026-09-11_09-28` report — c) bullets (HARVEST, examples, benchmarks, release-superseded), e#2, f#1/f#2/f#3/f#17/f#18/f#24/f#25; (3) `2026-09-18_19-11` report — d#1 (uncompilable master) + f#1–f#4 (1.27.1 adoption), f#6–f#10 (OQ1 → entitytag → typed validator → storedResponse), f#42, f#46. | strikethrough counts: 12 / 12 / 41 lines respectively                                                                                 |
+| a9 | **TODO_LIST refreshed per docs-health rules.** Completed items deleted (not archived); release item rewritten to reality (CHANGELOG already cut as `[0.4.0] - 2026-09-18`, tag pending — was still written as "cut v0.3.2"); new item added: make the LSP usable under 1.27.1. | `TODO_LIST.md` (2 items now)                                                                                                          |
+| a10| **Living docs synced.** CHANGELOG `[Unreleased]` populated (examples under Added; stored-validator internals under Changed with baseline cite); AGENTS.md updated in 4 places: LSP-dead-diagnostics note, `client/cache.go` architecture row, typed-validator gotcha rewritten to the parse-once-at-store-time model, error-classification paragraph now names `allETagErrorCodes` as the thing to extend together with `errorTemplates`. | `CHANGELOG.md`, `AGENTS.md`                                                                                                           |
+| a11| **Final gate green at session end:** `go build ./...`, `go vet ./...`, `go test -race -count=1 ./...` (4× ok), `golangci-lint fmt`, `golangci-lint run` → 0 issues (known `erraudit` nolint-filter warning is pre-existing and documented). `lsp_restart` attempted as good faith — failure is env-bound (see c3). | session terminal output                                                                                                               |
+
+## b) PARTIALLY DONE
+
+| #  | Item                                                                                       | What's missing                                                                                                                                                                                                                        |
+| -- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| b1 | Benchmark discipline for the session's own perf-relevant change                            | A **before-state** for the stored-validator change was never captured (sequencing mistake, see d1). The baseline file is an "after" snapshot; a before/after pair exists only for the earlier typed-validator change. Before-state is recoverable via git (`07fe65c^`) but not measured. |
+| b2 | docs-health VERIFY on FEATURES.md                                                          | Only the two rows this session touched (typed errors, domain type) were re-verified against code. Rows 14–23 (server middleware) and 32–47 (client transport) were not re-verified this session.                                       |
+| b3 | ANNOTATE sweep breadth                                                                     | Scoped by the "so what?" test to the 3 reports with genuinely misleading or origin-relevant content. `grep -l` surfaced 12 candidate files mentioning the error system; the other 9 were judged clear-from-context (release/test narratives) but not line-audited. Truncated `head` pipes were used during scanning, so candidates could in principle have been missed. |
+| b4 | dprint hygiene on session-edited Markdown                                                  | `dprint.json` exists, but `dprint` is not in PATH, so the edited files (TODO_LIST table alignment, annotation tables) are **unverified**. The auto-daemon historically re-formats tables within minutes; current state not measured.     |
+| b5 | HARVEST of this report's (f) list                                                          | Two items already live in TODO_LIST (LSP fix, tag v0.4.0); the rest of (f) is brainstorm here. If the session continues, docs-health HARVEST should route the bounded ones into TODO_LIST and the rest into ROADMAP.                     |
+
+## c) NOT STARTED (observed this session, not begun)
+
+| #  | Item                                                                                                                              | Why it matters                                                                                             |
+| -- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| c1 | CI verification on HEAD via `gh run list/watch` (the tag-time rule "CI green on the exact commit" is untouched)                    | The daemon has produced ~8 commits today incl. the v0.4.0 CHANGELOG cut; nobody has shown CI green on the exact HEAD. |
+| c2 | Tag v0.4.0 + clean-room `go get` + proxy.golang.org / sum.golang.org verification + GitHub Release as Latest non-prerelease        | The consumer-facing release; explicitly the owner's call (timing).                                          |
+| c3 | LSP env fix: set `GOTOOLCHAIN=auto` in the Crush LSP launcher config for gopls + golangci-lint-ls                                  | Every LSP diagnostic this session errored ("go.mod requires go >= 1.27.1; running go 1.26.7; GOTOOLCHAIN=local"); `lsp_restart` confirmed the failure is env-bound, not stale state. Needs owner permission (config + the "do not change persisted go env" rule). |
+| c4 | Fuzz smoke on the stored-validator path; coverage re-measure after the session's changes                                          | Cheap extra confidence + updated coverage numbers (FEATURES.md header still cites the 2026-09-11 measurements). |
+| c5 | Owner decisions still open: OQ2 (Alex fixtures + reply), OQ3 (tag-triggered release workflow), OQ4 (FNV default affirm), OQ5 (archive items), and 19-11 f#5 (who/what initiated the 1.27.1 bump) | Roadmap items rot while pending (19-11 e#3 said the same about OQ5).                                        |
+
+## d) TOTALLY FUCKED UP
+
+**Nothing shipped broken.** No production defect, no data loss, no reverting of others' work; the daemon's mid-session v0.4.0 CHANGELOG cut was noticed and adapted to, not clobbered. Three process failures, all self-caught or contained:
+
+1. **Benchmark sequencing violated the discipline I was executing.** TODO #4 (baselines) was executable *before* the perf-relevant Theme 2 change; I ran it last. Result: no before/after pair for my own change — the exact gap the baseline discipline exists to prevent. Contained: the change is parse-reducing by construction (one parse per stored validator lifetime vs. two per comparison), and the before-state is one `git worktree` away. But "by construction" is the reasoning the 09-28 report's e#1 already scolded ("verify-before-claiming on perf"). This session repeated the sin in a milder form.
+2. **Pipeline-masked exit code nearly recorded a false green.** First lint run was `golangci-lint run 2>&1 | tail -20; echo "LINT_EXIT=$?"` → printed `LINT_EXIT=0` while the lint had actually **failed** (GOTOOLCHAIN env error) — `$?` was `tail`'s. Caught one step later by re-running bare and reading the real error. This is the documented pipeline-masking failure class (`set -o pipefail` lesson); knowing the lesson did not stop the first reflex.
+3. **Edit-before-View violation, repeated.** Attempted the CHANGELOG.md edit after reading it only via `sed` in bash — the tool rejected it, one wasted round trip, then done correctly. This is the same failure class recorded in the 09-28 report's d#3. The harness contract (View before Edit) applies even when bash already displayed the bytes.
+
+## e) WHAT WE SHOULD IMPROVE
+
+1. **Sequence benchmarks before perf-relevant edits** — when a TODO list contains both a pending baseline task and a perf-relevant change task, the baseline task goes first, always. Would have turned b1 into a proper before/after pair for free.
+2. **Never read a verdict through a pipe** — when an exit code decides "green vs broken", run the command bare (or `set -o pipefail`). Filters that make a gate lie are worse than no gate.
+3. **View before Edit, every time, no exceptions for "just saw it in bash"** — the failure class has now occurred in at least two sessions; it costs a round trip every time and the rule exists precisely because memory-of-content is not content.
+4. **dprint in the loop for Markdown-heavy sessions** — dprint.json exists but the binary isn't on PATH in this shell; either install/alias it or note in AGENTS.md that Markdown formatting relies on the daemon.
+5. **Name bench files for the change, not just the date** — the `_{before,after}-typed-validator.txt` pair pattern is discoverable; extend it (or a worktree-based before-run) whenever a perf-relevant change is planned, not after.
+6. **Fix the LSP environment once** instead of every session tolerating dead diagnostics and re-proving the CLI is clean. One config line (`GOTOOLCHAIN=auto` in the LSP launcher) removes a permanent noise source and the b3-style temptation to trust stale tools.
+7. **Keep the "so what?" test but add a bounded completeness sweep** — after a targeted ANNOTATE pass, one untruncated `grep -rn` over the remaining candidates (no `head`) would close the "candidates could have been missed" hole for ~1 minute of work.
+
+## f) Up to 50 things we should get done next
+
+Ranked roughly by impact. Bounded + short-term → TODO_LIST candidates; the rest is ROADMAP fuel (docs-health HARVEST must apply extra routing rigor). Evidence cites where the item was noticed.
+
+**Release & CI**
+1. Verify CI green on the exact HEAD commit via `gh run list` (pre-tag gate; nothing tagged yet) — this session c1.
+2. Tag `v0.4.0` after (1), then clean-room `go get`, proxy/sum verification, GitHub Release as Latest non-prerelease (owner call) — TODO_LIST #1; 19-11 f#37–f#39.
+3. Post-release: verify pkg.go.dev renders the new surface (eventual, not a gate) — 09-28 f#32.
+4. Decide OQ3: tag-triggered Release workflow vs manual-only policy (all 5 tags have pages; the gap is automation) — 19-11 f#14–f#16.
+5. DiscordSync drift-guard: check whether it pins go-etag's error surface before the next release — 09-28 f#35.
+6. Check CI pins the same golangci-lint version used locally (version drift) — 09-28 f#22.
+
+**Client cache / Theme 2 aftermath**
+7. Capture a true before-state benchmark for the stored-validator change from `07fe65c^` (git worktree, no daemon interference) and file the pair — closes b1/d1 — this session.
+8. Fuzz smoke the stored-validator path (property: `weaklyMatches` symmetric; unparseable stored ⇒ false) — this session c4.
+9. Fuzz `mergeHeader` (mirrors the existing `FuzzHasNoStoreDirective` pattern) — 09-28 f#14.
+10. Extend client fuzz coverage beyond `FuzzHasNoStoreDirective` (Cache-Control variants) — 19-11 f#50.
+11. Verify the `KeyFunc` error contract end-to-end — 09-28 f#11.
+12. Document clamp-don't-reject explicitly in `client/doc.go` — 09-28 f#12.
+13. Design note: optional `Options.Validate()` loud-validation hook vs silent clamping — 09-28 f#13.
+14. Document why `Stats()` has no error surface — 09-28 f#16.
+15. Re-measure coverage (root/server/client) and refresh the FEATURES.md header numbers (still cite 2026-09-11) — this session c4.
+16. Assert `writer_type` context survives on hijack errors (Contextual smoke test) — 09-28 f#4.
+
+**Docs & docs-health**
+17. dprint pass (or daemon confirmation) over the session-edited `.md` files — b4.
+18. Untruncated grep sweep over the 9 unaudited status reports mentioning the error system — closes b3 — this session e7.
+19. README: document typed `Code`/`Domain` error routing for consumers — 09-28 f#5.
+20. README: verify the min-Go statement says 1.27.1 post-bump — this session.
+21. Add `Code`/`Domain`/`Family` terms to `docs/DOMAIN_LANGUAGE.md` if taxonomy is in scope there — 09-28 f#26.
+22. Record in `deprecated_test.go` docs that the typed surface is deliberately NOT shimmed — 09-28 f#20.
+23. Cross-link AGENTS.md error sections of go-etag ↔ httputil — 09-28 f#29.
+24. docs-health VERIFY pass on remaining ROADMAP claims — 19-11 f#49.
+25. Sweep the aged 2026-09-11 "Done this cycle" remnants out of TODO_LIST if any survive — 19-11 f#44.
+26. Record the five OQ decisions in ROADMAP once made (annotate, don't rewrite) — 19-11 f#43.
+
+**Error system follow-ups**
+27. Decide: exported `Domain("http")` constant vs literal (YAGNI call) — 09-28 f#6.
+28. Decide: keep all-6 family constructors or trim to the 4 used (parity vs YAGNI) — 09-28 f#7.
+29. Verify httputil's suite pins go-etag template VALUES verbatim; upstream a mirror test if not (verify-before-filing first) — 09-28 f#8.
+30. Consolidation review: could httputil reuse go-etag's `Code` instead of owning a duplicate? — 09-28 f#33.
+31. Ecosystem sweep: untyped-code gap in go-output, samber-do-auditlog, … — 09-28 f#34.
+32. go-error-family feature request candidate: template placeholder validation helpers — 09-28 f#38.
+33. Run `erraudit --no-suppress` + `erraudit nolint-audit .` on the next error-surface change — 09-28 f#9; 19-11 f#47.
+34. gosec sanity: `Code`/`Domain` accept arbitrary strings; confirm no template-injection surface in errorfamily rendering — 09-28 f#21.
+35. Identify which session/tool initiated the 1.27.1 bump and why it bypassed a build gate — 19-11 f#5.
+36. Design a build-gate so go.mod commits cannot land red (hook or sweep rule) — 19-11 f#48.
+
+**ROADMAP themes (large, demand-gated)**
+37. Design + implement opt-in freshness-based serving (§4.2 `max-age`/`Expires`), default stays accelerator — 19-11 f#19–f#21.
+38. `stale-while-revalidate` on top of §4.2 — 19-11 f#22.
+39. `stale-if-error` on top of §4.2 — 19-11 f#23.
+40. `Last-Modified`/`If-Modified-Since` as a second validator type — 19-11 f#24.
+41. Client observability hooks `OnHit`/`OnStore`/`OnFreshen`/`OnInvalidate` (mirror server) — 19-11 f#25.
+42. Per-host key partitioning by default (cross-origin KeyFunc safety) — 19-11 f#26.
+43. Singleflight request coalescing for concurrent identical GETs — 19-11 f#28.
+44. OTEL/Prometheus wiring recipe on the existing hooks — 19-11 f#33.
+45. `go-etag/otel` sub-module — stays parked until hooks battle-tested AND a consumer asks — 19-11 f#34.
+46. Project website launch + landing demo video — 19-11 f#29–f#30.
+47. Comparison table vs other Go ETag/caching libraries; awesome-go submission — 19-11 f#31–f#32.
+48. Define v1.0.0 criteria (what besides shim deletion gates the major bump); root shim deletion executes at v1.0.0 only — 19-11 f#35–f#36.
+49. OQ2: accept Alex's captures as permanent `client/testdata/` fixtures + provenance README + reply email — 19-11 f#11–f#13.
+50. OQ4/OQ5: affirm the FNV-64a `Strong` default; promote or retire the ~25 open-low archive items — 19-11 f#17–f#18.
+
+## g) Questions I cannot answer myself
+
+1. **Tag `v0.4.0` now?** The CHANGELOG is cut, the tree is clean, and my gates are green locally — but the release rule is "CI green on the exact commit" plus the clean-room verification, and the timing call is yours. Say the word and I'll verify CI on HEAD first, then tag and run the proxy/sum + clean-room `go get` checks.
+2. **Did you (or a tool you ran) intentionally bump go.mod to `go 1.27.1` + go-error-family v0.10.1 at 19:05 today?** Still unanswered from the 19-11 report (g#1). I re-greened on the adopted-1.27.1 branch of that fork in the road, but if the bump was accidental the revert branch is still open and today's CI-pin sync would need revisiting.
+3. **May I set `GOTOOLCHAIN=auto` in the Crush LSP launcher config (gopls + golangci-lint-ls) to fix the dead in-editor diagnostics?** Your AGENTS.md forbids changing the persisted global go env, and LSP config is yours — but every diagnostic this session was an env error while the CLI was green, and one config line fixes it permanently. I will not touch it without your ok.
