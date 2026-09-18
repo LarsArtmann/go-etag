@@ -170,7 +170,7 @@ Nothing. Everything compiles, all tests pass, audit is clean. No regressions int
 43. ~~Add a test for `ETag(ETagConfig{MaxBufferSize: -1})` without calling `Validate()` — what happens?~~ done (`TestNew_ZeroValueConfig_ClampsBufferSize` pins the clamping)
 44. ~~Document the panic behavior of hash.Write failures in README.md~~ done (AGENTS.md documents the classified panic)
 45. ~~Consider adding `ETagConfig.Validated()` that returns a validated, immutable config~~ **Won't implement — `Validate()` + caller discipline is the shipped contract**
-46. ~~Evaluate whether error codes should be typed (e.g., `type ErrCode string`) rather than bare `string` constants~~ **Won't implement — string codes are the go-error-family contract**
+46. ~~Evaluate whether error codes should be typed (e.g., `type ErrCode string`) rather than bare `string` constants~~ **Won't implement — string codes are the go-error-family contract** — reversed 2026-09-11 at `2f315a8`: a typed `Code`/`Domain` routing surface landed in `server/code.go` (internal construction via typed constants; the exported `ErrCode*` strings stayed untyped for compatibility)
 47. ~~Consider whether `RegisterErrorClassifications` should be idempotent (safe to call multiple times)~~ done — idempotent by design
 48. ~~Add a test verifying `RegisterErrorClassifications` does not panic on double registration~~ done at `c759373`
 49. ~~Consider whether the `OnError` callback should receive a copy of the request context for tracing~~ **Won't implement — hooks stay allocation-free; consumers close over what they need**

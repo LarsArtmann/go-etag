@@ -97,7 +97,7 @@ Working tree is clean; the auto-daemon captured everything.
 
 ## d) TOTALLY FUCKED UP
 
-1. **master is uncompilable — locally and in CI.**
+1. ~~**master is uncompilable — locally and in CI.**~~ resolved 2026-09-18: 1.27.1 adopted, CI pins synced, full gate re-greened (f#1–f#4 below)
    - What: commit 7ae7501 (auto-commit, 2026-09-18 19:05:53 CEST) sets `go 1.27.1` in
      go.mod. Local: go1.26.7 + `GOTOOLCHAIN=local` → `go build` fails immediately
      ("go.mod requires go >= 1.27.1"). CI: test/lint/fuzz jobs pin
@@ -148,16 +148,16 @@ roadmap-level ideas in `ROADMAP.md` — this list is brainstorm input, not a com
 
 | #  | Task                                                                                            | Impact   | Effort | Category      |
 | -- | ----------------------------------------------------------------------------------------------- | -------- | ------ | ------------- |
-| 1  | Fix broken `go 1.27.1` pin in go.mod: revert to 1.26.7 or adopt 1.27.1 fully                    | Critical | S      | Bug           |
-| 2  | If adopting 1.27.1: update local toolchain and the three CI `GOTOOLCHAIN: go1.26.7` pins        | Critical | S      | Bug           |
-| 3  | Verify go-error-family v0.10.1 builds and tests green under the chosen toolchain                | Critical | S      | Bug           |
-| 4  | Run `go build ./... && go test -race ./... && golangci-lint run` to re-green master             | Critical | S      | Quality       |
+| 1  | ~~Fix broken `go 1.27.1` pin in go.mod: revert to 1.26.7 or adopt 1.27.1 fully~~ done 2026-09-18: adopted                    | Critical | S      | Bug           |
+| 2  | ~~If adopting 1.27.1: update local toolchain and the three CI `GOTOOLCHAIN: go1.26.7` pins~~ done 2026-09-18: CI pins synced to `go1.27.1`; local shells use the `GOTOOLCHAIN=auto` convention (local go stays 1.26.7 by design)        | Critical | S      | Bug           |
+| 3  | ~~Verify go-error-family v0.10.1 builds and tests green under the chosen toolchain~~ done 2026-09-18: green under 1.27.1                | Critical | S      | Bug           |
+| 4  | ~~Run `go build ./... && go test -race ./... && golangci-lint run` to re-green master~~ done 2026-09-18: all green, 0 lint issues             | Critical | S      | Quality       |
 | 5  | Identify which session/tool initiated the 1.27.1 bump and why it bypassed a build gate          | High     | S      | Cleanup       |
-| 6  | Decide OQ1: client imports server's `ETag` vs shared subpackage (blocks Theme 2)                | High     | S      | Decision      |
-| 7  | If shared subpackage: extract `entitytag` package (ETag, Strength, parsers)                     | High     | M      | Feature       |
-| 8  | Re-export the type from `server/` via aliases; keep deprecated-shim parity tests green          | High     | M      | Feature       |
-| 9  | Adopt the typed `ETag` in client validator handling (§4.3.4 filtering)                          | High     | M      | Feature       |
-| 10 | Evolve `cacheEntry` → `storedResponse` with validator-matching methods                          | Medium   | M      | Feature       |
+| 6  | ~~Decide OQ1: client imports server's `ETag` vs shared subpackage (blocks Theme 2)~~ done 2026-09-18: shared `entitytag` package                | High     | S      | Decision      |
+| 7  | ~~If shared subpackage: extract `entitytag` package (ETag, Strength, parsers)~~ done at `b36f2f0`                     | High     | M      | Feature       |
+| 8  | ~~Re-export the type from `server/` via aliases; keep deprecated-shim parity tests green~~ done at `b36f2f0`, `acd97a4`          | High     | M      | Feature       |
+| 9  | ~~Adopt the typed `ETag` in client validator handling (§4.3.4 filtering)~~ done at `acd97a4`                          | High     | M      | Feature       |
+| 10 | ~~Evolve `cacheEntry` → `storedResponse` with validator-matching methods~~ done at `07fe65c` (`storedValidator.weaklyMatches`; parsed once at store time)                          | Medium   | M      | Feature       |
 | 11 | Decide OQ2: accept Alex's captures as permanent `client/testdata/` fixtures?                    | Medium   | S      | Decision      |
 | 12 | Draft the Alex reply email (Age answer + no-store/freshening changes shipped)                   | Medium   | S      | Documentation |
 | 13 | If fixtures accepted: commit captures with a provenance README                                  | Medium   | S      | Feature       |
@@ -189,11 +189,11 @@ roadmap-level ideas in `ROADMAP.md` — this list is brainstorm input, not a com
 | 39 | Consumer migration note for the `ErrInvalidConfig` `error`-interface change                     | Medium   | S      | Documentation |
 | 40 | Push cqrs-htmx's 7 local alignment commits; watch its CI green                                  | High     | S      | Feature       |
 | 41 | Fix cqrs-htmx pre-existing `GOWORK=off` failures (systemadapter, system-demo, integration_test) | Low      | M      | Bug           |
-| 42 | HARVEST this report's (f) into `TODO_LIST.md` / `ROADMAP.md`                                    | High     | S      | Documentation |
+| 42 | ~~HARVEST this report's (f) into `TODO_LIST.md` / `ROADMAP.md`~~ done 2026-09-18 by the 19-49 session                                    | High     | S      | Documentation |
 | 43 | Record the five OQ decisions in ROADMAP once made (annotate, don't rewrite)                     | Medium   | S      | Documentation |
 | 44 | Sweep the aged 2026-09-11 "Done this cycle" section out of TODO_LIST                            | Low      | S      | Documentation |
 | 45 | Update AGENTS.md Go-version and go-error-family mentions after item 1-3 settle                  | Medium   | S      | Documentation |
-| 46 | Capture `-benchmem -count=6` baselines under `reports/bench/` before any perf work              | Low      | S      | Quality       |
+| 46 | ~~Capture `-benchmem -count=6` baselines under `reports/bench/` before any perf work~~ done 2026-09-18: `reports/bench/2026-09-18_baseline-typed-code-stored-validator.txt`              | Low      | S      | Quality       |
 | 47 | Run `erraudit --no-suppress` on the next error-surface change                                   | Low      | S      | Quality       |
 | 48 | Design a build-gate so go.mod commits cannot land red (hook or sweep rule)                      | Medium   | M      | Quality       |
 | 49 | docs-health VERIFY pass on remaining ROADMAP claims (OQ3 done via item 16)                      | Low      | S      | Documentation |

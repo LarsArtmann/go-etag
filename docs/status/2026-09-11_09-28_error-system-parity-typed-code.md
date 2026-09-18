@@ -34,11 +34,11 @@
 
 ## c) NOT STARTED
 
-- HARVEST of the 50 next-items into `TODO_LIST.md` / `ROADMAP.md` (docs-health)
-- GoDoc examples for the new exported surface (`ExampleCode_*`, `ExampleDomainOf` — `testableexamples` requires `// Output:`; httputil has none either, so no parity pressure)
-- Benchmark baselines per AGENTS discipline (`-benchmem -count=6` before/after — arguably N/A, unproven)
+- ~~HARVEST of the 50 next-items into `TODO_LIST.md` / `ROADMAP.md` (docs-health)~~ done 2026-09-18 by the 19-49 session
+- ~~GoDoc examples for the new exported surface (`ExampleCode_*`, `ExampleDomainOf` — `testableexamples` requires `// Output:`; httputil has none either, so no parity pressure)~~ done at `fb6efab` (`ExampleCode`, `ExampleDomainOf`, `ExampleInDomain` in `server/example_test.go`)
+- ~~Benchmark baselines per AGENTS discipline (`-benchmem -count=6` before/after — arguably N/A, unproven)~~ done 2026-09-18 (`reports/bench/2026-09-18_baseline-typed-code-stored-validator.txt`; the typed-code change was compile-time constants, so no separate before-state was reconstructed)
 - CI verification on the daemon's commits (local gates only; tag-time rule "CI green on exact commit" untouched)
-- Release decision (nothing tagged; `CHANGELOG [Unreleased]` carries the entry)
+- ~~Release decision (nothing tagged; `CHANGELOG [Unreleased]` carries the entry)~~ superseded 2026-09-18: cut as `[0.4.0]` in `CHANGELOG.md` — the tag itself is still pending (owner call)
 
 ## d) TOTALLY FUCKED UP
 
@@ -54,7 +54,7 @@ No production code, tests, or docs carry any of these forward. The persistent st
 ## e) WHAT WE SHOULD IMPROVE
 
 1. **Verify-before-claiming on perf**: run even a smoke benchmark when touching shared code, rather than asserting N/A from reasoning.
-2. **Single-source the code list**: the completeness test re-lists all codes as a literal slice; a `allETagErrorCodes` var (httputil's `allHTTputilErrorCodes` pattern) would remove the duplicate-literal drift risk.
+2. ~~**Single-source the code list**: the completeness test re-lists all codes as a literal slice; a `allETagErrorCodes` var (httputil's `allHTTputilErrorCodes` pattern) would remove the duplicate-literal drift risk.~~ done at `16369cc`
 3. **Restart the LSP when diagnostics contradict the CLI** instead of tolerating repeated stale noise.
 4. **Read-before-edit discipline for harness contracts**: the View-first rule applies even when content is "known" from context.
 5. **Decide YAGNI vs parity explicitly in-repo**: all-6-family constructors exist for httputil parity while only 4 families are used — the rationale lives in AGENTS.md now, but a roadmap note (or trim) should settle it permanently.
@@ -64,9 +64,9 @@ No production code, tests, or docs carry any of these forward. The persistent st
 
 **Error system follow-ups**
 
-1. HARVEST this report into `TODO_LIST.md` (docs-health HARVEST mode)
-2. Add `allETagErrorCodes` single-source var for the completeness test
-3. GoDoc examples for `Code` constructors / `DomainOf` / `InDomain` with `// Output:`
+1. ~~HARVEST this report into `TODO_LIST.md` (docs-health HARVEST mode)~~ done 2026-09-18 by the 19-49 session (TODO_LIST items 3–7)
+2. ~~Add `allETagErrorCodes` single-source var for the completeness test~~ done at `16369cc`
+3. ~~GoDoc examples for `Code` constructors / `DomainOf` / `InDomain` with `// Output:`~~ done at `fb6efab`
 4. Assert `writer_type` context survives on hijack errors (Contextual smoke test)
 5. README: document typed `Code`/`Domain` error routing for consumers
 6. Decide: exported `Domain("http")` constant vs leave literal (YAGNI call)
@@ -86,15 +86,15 @@ No production code, tests, or docs carry any of these forward. The persistent st
 
 **Server / quality**
 
-17. Smoke benchmark `-bench=.` to back the no-perf-impact claim
-18. Capture `-benchmem -count=6` baselines under `reports/bench/` per discipline
+17. ~~Smoke benchmark `-bench=.` to back the no-perf-impact claim~~ done 2026-09-18 (smoke run green; typed-validator pair `reports/bench/2026-09-18_{before,after}-typed-validator.txt`)
+18. ~~Capture `-benchmem -count=6` baselines under `reports/bench/` per discipline~~ done 2026-09-18 (`reports/bench/2026-09-18_baseline-typed-code-stored-validator.txt`)
 19. godoclint/pkg.go.dev rendering check of new doc comments post-publish
 20. Record in `deprecated_test.go` docs that the typed surface is deliberately NOT shimmed
 21. gosec sanity note: `Code`/`Domain` accept arbitrary strings; confirm no template-injection surface in errorfamily rendering
 22. Check CI pins the same golangci-lint version used locally (version drift)
 23. Run dprint on the edited Markdown files
-24. docs-health VERIFY pass on the updated FEATURES.md claims
-25. ANNOTATE older `docs/status/` reports that describe the error system as untyped-only
+24. ~~docs-health VERIFY pass on the updated FEATURES.md claims~~ done 2026-09-18 (typed-error row verified against `server/errors.go`+`server/code.go`; domain-type row evidence corrected for the `entitytag` extraction)
+25. ~~ANNOTATE older `docs/status/` reports that describe the error system as untyped-only~~ done 2026-09-18 (typed-errors-overhaul #46's "Won't implement" reversed inline; this report's resolved items annotated)
 
 **Docs / memory**
 
