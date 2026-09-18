@@ -763,37 +763,62 @@ func TestRoundTripNilNilFromNextPassesThrough(t *testing.T) {
 	}
 }
 
-// TestWeaklyMatchesValidator pins the comparison the §4.3.4 validator filter
-// relies on: the same opaque tag matches regardless of the W/ marker, in
-// either argument, while a lowercase w/ is not a weakness marker and an empty
-// side never matches.
-func TestWeaklyMatchesValidator(t *testing.T) {
+// TestStoredValidatorWeaklyMatches pins the comparison the §4.3.4 validator
+// filter relies on: the same opaque tag matches regardless of the W/ marker,
+// in either argument, while a lowercase w/ is not a weakness marker and an
+// unparseable value on either side never matches.
+func TestStoredValidatorWeaklyMatches(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name string
-		a    string
-		b    string
-		want bool
+		name      string
+		stored    string
+		candidate string
+		want      bool
 	}{
-		{name: "identical strong forms", a: `"v"`, b: `"v"`, want: true},
-		{name: "weak vs strong", a: `W/"v"`, b: `"v"`, want: true},
-		{name: "strong vs weak", a: `"v"`, b: `W/"v"`, want: true},
-		{name: "both weak", a: `W/"v"`, b: `W/"v"`, want: true},
-		{name: "different opaque tags", a: `"a"`, b: `"b"`, want: false},
-		{name: "lowercase w is not a marker", a: `w/"v"`, b: `"v"`, want: false},
-		{name: "empty left", a: "", b: `"v"`, want: false},
-		{name: "empty right", a: `"v"`, b: "", want: false},
-		{name: "unclosed quote never matches", a: `"v`, b: `"v"`, want: false},
-		{name: "wildcard is not a comparable validator", a: "*", b: "*", want: false},
+		{name: "identical strong forms", stored: `"v"`, candidate: `"v"`, want: true},
+		{name: "weak vs strong", stored: `W/"v"`, candidate: `"v"`, want: true},
+		{name: "strong vs weak", stored: `"v"`, candidate: `W/"v"`, want: true},
+		{name: "both weak", stored: `W/"v"`, candidate: `W/"v"`, want: true},
+		{name: "different opaque tags", stored: `"a"`, candidate: `"b"`, want: false},
+		{name: "lowercase w is not a marker", stored: `w/"v"`, candidate: `"v"`, want: false},
+		{name: "unparseable stored validator", stored: "", candidate: `"v"`, want: false},
+		{name: "unparseable candidate", stored: `"v"`, candidate: "", want: false},
+		{name: "unclosed quote never matches", stored: `"v`, candidate: `"v"`, want: false},
+		{name: "wildcard is not a comparable validator", stored: "*", candidate: "*", want: false},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got := weaklyMatchesValidator(tt.a, tt.b); got != tt.want {
-				t.Errorf("weaklyMatchesValidator(%q, %q) = %v, want %v", tt.a, tt.b, got, tt.want)
+			validator := newStoredValidator(tt.stored)
+			if got := validator.weaklyMatches(tt.candidate); got != tt.want {
+				t.Errorf(
+					"newStoredValidator(%q).weaklyMatches(%q) = %v, want %v",
+					tt.stored,
+					tt.candidate,
+					got,
+					tt.want,
+				)
+			}
+		})
+	}
+}
+
+// TestNewStoredValidatorReplaysWireVerbatim pins that the stored identity
+// keeps the exact field value the server sent — parse state never rewrites
+// it — so If-None-Match replays a validator the server can actually compare,
+// including values it sent outside the RFC grammar.
+func TestNewStoredValidatorReplaysWireVerbatim(t *testing.T) {
+	t.Parallel()
+
+	for _, wire := range []string{`"v"`, `W/"v"`, `w/"v"`, "*", `"unclosed`, ""} {
+		t.Run(wire, func(t *testing.T) {
+			t.Parallel()
+
+			if got := newStoredValidator(wire).wire; got != wire {
+				t.Errorf("wire = %q, want verbatim %q", got, wire)
 			}
 		})
 	}

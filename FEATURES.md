@@ -3,7 +3,8 @@
 Honest inventory of what exists, by status. Evidence cites code; every
 FULLY_FUNCTIONAL row is exercised by the test suite (verified 2026-09-11 at the
 v0.3.0 tree: `go test -race ./...` green, root 100.0% / server 99.0% / client
-97.7% coverage).
+97.7% coverage; error-system and domain-type rows re-verified 2026-09-18
+against the post-extraction tree).
 
 Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 
@@ -21,9 +22,9 @@ Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 | Buffer overflow → stream without ETag (`MaxBufferSize`)                                   | FULLY_FUNCTIONAL | `TestNew_MemoryLimit_DisablesETag`, overflow write-error tests                                                              |
 | Hijack/Flush → streaming mode                                                             | FULLY_FUNCTIONAL | `server/wrapper.go`; hijack/flush delegate tests, streaming write tests                                                     |
 | Observability hooks (`OnETagGenerated` / `On304` / `OnBufferOverflow` / `OnError`)        | FULLY_FUNCTIONAL | v0.2.0; exactly-once/ordering/nil-safety specs; no telemetry dependency                                                     |
-| `ETag` domain type — parse, strength, strong/weak comparison                              | FULLY_FUNCTIONAL | `server/entity_tag.go`; BDD specs + fuzz round-trip (`entity_tag_fuzz_test.go`)                                             |
+| `ETag` domain type — parse, strength, strong/weak comparison                              | FULLY_FUNCTIONAL | `entitytag/entity_tag.go` (re-exported by `server/entity_tag.go`); `entitytag/entity_tag_test.go` + fuzz round-trip (`entitytag/entity_tag_fuzz_test.go`)                                   |
 | Conditional-request helpers (`MatchesIfNoneMatch`, `MatchesIfMatch`)                      | FULLY_FUNCTIONAL | RFC 7232 §3.1/§3.2; lost-update example in README                                                                           |
-| Classified errors (`go-error-family`, 5 codes + sentinel + typed `Code`/`Domain` routing) | FULLY_FUNCTIONAL | `server/errors.go` + `server/code.go`; `errors_test.go` (registration, bidirectional template completeness), `code_test.go` |
+| Classified errors (`go-error-family`, 5 codes + sentinel + typed `Code`/`Domain` routing) | FULLY_FUNCTIONAL | `server/errors.go` + `server/code.go`; `errors_test.go` (registration, bidirectional template completeness via `allETagErrorCodes`), `code_test.go` |
 
 ## Client transport (`client/`, package `etagclient`)
 

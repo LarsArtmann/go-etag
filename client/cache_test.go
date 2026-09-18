@@ -114,7 +114,11 @@ func TestResponseCacheFreshenSkipsWhenValidatorMovedOn(t *testing.T) {
 
 	cache.set("k1", storedResponse{validator: newStoredValidator(`"old"`), body: []byte("validated entry")})
 	cache.set("k1", storedResponse{validator: newStoredValidator(`"new"`), body: []byte("concurrent 200")})
-	cache.freshen("k1", `"old"`, storedResponse{validator: newStoredValidator(`"old"`), body: []byte("stale freshening")})
+	cache.freshen(
+		"k1",
+		`"old"`,
+		storedResponse{validator: newStoredValidator(`"old"`), body: []byte("stale freshening")},
+	)
 
 	entry, ok := cache.get("k1")
 	if !ok {

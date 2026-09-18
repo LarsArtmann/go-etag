@@ -9,11 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Nothing yet.
+- GoDoc examples for the typed error surface (server): `ExampleCode` (family constructor + classification readout), `ExampleDomainOf`, and `ExampleInDomain`, each with `// Output:` directives.
 
 ### Changed
 
-- Nothing yet.
+- The client cache stores its validator as a parsed `entitytag.ETag` computed once at store time (`storedResponse` carrying a `storedValidator` identity: the wire string replayed verbatim as `If-None-Match`, plus the parsed form), so §4.3.5 HEAD-confirmation and §4.3.4 304 mismatch-restore reuse the parsed form instead of re-parsing the stored string on every comparison. Behavior is unchanged, including the rule that an unparseable stored validator never matches. Baselines: `reports/bench/2026-09-18_baseline-typed-code-stored-validator.txt`.
 
 ### Fixed
 
