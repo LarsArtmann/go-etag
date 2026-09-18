@@ -73,7 +73,7 @@ GOEXPERIMENT=jsonv2 erraudit ./... --type-aware --enforce-go-error-family --enfo
 
 ## Architecture
 
-One module (`github.com/larsartmann/go-etag`), three packages: the real code lives in `server/` (package name `etag`) and `client/` (package `etagclient`); the root is a deprecated alias shim over the server package (deleted at v1.0.0). One external dependency: `github.com/larsartmann/go-error-family`. Go 1.26+.
+One module (`github.com/larsartmann/go-etag`), three packages: the real code lives in `server/` (package name `etag`) and `client/` (package `etagclient`); the root is a deprecated alias shim over the server package (deleted at v1.0.0). One external dependency: `github.com/larsartmann/go-error-family`. Go 1.27+.
 
 | File                   | Exports                                                                                                                                                                             | Purpose                                                                                                                                               |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |

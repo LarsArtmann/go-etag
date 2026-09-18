@@ -89,7 +89,9 @@ prevents. Directions (decision open — see Open Questions):
    no-store/freshening changes are in), and accept his raw header captures
    as permanent fixtures in `client/testdata/`?
 3. **Release workflow for go-etag:** the repo has no tag-triggered Release
-   workflow (tags are release-page-less unless created manually). Decide
+   workflow; all five tags DO have manual Release pages (verified 2026-09-18
+   via `gh release list`, v0.3.1 is Latest), so the gap is automation, not
+   pages. Decide
    whether to add one or keep manual releases.
 4. **FNV-64a strength honesty (standing decision, revisitable):** the
    default `Strong` is pragmatic (birthday bound ~4.3B bodies) but not

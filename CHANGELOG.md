@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - CI: the `GOTOOLCHAIN` toolchain pin moved from workflow level to the test, lint, and fuzz jobs; the govulncheck job is deliberately unpinned so its `govulncheck@latest` install can fetch a newer Go toolchain instead of failing.
+- Minimum Go is now 1.27.1 (go.mod directive) and `go-error-family` is bumped to v0.10.1; the test, lint, and fuzz CI pins were synced to `go1.27.1` to match. Consumers on older toolchains must upgrade Go to consume this version.
 - `docs/rfc9111-conformance.md`: a new "Interpretation decisions" section records the RFC judgment calls (304-`no-store` update ≠ storage, `no-store` HEAD neutrality, unprovable HEAD identity means stale, `FreshenOn304` is 304-scoped).
 - `ErrInvalidConfig` (server package and the deprecated root shim) is declared as the `error` interface instead of `*errorfamily.Error` (erraudit's sentinel guard rejects concrete-typed sentinels). `errors.Is(err, ErrInvalidConfig)` matching is unchanged — matching is by code and family, not identity — and `Validate` still returns context-bearing classified errors derived from the same code and message. Consumers assigning the sentinel to a `*errorfamily.Error` variable must switch to the interface type or `errors.AsType`.
 

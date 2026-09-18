@@ -21,7 +21,7 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     env:
-      GOTOOLCHAIN: go1.26.7
+      GOTOOLCHAIN: go1.27.1
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -55,7 +55,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     env:
-      GOTOOLCHAIN: go1.26.7
+      GOTOOLCHAIN: go1.27.1
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -73,7 +73,7 @@ jobs:
     name: Fuzz
     runs-on: ubuntu-latest
     env:
-      GOTOOLCHAIN: go1.26.7
+      GOTOOLCHAIN: go1.27.1
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
