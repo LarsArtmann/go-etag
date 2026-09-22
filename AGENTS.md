@@ -60,18 +60,20 @@ Any function taking `*testing.T` that calls `t.Fatal`/`t.Error` must start with 
 
 ## Commands
 
-Local go is 1.26.7 with `GOTOOLCHAIN=local` persisted; go.mod requires 1.27.1, so prefix every go command — and every golangci-lint invocation (it shells out to go) — with `GOTOOLCHAIN=auto` (downloads go1.27.1 once into the module cache). Do not change the persisted go env. The LSP's gopls/golangci-lint-ls still load with the persisted env and error on every file ("go.mod requires go >= 1.27.1"); their diagnostics are unusable — verify via the CLI instead.
+Local go is 1.26.7 with `GOTOOLCHAIN=local` persisted, so prefix every go command — and every golangci-lint invocation (it shells out to go) — with `GOTOOLCHAIN=auto` (downloads the go.mod toolchain once into the module cache). Do not change the persisted go env. Go directive history: v0.4.0 tagged `go 1.27.1`; daemon commit `969d077` (2026-09-22, unreviewed) relaxed it to `go 1.27` — still builds green, but the README badge and all three CI `GOTOOLCHAIN` pins say 1.27.1; the floor decision for v0.5.0 is TODO_LIST #2. The LSP's gopls/golangci-lint-ls still load with the persisted env and error on every file ("go.mod requires go >= 1.27"); their diagnostics are unusable — verify via the CLI instead.
 
 ```bash
-go test ./...              # Run tests
-go test -race ./...        # Race detection (REQUIRED for tests with t.Parallel() or shared state)
-go vet ./...               # Vet
-go test -bench=. ./...     # Benchmarks
-golangci-lint run          # Lint
-golangci-lint run --fix    # Auto-fix what's possible
-golangci-lint fmt          # Format (gofumpt + golines@120 + gci)
-GOEXPERIMENT=jsonv2 erraudit ./... --type-aware --enforce-go-error-family --enforce-samber-oops --enforce-generic-return --explain  # Error audit (default mode reports 0; --no-suppress surfaces suppressed findings by design; filter [feature:logger] debug lines from stdout)
+GOTOOLCHAIN=auto go test ./...              # Run tests
+GOTOOLCHAIN=auto go test -race ./...        # Race detection (REQUIRED for tests with t.Parallel() or shared state)
+GOTOOLCHAIN=auto go vet ./...               # Vet
+GOTOOLCHAIN=auto go test -bench=. ./...     # Benchmarks
+GOTOOLCHAIN=auto golangci-lint run          # Lint
+GOTOOLCHAIN=auto golangci-lint run --fix    # Auto-fix what's possible
+GOTOOLCHAIN=auto golangci-lint fmt          # Format (gofumpt + golines@120 + gci)
+GOTOOLCHAIN=auto GOEXPERIMENT=jsonv2 erraudit ./... --type-aware --enforce-go-error-family --enforce-samber-oops --enforce-generic-return --explain  # Error audit (default mode reports 0; --no-suppress surfaces suppressed findings by design; filter [feature:logger] debug lines from stdout)
 ```
+
+**Verification gate (first pass, not last):** `golangci-lint fmt` → repo-wide `golangci-lint run` (0 issues) → `go vet ./...` → `go test -race -count=1 ./...` — even for comment-only edits (godot/wsl bite comments too; all commands take the `GOTOOLCHAIN=auto` prefix). Supplement when touching clones or error paths: `art-dupl -t 1 --type-aware` (expect exactly the 1 accepted group) and `GOEXPERIMENT=jsonv2 erraudit nolint-audit .` (takes a path, NOT `./...`).
 
 ## Architecture
 

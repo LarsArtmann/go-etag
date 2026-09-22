@@ -6,11 +6,13 @@
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/go-etag/server.svg)](https://pkg.go.dev/github.com/larsartmann/go-etag/server)
 
-| Package                                                                                             | Purpose                                                                        |
-| --------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| [`go-etag/server`](https://pkg.go.dev/github.com/larsartmann/go-etag/server) (package `etag`)       | Server middleware: generate ETags from bodies, answer `If-None-Match` with 304 |
-| [`go-etag/client`](https://pkg.go.dev/github.com/larsartmann/go-etag/client) (package `etagclient`) | Client `http.RoundTripper`: conditional GET cache, 304 rebuilt as 200          |
-| `go-etag` (root)                                                                                    | Deprecated alias shim for the server package; removed in v1.0.0                |
+| Package                                                                                                 | Purpose                                                                        |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| [`go-etag/server`](https://pkg.go.dev/github.com/larsartmann/go-etag/server) (package `etag`)           | Server middleware: generate ETags from bodies, answer `If-None-Match` with 304 |
+| [`go-etag/client`](https://pkg.go.dev/github.com/larsartmann/go-etag/client) (package `etagclient`)     | Client `http.RoundTripper`: conditional GET cache, 304 rebuilt as 200          |
+| [`go-etag/entitytag`](https://pkg.go.dev/github.com/larsartmann/go-etag/entitytag) (package `entitytag`) | Shared RFC 7232 §2.3 entity-tag domain type: parse, strength, comparisons      |
+| [`go-etag/metrics`](https://pkg.go.dev/github.com/larsartmann/go-etag/metrics) (package `metrics`)      | Ready-made atomic counters for the server's observability hooks                |
+| `go-etag` (root)                                                                                        | Deprecated alias shim for the server package; removed in v1.0.0                |
 
 ---
 
@@ -396,8 +398,10 @@ The middleware adds sub-microsecond overhead per request. For a typical API retu
 ## Installation
 
 ```bash
-go get github.com/larsartmann/go-etag/server   # server middleware (package etag)
-go get github.com/larsartmann/go-etag/client   # client transport (package etagclient)
+go get github.com/larsartmann/go-etag/server      # server middleware (package etag)
+go get github.com/larsartmann/go-etag/client      # client transport (package etagclient)
+go get github.com/larsartmann/go-etag/entitytag   # shared entity-tag domain type (package entitytag)
+go get github.com/larsartmann/go-etag/metrics     # hook counters companion (package metrics)
 ```
 
 ### Upgrading from v0.1.x
