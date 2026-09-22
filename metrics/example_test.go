@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 
 	"github.com/larsartmann/go-etag/metrics"
-	"github.com/larsartmann/go-etag/server"
+	etag "github.com/larsartmann/go-etag/server"
 )
 
 func ExampleAttach() {
