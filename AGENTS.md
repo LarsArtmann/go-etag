@@ -60,7 +60,7 @@ Any function taking `*testing.T` that calls `t.Fatal`/`t.Error` must start with 
 
 ## Commands
 
-Local go is 1.26.7 with `GOTOOLCHAIN=local` persisted; go.mod requires 1.27.1, so prefix every go command with `GOTOOLCHAIN=auto` (downloads go1.27.1 once into the module cache). Do not change the persisted go env. The LSP's gopls/golangci-lint-ls still load with the persisted env and error on every file ("go.mod requires go >= 1.27.1"); their diagnostics are unusable — verify via the CLI instead.
+Local go is 1.26.7 with `GOTOOLCHAIN=local` persisted; go.mod requires 1.27.1, so prefix every go command — and every golangci-lint invocation (it shells out to go) — with `GOTOOLCHAIN=auto` (downloads go1.27.1 once into the module cache). Do not change the persisted go env. The LSP's gopls/golangci-lint-ls still load with the persisted env and error on every file ("go.mod requires go >= 1.27.1"); their diagnostics are unusable — verify via the CLI instead.
 
 ```bash
 go test ./...              # Run tests
