@@ -375,6 +375,11 @@ func main() {
 }
 ```
 
+For retry-aware routing without string parsing, the typed surface (`etag.Code`
+with six family constructors, `etag.DomainOf`/`etag.InDomain`) lets consumers
+branch on failing component — see `ExampleCode`, `ExampleDomainOf`, and
+`ExampleInDomain` in the [server package GoDoc](https://pkg.go.dev/github.com/larsartmann/go-etag/server).
+
 ## Benchmarks
 
 Measured on AMD Ryzen AI MAX+ 395:

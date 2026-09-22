@@ -20,17 +20,14 @@ value:
 - `Last-Modified` / `If-Modified-Since` as a second validator type alongside
   ETags (servers that send no ETag today get zero benefit from the client).
 
-### 2. Typed client cache
+### 2. Typed client cache — COMPLETE (2026-09-18)
 
-The server package owns a proper `ETag` domain type (parser, strength,
-comparison); the client treats validators as raw strings. The §4.3.4
-validator-filtering nuance is exactly the bug class a typed validator
-prevents. Directions (decision open — see Open Questions):
-
-- Client imports `server`'s `ETag` type, or the type moves to a shared
-  subpackage.
-- `cacheEntry` evolves toward a `storedResponse` type with §4.3.4-aware
-  validator-matching methods.
+Delivered: the shared [`entitytag/`](../entitytag/README.md) package (moved
+out of `server/`), typed validator comparison in the client, and the
+`cacheEntry` → `storedResponse` evolution (`storedValidator`: the wire string
+replayed verbatim plus the parsed `entitytag.ETag`, parsed once at store time
+— commit `07fe65c`). The §4.3.4 validator-filtering bug class a typed
+validator prevents is closed; no further work planned here.
 
 ### 3. Scale, persistence, and observability
 
@@ -121,3 +118,11 @@ prevents. Directions (decision open — see Open Questions):
    four actually used? Same call pending for an exported `Domain("http")`
    constant vs leaving it literal. (Origin: report
    `2026-09-11_09-28_error-system-parity-typed-code.md` f#6, f#7, g#3.)
+8. **art-dupl enforcement policy:** the single accepted clone group
+   (test-double `Write` vs `etagWriter.Write`) is documented in AGENTS.md and
+   on the code, but nothing fails if a second group appears tomorrow — the
+   prose claim silently rots. Machine-enforce it (committed `art-dupl`
+   baseline, or a CI step asserting "exactly 1 known group"), or declare
+   prose-only acceptance the standing policy? Deferred since 2026-08-07.
+   (Origin: report `2026-09-22_21-36_art-dupl-acceptance-documentation-session.md`
+   g#1, f#1, f#10, f#11.)

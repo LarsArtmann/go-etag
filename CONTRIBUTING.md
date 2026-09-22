@@ -12,8 +12,10 @@ Thanks for your interest in contributing!
 
 ## Development Setup
 
-Go 1.26+ and [golangci-lint](https://golangci-lint.run) v2.13+ are the only
-requirements:
+Go 1.27+ (go.mod sets the exact floor) and [golangci-lint](https://golangci-lint.run)
+v2.13+ are the only requirements. If your local toolchain is older than the
+go.mod directive, prefix every command — golangci-lint included, it shells
+out to go — with `GOTOOLCHAIN=auto`:
 
 ```bash
 go build ./...          # compile everything
@@ -35,8 +37,10 @@ go test -run '^$' -bench . -benchmem -count=6 ./...
 
 | Path            | Package       | Purpose                                                                    |
 | --------------- | ------------- | -------------------------------------------------------------------------- |
-| `server/`       | `etag`        | RFC 7232 ETag domain type and response middleware                          |
+| `server/`       | `etag`        | RFC 7232 ETag response middleware                                          |
 | `client/`       | `etagclient`  | RFC 9111 conditional-GET cache transport                                   |
+| `entitytag/`    | `entitytag`   | Shared RFC 7232 §2.3 entity-tag domain type                                |
+| `metrics/`      | `metrics`     | Atomic counters for the server's observability hooks                       |
 | `deprecated.go` | `etag` (root) | Deprecated alias shim; removed at v1.0.0                                   |
 | `docs/`         | —             | `rfc9111-conformance.md` (MUST-by-MUST table), planning and status reports |
 

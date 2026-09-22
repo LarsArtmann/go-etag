@@ -92,8 +92,9 @@ func (*failingHijackRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 // production buffer in etagWriter.Write: the double cannot embed
 // httptest.ResponseRecorder (it implements Hijacker), production code cannot
 // import test helpers, and the shared logic is a single append, cheaper to
-// duplicate than to abstract. art-dupl reports this pair as the repo's single
-// accepted clone group.
+// duplicate than to abstract. art-dupl reported this pair as the repo's
+// single accepted clone group when accepted on 2026-09-22; see AGENTS.md
+// (Non-Obvious Behaviors) for the standing decision.
 type nonHijackableRecorder struct {
 	header http.Header
 	status int

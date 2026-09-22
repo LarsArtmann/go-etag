@@ -1,10 +1,10 @@
 # Features
 
 Honest inventory of what exists, by status. Evidence cites code; every
-FULLY_FUNCTIONAL row is exercised by the test suite (verified 2026-09-11 at the
-v0.3.0 tree: `go test -race ./...` green, root 100.0% / server 99.0% / client
-97.7% coverage; error-system and domain-type rows re-verified 2026-09-18
-against the post-extraction tree).
+FULLY_FUNCTIONAL row is exercised by the test suite (verified 2026-09-23 at
+the post-metrics tree: `go test -race -count=1 -cover ./...` green — root
+100.0% / server 98.6% / client 99.1% / entitytag 98.9% / metrics 96.8%
+coverage).
 
 Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 
