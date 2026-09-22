@@ -1,6 +1,14 @@
 # Move `httputil/etagmetrics` → `go-etag/metrics`
 
-**Date:** 2026-09-22 23:25 · **Status:** executing · **Scope:** cross-repo (go-etag receives, httputil removes) · **Origin:** owner decision in httputil session 2026-09-22 ("A: subpackage `go-etag/metrics`, zero new release machinery")
+**Date:** 2026-09-22 23:25 · **Status:** executed & verified (same day, ~23:45) · **Scope:** cross-repo (go-etag receives, httputil removes) · **Origin:** owner decision in httputil session 2026-09-22 ("A: subpackage `go-etag/metrics`, zero new release machinery")
+
+## Outcome (filled in after execution)
+
+- **go-etag:** `metrics/` package landed (`metrics.go`, `doc.go`, `metrics_test.go`, `bench_test.go`, `example_test.go` — the GoDoc example the auto-commit daemon contributed mid-move, carried over). Gates: `go test -race ./...` green (all 5 packages), `golangci-lint run` 0 issues, hook-overhead benchmark ~9 ns/op over the hook-less baseline. Content committed by the auto-commit daemon (`33914f1`, `5ae86e0`, `5b2d21e`, `8884b87`); this completion record is the deliberate commit.
+- **httputil:** `etagmetrics/` deleted (daemon commit `ca3ec3f`), README/CHANGELOG/FEATURES move notes (`3288807`), dependabot `/etagmetrics` entry dropped (`6654e4c`). Race gate green via `buildflow -s test-race`; module lint 0 issues.
+- **HitRatio fix shipped:** `NotModified / Generated` (was `NotModified / (Generated + NotModified)` — every 304 double-counted); correction of record in httputil `[Unreleased]`; the frozen v1.3.0 tag keeps the old copy (tags are never retagged).
+- **Incidents during execution:** (1) the auto-commit daemon twice resurrected the deleted `httputil/etagmetrics/` from a stale snapshot; resolved by re-trashing — stable since 23:39:51, no history re-addition. (2) The daemon's dependabot write raced the first edit; re-applied and deliberately committed (`6654e4c`). (3) BuildFlow's `golangci-lint` step failed twice against the resurrected ghost module — noise, not a real finding; root module reported 0 issues throughout.
+- **Follow-up (not executed here):** tag go-etag `v0.5.0` via the release runbook so consumers can `go get github.com/larsartmann/go-etag/metrics@v0.5.0` instead of a master pseudo-version.
 
 ## Problem
 
