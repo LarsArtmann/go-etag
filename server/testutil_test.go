@@ -88,8 +88,12 @@ func (*failingHijackRecorder) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 
 // nonHijackableRecorder is a minimal http.ResponseWriter that does NOT
 // implement http.Hijacker, exercising the "hijack unsupported" error path.
-// Its Write is deliberately the plain two-line recorder, not shared with the
-// production body buffering it exists to test in isolation.
+// Its Write is deliberately a plain append rather than shared with the
+// production buffer in etagWriter.Write: the double cannot embed
+// httptest.ResponseRecorder (it implements Hijacker), production code cannot
+// import test helpers, and the shared logic is a single append, cheaper to
+// duplicate than to abstract. art-dupl reports this pair as the repo's single
+// accepted clone group.
 type nonHijackableRecorder struct {
 	header http.Header
 	status int

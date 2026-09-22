@@ -181,6 +181,7 @@ Internal construction goes through the typed `Code` constants in `server/errors.
 - **Hooks are synchronous and unprotected** — they run in the request goroutine with no recover; net/http isolates panics like handler panics.
 - **Hijack/Flush switches to streaming mode** — after either call, the middleware writes through without buffering.
 - **Hash.Write errors panic with a classified Orchestration error** — the `hash.Hash` contract guarantees Write never fails; if it does, the hash implementation is broken and we panic with `http.etag_hash_write_failed`.
+- **The one `art-dupl` clone group is accepted — do not extract it** — `art-dupl -t 1 --type-aware` reports a single group: `etagWriter.Write`'s body-buffer append vs `nonHijackableRecorder.Write` in `server/testutil_test.go`. The duplication is deliberate: the test double must NOT implement `http.Hijacker` (that is its entire testing purpose), so it cannot embed `httptest.ResponseRecorder` or share any production buffer type; production code cannot import test helpers; and the shared logic is a single `append` plus `return len(b), nil` — any abstraction would take more parameters than the duplicated code has lines. Full rationale on the double's doc comment; accept this group in every future dedup pass.
 
 ## Testing Conventions
 
