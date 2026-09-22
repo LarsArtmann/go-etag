@@ -21,11 +21,11 @@
 
 ## Decision (option table from the session)
 
-| Option | Deps cost | Hook coupling | Release machinery | Verdict |
-| --- | --- | --- | --- | --- |
-| A. subpackage `go-etag/metrics` (same module, **chosen**) | zero — imports only `sync/atomic` + in-module `server` | atomic, same PR | none; ships with go-etag tags | best fit while no telemetry SDK dep exists |
-| B. sub-module `go-etag/etagmetrics` (own go.mod) | core clean; allows future SDK deps | atomic | new tag cadence | extract later, the moment a Prometheus/OTEL SDK dep is actually needed |
-| C. status quo in httputil | drift (v0.3.1 vs v0.4.0) | two repos per hook change | orphaned from the hooks it counts | rejected |
+| Option                                                    | Deps cost                                              | Hook coupling             | Release machinery                 | Verdict                                                                |
+| --------------------------------------------------------- | ------------------------------------------------------ | ------------------------- | --------------------------------- | ---------------------------------------------------------------------- |
+| A. subpackage `go-etag/metrics` (same module, **chosen**) | zero — imports only `sync/atomic` + in-module `server` | atomic, same PR           | none; ships with go-etag tags     | best fit while no telemetry SDK dep exists                             |
+| B. sub-module `go-etag/etagmetrics` (own go.mod)          | core clean; allows future SDK deps                     | atomic                    | new tag cadence                   | extract later, the moment a Prometheus/OTEL SDK dep is actually needed |
+| C. status quo in httputil                                 | drift (v0.3.1 vs v0.4.0)                               | two repos per hook change | orphaned from the hooks it counts | rejected                                                               |
 
 ## Bug found during research: `HitRatio()` double-counts 304s
 
@@ -46,48 +46,48 @@ Shipped formula: `NM / (Generated + NM)` with the claim "the denominator counts 
 
 ## Medium-granularity plan (sorted by importance / impact / effort / customer value)
 
-| # | Task | Impact | Effort | Est |
-| --- | --- | --- | --- | --- |
-| M1 | go-etag: create `metrics/` package — `Attach`/`Counters`/`Snapshot`, fixed `HitRatio`, rewritten `doc.go` (no httputil references) | Critical (the deliverable) | M | 45m |
-| M2 | go-etag: adapt tests (`package metrics_test`, ratio 1/2, drop dead `mustAttach`) + benchmarks | Critical (correctness proof) | M | 40m |
-| M3 | go-etag: formatter + `go test -race ./...` + `golangci-lint run` + bench sanity (`GOTOOLCHAIN=auto`) | Critical (gate) | S | 30m |
-| M4 | go-etag: docs — README (Observability Hooks → metrics), CHANGELOG `[Unreleased]`, FEATURES row, AGENTS.md architecture row + conventions, ROADMAP observability line | High (discoverability) | M | 45m |
-| M5 | httputil: `git rm -r etagmetrics/` + remove dependabot `/etagmetrics` entry | High (single source of truth) | S | 20m |
-| M6 | httputil: README section → migration pointer, CHANGELOG `[Unreleased]` (Removed + Fixed), FEATURES rows removed | High (honest history) | S | 30m |
-| M7 | httputil: buildflow verification (race + lint; documented policy-rejected findings tolerated) | High (no breakage) | S | 30m |
-| M8 | This plan file + breakdowns | Coordination | S | 30m |
-| M9 | Detailed commits in both repos + push | Delivery (owner-requested) | S | 20m |
-| M10 | Final report + v0.5.0 tag follow-up note | Wrap-up | S | 10m |
+| #   | Task                                                                                                                                                                 | Impact                        | Effort | Est |
+| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ------ | --- |
+| M1  | go-etag: create `metrics/` package — `Attach`/`Counters`/`Snapshot`, fixed `HitRatio`, rewritten `doc.go` (no httputil references)                                   | Critical (the deliverable)    | M      | 45m |
+| M2  | go-etag: adapt tests (`package metrics_test`, ratio 1/2, drop dead `mustAttach`) + benchmarks                                                                        | Critical (correctness proof)  | M      | 40m |
+| M3  | go-etag: formatter + `go test -race ./...` + `golangci-lint run` + bench sanity (`GOTOOLCHAIN=auto`)                                                                 | Critical (gate)               | S      | 30m |
+| M4  | go-etag: docs — README (Observability Hooks → metrics), CHANGELOG `[Unreleased]`, FEATURES row, AGENTS.md architecture row + conventions, ROADMAP observability line | High (discoverability)        | M      | 45m |
+| M5  | httputil: `git rm -r etagmetrics/` + remove dependabot `/etagmetrics` entry                                                                                          | High (single source of truth) | S      | 20m |
+| M6  | httputil: README section → migration pointer, CHANGELOG `[Unreleased]` (Removed + Fixed), FEATURES rows removed                                                      | High (honest history)         | S      | 30m |
+| M7  | httputil: buildflow verification (race + lint; documented policy-rejected findings tolerated)                                                                        | High (no breakage)            | S      | 30m |
+| M8  | This plan file + breakdowns                                                                                                                                          | Coordination                  | S      | 30m |
+| M9  | Detailed commits in both repos + push                                                                                                                                | Delivery (owner-requested)    | S      | 20m |
+| M10 | Final report + v0.5.0 tag follow-up note                                                                                                                             | Wrap-up                       | S      | 10m |
 
 ## Fine-grained plan (≤12 min each, sorted by importance)
 
-| # | Task | Parent | Est |
-| --- | --- | --- | --- |
-| F1 | Create `go-etag/metrics/metrics.go` (Counters, Snapshot, Attach, fixed HitRatio + doc comments) | M1 | 12m |
-| F2 | Create `go-etag/metrics/doc.go` (package doc, go-etag-native stance, usage snippet) | M1 | 8m |
-| F3 | Adapt `metrics/metrics_test.go`: import path, ratio 1/3→1/2, remove dead `mustAttach` | M2 | 10m |
-| F4 | Adapt `metrics/bench_test.go`: import path, clean formatting | M2 | 6m |
-| F5 | Add `TestHitRatio_AdoptedTagCaveat` pinning documented ratio semantics | M2 | 10m |
-| F6 | `golangci-lint fmt` + fix whitespace findings | M3 | 6m |
-| F7 | `GOTOOLCHAIN=auto go test -race ./...` in go-etag | M3 | 8m |
-| F8 | `GOTOOLCHAIN=auto golangci-lint run` in go-etag (0 findings expected) | M3 | 8m |
-| F9 | Bench sanity `-count=1` (no baseline capture — not perf-relevant; code identical) | M3 | 6m |
-| F10 | README: extend "Observability Hooks" section with metrics example | M4 | 10m |
-| F11 | CHANGELOG `[Unreleased]` Added entry (incl. HitRatio fix note + provenance) | M4 | 10m |
-| F12 | FEATURES.md: metrics row under a new `metrics/` section | M4 | 8m |
-| F13 | AGENTS.md: architecture table row + dependency direction note | M4 | 10m |
-| F14 | ROADMAP: observability line (server-side companion exists; client hooks still planned) | M4 | 5m |
-| F15 | httputil: `git rm -r etagmetrics/` | M5 | 4m |
-| F16 | httputil: drop dependabot `/etagmetrics` block (dead directory after move) | M5 | 5m |
-| F17 | httputil README: replace ETag Metrics section with 2-line pointer to go-etag/metrics | M6 | 8m |
-| F18 | httputil CHANGELOG `[Unreleased]`: Removed (move, migration path) + Fixed (HitRatio formula, corrected in new home) | M6 | 10m |
-| F19 | httputil FEATURES.md: remove table row + section; AGENTS.md check (no mentions → none) | M6 | 8m |
-| F20 | httputil: `buildflow -s test-race` and `-s golangci-lint` (or dev run) | M7 | 12m |
-| F21 | httputil: confirm doc-snippet-refs unaffected (etagmetrics alias never in checkedPackages) | M7 | 4m |
-| F22 | go-etag commit (feat, detailed body) | M9 | 8m |
-| F23 | httputil commit (refactor/removal, detailed body) | M9 | 8m |
-| F24 | Push both repos (owner-requested) | M9 | 4m |
-| F25 | Final report + tag follow-up (go-etag v0.5.0 via release runbook) | M10 | 8m |
+| #   | Task                                                                                                                | Parent | Est |
+| --- | ------------------------------------------------------------------------------------------------------------------- | ------ | --- |
+| F1  | Create `go-etag/metrics/metrics.go` (Counters, Snapshot, Attach, fixed HitRatio + doc comments)                     | M1     | 12m |
+| F2  | Create `go-etag/metrics/doc.go` (package doc, go-etag-native stance, usage snippet)                                 | M1     | 8m  |
+| F3  | Adapt `metrics/metrics_test.go`: import path, ratio 1/3→1/2, remove dead `mustAttach`                               | M2     | 10m |
+| F4  | Adapt `metrics/bench_test.go`: import path, clean formatting                                                        | M2     | 6m  |
+| F5  | Add `TestHitRatio_AdoptedTagCaveat` pinning documented ratio semantics                                              | M2     | 10m |
+| F6  | `golangci-lint fmt` + fix whitespace findings                                                                       | M3     | 6m  |
+| F7  | `GOTOOLCHAIN=auto go test -race ./...` in go-etag                                                                   | M3     | 8m  |
+| F8  | `GOTOOLCHAIN=auto golangci-lint run` in go-etag (0 findings expected)                                               | M3     | 8m  |
+| F9  | Bench sanity `-count=1` (no baseline capture — not perf-relevant; code identical)                                   | M3     | 6m  |
+| F10 | README: extend "Observability Hooks" section with metrics example                                                   | M4     | 10m |
+| F11 | CHANGELOG `[Unreleased]` Added entry (incl. HitRatio fix note + provenance)                                         | M4     | 10m |
+| F12 | FEATURES.md: metrics row under a new `metrics/` section                                                             | M4     | 8m  |
+| F13 | AGENTS.md: architecture table row + dependency direction note                                                       | M4     | 10m |
+| F14 | ROADMAP: observability line (server-side companion exists; client hooks still planned)                              | M4     | 5m  |
+| F15 | httputil: `git rm -r etagmetrics/`                                                                                  | M5     | 4m  |
+| F16 | httputil: drop dependabot `/etagmetrics` block (dead directory after move)                                          | M5     | 5m  |
+| F17 | httputil README: replace ETag Metrics section with 2-line pointer to go-etag/metrics                                | M6     | 8m  |
+| F18 | httputil CHANGELOG `[Unreleased]`: Removed (move, migration path) + Fixed (HitRatio formula, corrected in new home) | M6     | 10m |
+| F19 | httputil FEATURES.md: remove table row + section; AGENTS.md check (no mentions → none)                              | M6     | 8m  |
+| F20 | httputil: `buildflow -s test-race` and `-s golangci-lint` (or dev run)                                              | M7     | 12m |
+| F21 | httputil: confirm doc-snippet-refs unaffected (etagmetrics alias never in checkedPackages)                          | M7     | 4m  |
+| F22 | go-etag commit (feat, detailed body)                                                                                | M9     | 8m  |
+| F23 | httputil commit (refactor/removal, detailed body)                                                                   | M9     | 8m  |
+| F24 | Push both repos (owner-requested)                                                                                   | M9     | 4m  |
+| F25 | Final report + tag follow-up (go-etag v0.5.0 via release runbook)                                                   | M10    | 8m  |
 
 ## Execution graph
 
