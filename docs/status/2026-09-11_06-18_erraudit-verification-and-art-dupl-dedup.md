@@ -103,25 +103,25 @@ they were sloppy, not because they survived:
 
 ## f) Next tasks (grounded in this session only — capped honestly at 17, not padded to 50)
 
-| #  | Task                                                                                                                               | Impact                    | Effort |
-| -- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------ |
-| 1  | Spec test: HEAD-freshened entries never persist the FromCacheHeader marker                                                         | High (pins new invariant) | S      |
-| 2  | Prove-or-delete: can `entry.header` be nil? If never, drop `cloneHeader`'s guard; if maybe, unit-test the branch                   | Medium                    | S      |
-| 3  | Benchmark client freshening paths; diff vs git-reachable pre-dedup baseline (`reports/bench/2026-09-11_*.txt`)                     | Medium                    | M      |
-| 4  | Coverage check: confirm `persistFreshened`/`cloneHeader` lines are exercised (`go test -coverprofile`)                             | Medium                    | S      |
-| 5  | Canonicalize (or reject) non-canonical `FreshenFields` names in Options validation — kills the invisible-key footgun               | High (UX)                 | M      |
-| 6  | Restructure `TestMergeHeaderPrefersExactThenCanonical` to a non-literal key so gopls stops flagging SA1008                         | Low                       | S      |
-| 7  | ~~Run `erraudit nolint-audit .` once post-change (completeness; expect no drift)~~ re-confirmed 2026-09-23: 2 directives needed, 0 stale (docs-health pass)         | Low                       | S      |
-| 8  | ~~HARVEST section (f) into TODO_LIST.md (docs-health)~~ done 2026-09-23 (TODO_LIST #5–#7 carry the survivors)                                                     | Medium                    | S      |
-| 9  | ~~Verify CI is green on the auto-daemon commit carrying the dedup (4ba1ed8)~~ superseded — CI green since (v0.3.0→v0.4.0 all shipped; tag runs verified)            | Medium                    | S      |
-| 10 | AGENTS.md note: HEAD freshening commits through `persistFreshened` (single funnel invariant)                                       | Low                       | S      |
-| 11 | Grep spec_test.go for existing HEAD × FromCacheHeader coverage — close the b/1 verification gap                                    | Medium                    | S      |
-| 12 | Consider a coverage floor in CI if none exists (check workflow first)                                                              | Unknown until checked     | M      |
-| 13 | Audit other `-t 1` findings at the default threshold 5 to confirm the report is empty there too (clone baseline)                   | Low                       | S      |
-| 14 | Add `cloneHeader`-style stdlib-footgun notes to AGENTS.md gotchas if more Clone-guard sites ever appear                            | Low                       | S      |
-| 15 | ~~Skim `docs/status/` backlog (2 modified files at session start) for unharvested items~~ done 2026-09-23 — every 2026-0* snapshot read end-to-end and annotated (docs-health full audit)                              | Medium                    | S      |
-| 16 | Consider whether `drainAndClose` suppressions should gain a dedicated spec test asserting the discard is safe under a failing body | Low                       | M      |
-| 17 | Double-check the deprecated root shim still compiles green after any future transport refactor (habit, not a current issue)        | Low                       | S      |
+| #  | Task                                                                                                                                                                                      | Impact                    | Effort |
+| -- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- | ------ |
+| 1  | Spec test: HEAD-freshened entries never persist the FromCacheHeader marker                                                                                                                | High (pins new invariant) | S      |
+| 2  | Prove-or-delete: can `entry.header` be nil? If never, drop `cloneHeader`'s guard; if maybe, unit-test the branch                                                                          | Medium                    | S      |
+| 3  | Benchmark client freshening paths; diff vs git-reachable pre-dedup baseline (`reports/bench/2026-09-11_*.txt`)                                                                            | Medium                    | M      |
+| 4  | Coverage check: confirm `persistFreshened`/`cloneHeader` lines are exercised (`go test -coverprofile`)                                                                                    | Medium                    | S      |
+| 5  | Canonicalize (or reject) non-canonical `FreshenFields` names in Options validation — kills the invisible-key footgun                                                                      | High (UX)                 | M      |
+| 6  | Restructure `TestMergeHeaderPrefersExactThenCanonical` to a non-literal key so gopls stops flagging SA1008                                                                                | Low                       | S      |
+| 7  | ~~Run `erraudit nolint-audit .` once post-change (completeness; expect no drift)~~ re-confirmed 2026-09-23: 2 directives needed, 0 stale (docs-health pass)                               | Low                       | S      |
+| 8  | ~~HARVEST section (f) into TODO_LIST.md (docs-health)~~ done 2026-09-23 (TODO_LIST #5–#7 carry the survivors)                                                                             | Medium                    | S      |
+| 9  | ~~Verify CI is green on the auto-daemon commit carrying the dedup (4ba1ed8)~~ superseded — CI green since (v0.3.0→v0.4.0 all shipped; tag runs verified)                                  | Medium                    | S      |
+| 10 | AGENTS.md note: HEAD freshening commits through `persistFreshened` (single funnel invariant)                                                                                              | Low                       | S      |
+| 11 | Grep spec_test.go for existing HEAD × FromCacheHeader coverage — close the b/1 verification gap                                                                                           | Medium                    | S      |
+| 12 | Consider a coverage floor in CI if none exists (check workflow first)                                                                                                                     | Unknown until checked     | M      |
+| 13 | Audit other `-t 1` findings at the default threshold 5 to confirm the report is empty there too (clone baseline)                                                                          | Low                       | S      |
+| 14 | Add `cloneHeader`-style stdlib-footgun notes to AGENTS.md gotchas if more Clone-guard sites ever appear                                                                                   | Low                       | S      |
+| 15 | ~~Skim `docs/status/` backlog (2 modified files at session start) for unharvested items~~ done 2026-09-23 — every 2026-0* snapshot read end-to-end and annotated (docs-health full audit) | Medium                    | S      |
+| 16 | Consider whether `drainAndClose` suppressions should gain a dedicated spec test asserting the discard is safe under a failing body                                                        | Low                       | M      |
+| 17 | Double-check the deprecated root shim still compiles green after any future transport refactor (habit, not a current issue)                                                               | Low                       | S      |
 
 ## g) Questions I cannot figure out myself
 
