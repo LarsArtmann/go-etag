@@ -1,10 +1,12 @@
+package metrics
+
 import (
 	"sync/atomic"
 
-	"github.com/larsartmann/go-etag/server"
+	etag "github.com/larsartmann/go-etag/server"
 )
 
-// Counters holds the atomic event counters for one [server.ETagConfig].
+// Counters holds the atomic event counters for one [etag.ETagConfig].
 // Create one via [Attach]; all methods are safe for concurrent use.
 type Counters struct {
 	// Generated counts OnETagGenerated events: one per response whose ETag
@@ -30,23 +32,25 @@ type Snapshot struct {
 }
 
 // Attach installs counting hooks on a copy of cfg and returns the modified
-// configuration (pass it to [server.New]) together with the counters it will
+// configuration (pass it to [etag.New]) together with the counters it will
 // update. Hooks already present on cfg are preserved and run after the
 // counting hooks, so attaching never silently drops consumer instrumentation.
-func Attach(cfg server.ETagConfig) (server.ETagConfig, *Counters) {
-	c := &Counters{}
+func Attach(cfg etag.ETagConfig) (etag.ETagConfig, *Counters) {
+	c := &Counters{} //nolint:exhaustruct_v5 // zero value starts all counters at 0
 
 	generated := cfg.OnETagGenerated
-	cfg.OnETagGenerated = func(e server.ETag) {
+	cfg.OnETagGenerated = func(e etag.ETag) {
 		c.Generated.Add(1)
+
 		if generated != nil {
 			generated(e)
 		}
 	}
 
 	notModified := cfg.On304
-	cfg.On304 = func(e server.ETag) {
+	cfg.On304 = func(e etag.ETag) {
 		c.NotModified.Add(1)
+
 		if notModified != nil {
 			notModified(e)
 		}
@@ -55,6 +59,7 @@ func Attach(cfg server.ETagConfig) (server.ETagConfig, *Counters) {
 	overflow := cfg.OnBufferOverflow
 	cfg.OnBufferOverflow = func(limit int) {
 		c.BufferOverflows.Add(1)
+
 		if overflow != nil {
 			overflow(limit)
 		}

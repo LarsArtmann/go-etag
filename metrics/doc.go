@@ -2,7 +2,7 @@
 // ready-made atomic counters for cache hit-ratio and buffer-overflow
 // monitoring.
 //
-// [server.ETagConfig] exposes single-valued hooks (OnETagGenerated, On304,
+// [etag.ETagConfig] exposes single-valued hooks (OnETagGenerated, On304,
 // OnBufferOverflow). This package attaches counting implementations that
 // preserve any hooks the consumer already installed, so a Prometheus
 // exporter or a slog logger and these counters can coexist on one config:
