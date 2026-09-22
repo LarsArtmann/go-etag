@@ -53,8 +53,8 @@ wild (go-github-kit).
    other httputil consumers) stay on go-etag v0.2.0 until httputil cuts a
    release carrying v0.3.0. Bumping httputil's master pin (done here) is not
    visible to consumers until tagged (F17). Needs the go-release flow.~~ done 2026-09-11 — httputil v1.0.1 released carrying go-etag v0.3.1 transitively (report 2026-09-11_05-09 §a.1)
-2. **BuildFlow hook noise in cqrs-htmx:** the pre-commit run reported
+2. ~~**BuildFlow hook noise in cqrs-htmx:** the pre-commit run reported
    transient `/tmp` exhaustion (`No space left on device` tmpfs) and many
    pre-existing gomod-check findings; unrelated to this migration but worth
-   a look. _Foreign repo; its three standalone failures were verified passing
-   on 2026-09-18 (report 2026-09-18_19-49 §a)._
+   a look.~~ resolved — foreign repo; its three standalone failures were verified passing
+   on 2026-09-18 (report 2026-09-18_19-49 §a)
