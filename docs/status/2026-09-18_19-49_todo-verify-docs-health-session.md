@@ -51,23 +51,23 @@ was applied one step later than it should have been).
 
 | Item                                             | Works                                                                             | Open                                                                                                                          | Blocker                                               | Effort |
 | ------------------------------------------------ | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- | ------ |
-| AGENTS.md testing mandate: `go test -race ./...` | Plain `go test ./...` run green under 1.27.1 (adopt direction proven)             | `-race` and `golangci-lint run` NOT run under 1.27.1 — the extraction landed mid-session and the tree stopped being mine      | Concurrent session's in-flight tree; also f#1 residue | S      |
-| TODO_LIST quality                                | 6 verified rows, both source reports cited                                        | The concurrent extraction will invalidate/complete some rows (OQ1 direction, module map); a sweep is needed once it settles   | Extraction landing                                    | S      |
+| AGENTS.md testing mandate: `go test -race ./...` | ~~Plain `go test ./...` run green under 1.27.1 (adopt direction proven)~~ resolved — full `-race` + lint gate re-run green post-extraction (report 2026-09-18_20-44 §a.11) | — | — | S |
+| TODO_LIST quality                                | ~~6 verified rows, both source reports cited~~ resolved — rebuilt after the extraction (report 2026-09-18_20-44 §a.9) and again 2026-09-23 (7 rows) | — | — | S |
 | BuildFlow usage in go-etag                       | `buildflow format` / dry-run execute fine (auto-detect); format findings reviewed | go-etag has **no `.buildflow.yml` and no pre-commit hook** — formally not a "covered" project; fleet-consistency call is open | Owner decision                                        | S      |
-| CI green confirmation                            | Pins fixed and committed at HEAD; local yaml validated                            | Remote CI run on the next push not observed (this session pushed nothing)                                                     | Next push by whoever pushes                           | S      |
+| CI green confirmation                            | ~~Pins fixed and committed at HEAD; local yaml validated~~ resolved — remote CI green through the v0.4.0 master and frozen tag runs (report 2026-09-18_21-00 §a) | — | — | S |
 
 ## c) NOT STARTED (per the rebuilt TODO_LIST / ROADMAP — none re-verified as started elsewhere)
 
-- **TODO #1 residue:** dev shells with `GOTOOLCHAIN=local` on go1.26.7 still fail on master;
-  `-race` + lint under 1.27.1 pending (blocked per b).
-- **TODO #2:** v0.3.2 cut — `[Unreleased]` now carries the typed `Code` surface, the BREAKING
-  `ErrInvalidConfig` interface change, AND the min-Go 1.27.1 bump. Timing is the owner's call.
-- **TODO #3:** `allETagErrorCodes` single-source var (`server/errors_test.go:50` literal slice).
-- **TODO #4:** benchmark backfill for the typed-code change (reports/bench newest predates
-  `server/code.go`; the 09-28 session asserted "no perf impact" without any benchmark run).
-- **TODO #5:** GoDoc examples for `Code` constructors / `DomainOf` / `InDomain` (no `func Example`).
-- **TODO #6:** docs-health passes: FEATURES.md typed-error claims; ANNOTATE older reports
-  describing the error system as untyped-only.
+- ~~**TODO #1 residue:** dev shells with `GOTOOLCHAIN=local` on go1.26.7 still fail on master;
+  `-race` + lint under 1.27.1 pending (blocked per b).~~ resolved — the `GOTOOLCHAIN=auto` per-command convention was adopted and documented in AGENTS.md; full gate re-run green by the 20:44 session (report 2026-09-18_20-44 §a.1)
+- ~~**TODO #2:** v0.3.2 cut — `[Unreleased]` now carries the typed `Code` surface, the BREAKING
+  `ErrInvalidConfig` interface change, AND the min-Go 1.27.1 bump. Timing is the owner's call.~~ superseded — shipped as v0.4.0 (declared-type change ⇒ minor, not patch): tagged `16369cc` 2026-09-18 (report 2026-09-18_21-00)
+- ~~**TODO #3:** `allETagErrorCodes` single-source var (`server/errors_test.go:50` literal slice).~~ done at `16369cc`
+- ~~**TODO #4:** benchmark backfill for the typed-code change (reports/bench newest predates
+  `server/code.go`; the 09-28 session asserted "no perf impact" without any benchmark run).~~ done — `reports/bench/2026-09-18_baseline-typed-code-stored-validator.txt` (report 2026-09-18_20-44 §a.6)
+- ~~**TODO #5:** GoDoc examples for `Code` constructors / `DomainOf` / `InDomain` (no `func Example`).~~ done at `fb6efab` (`ExampleCode`, `ExampleDomainOf`, `ExampleInDomain`)
+- ~~**TODO #6:** docs-health passes: FEATURES.md typed-error claims; ANNOTATE older reports
+  describing the error system as untyped-only.~~ done 2026-09-18 (report 2026-09-18_20-44 §a.7–a.8)
 - **ROADMAP open questions 1–5, 7:** zero decisions made (the 19:11 session delivered
   recommendations; the extraction starting suggests OQ1 direction, but no recorded decision exists).
 - **OQ2 / Alex reply email:** never drafted (noted by 19:11 session, unchanged).
@@ -130,41 +130,41 @@ items verified by this session are marked ✅-verified where the verification WA
 
 **Re-green and stabilize master**
 
-1. Once the entitytag extraction settles: run `GOTOOLCHAIN=auto go build ./... && go test -race ./... && golangci-lint run` — full gate, strong form (Critical, S)
-2. Confirm CI green on the next push after the pin sync (Critical, S)
-3. Update local dev shells: toolchain → go1.27.1 or `GOTOOLCHAIN=auto` (Critical, S)
-4. Investigate the silent ci.yml edit-loss mechanism (daemon race vs tool bug); if daemon: document the blind spot in AGENTS.md (High, S)
-5. Decide repo policy: may agents commit their own edits immediately after the gate, so the daemon can't race critical files (High, S)
+1. ~~Once the entitytag extraction settles: run `GOTOOLCHAIN=auto go build ./... && go test -race ./... && golangci-lint run` — full gate, strong form (Critical, S)~~ done 2026-09-18 (report 2026-09-18_20-02 §a + 20-44 §a.1 — all green, 0 lint issues)
+2. ~~Confirm CI green on the next push after the pin sync (Critical, S)~~ done — CI green through the v0.4.0 tag runs (report 2026-09-18_21-00 §a)
+3. ~~Update local dev shells: toolchain → go1.27.1 or `GOTOOLCHAIN=auto` (Critical, S)~~ resolved by convention — every command takes the `GOTOOLCHAIN=auto` prefix (AGENTS.md Commands); the persisted env stays untouched by design
+4. Investigate the silent ci.yml edit-loss mechanism (daemon race vs tool bug); if daemon: document the blind spot in AGENTS.md (High, S) — still open (never reproduced)
+5. Decide repo policy: may agents commit their own edits immediately after the gate, so the daemon can't race critical files (High, S) — still open (owner call)
 
 **Concurrent extraction (verify, don't do)**
 
-6. Verify the extraction against `deprecated_test.go` shim parity assertions (compile-time type identity may break) (High, S)
-7. Record the OQ1 decision in ROADMAP once the owner confirms the shared-subpackage direction (annotate, don't rewrite) (High, S)
-8. Update AGENTS.md architecture table for the new `entitytag/` module map after landing (Medium, S)
-9. CHANGELOG `[Unreleased]`: document the extraction when it lands (Medium, S)
-10. Re-run `erraudit --no-suppress` + `erraudit nolint-audit .` after the extraction moves error-adjacent code (Low, S)
+6. ~~Verify the extraction against `deprecated_test.go` shim parity assertions (compile-time type identity may break) (High, S)~~ done — suite green through the extraction (report 2026-09-18_20-02 §a); parity suite pins type identity + wrapper smokes
+7. ~~Record the OQ1 decision in ROADMAP once the owner confirms the shared-subpackage direction (annotate, don't rewrite) (High, S)~~ done — ROADMAP Open Question 1 annotated resolved 2026-09-18
+8. ~~Update AGENTS.md architecture table for the new `entitytag/` module map after landing (Medium, S)~~ done 2026-09-18 (four-package table; extended to five packages with `metrics/` on 2026-09-22)
+9. ~~CHANGELOG `[Unreleased]`: document the extraction when it lands (Medium, S)~~ done — shipped in `[0.4.0]` (report 2026-09-18_21-00)
+10. ~~Re-run `erraudit --no-suppress` + `erraudit nolint-audit .` after the extraction moves error-adjacent code (Low, S)~~ done — erraudit 0 violations in the 20-02 session; nolint-audit re-confirmed 2026-09-23 (2 needed, 0 stale)
 
 **Release**
 
-11. Cut v0.3.2: CHANGELOG already complete (typed surface + BREAKING sentinel change + min-Go bump); tag after CI green on the exact commit; clean-room `go get` + proxy/sum; GitHub Release as Latest non-prerelease (High, M)
-12. Post-tag: verify pkg.go.dev rendering (eventual, not a gate) (Low, S)
-13. Consumer migration note for `ErrInvalidConfig` interface change (Medium, S)
+11. ~~Cut v0.3.2: CHANGELOG already complete (typed surface + BREAKING sentinel change + min-Go bump); tag after CI green on the exact commit; clean-room `go get` + proxy/sum; GitHub Release as Latest non-prerelease (High, M)~~ done as v0.4.0 — tagged `16369cc` 2026-09-18, full chain verified (report 2026-09-18_21-00)
+12. ~~Post-tag: verify pkg.go.dev rendering (eventual, not a gate) (Low, S)~~ done — verified rendering v0.4.0 at release
+13. ~~Consumer migration note for `ErrInvalidConfig` interface change (Medium, S)~~ done — README "Upgrading from v0.3.x" section (report 2026-09-18_21-00 §a)
 14. Decide OQ3 finally: tag-triggered Release workflow vs documented manual policy (wording now corrected in ROADMAP) (Medium, S)
 
 **Error-system follow-ups (harvested, verified open)**
 
-15. `allETagErrorCodes` single-source var; drive `server/errors_test.go:50` completeness test from it (Medium, S)
-16. Benchmark backfill: smoke `-bench=.`, then `-benchmem -count=6` baselines under `reports/bench/` (Medium, S)
-17. GoDoc examples: `Code` family constructors, `DomainOf`, `InDomain`, with `// Output:` (Low, S)
-18. FEATURES.md VERIFY pass on the typed-error row (`FEATURES.md:26`) (Low, S)
-19. ANNOTATE older status reports describing the error system as untyped-only (Low, S)
+15. ~~`allETagErrorCodes` single-source var; drive `server/errors_test.go:50` completeness test from it (Medium, S)~~ done at `16369cc`
+16. ~~Benchmark backfill: smoke `-bench=.`, then `-benchmem -count=6` baselines under `reports/bench/` (Medium, S)~~ done (report 2026-09-18_20-44 §a.6)
+17. ~~GoDoc examples: `Code` family constructors, `DomainOf`, `InDomain`, with `// Output:` (Low, S)~~ done at `fb6efab`
+18. ~~FEATURES.md VERIFY pass on the typed-error row (`FEATURES.md:26`) (Low, S)~~ done (report 2026-09-18_20-44 §a.7)
+19. ~~ANNOTATE older status reports describing the error system as untyped-only (Low, S)~~ done (report 2026-09-18_20-44 §a.8)
 20. gosec sanity: `Code`/`Domain` accept arbitrary strings — confirm no template-injection surface in errorfamily rendering (Low, S)
 21. Ecosystem sweep: same untyped-code gap in other larsartmann libs (go-output, samber-do-auditlog) (Low, M)
 22. go-error-family feature request candidate: `ListTemplates` registry introspection (parked in ROADMAP) (Low, S)
 
 **Roadmap decisions (batch-decide; each is S effort)**
 
-23. OQ1: shared `entitytag` subpackage — record the decision the extraction implies (High, S)
+23. ~~OQ1: shared `entitytag` subpackage — record the decision the extraction implies (High, S)~~ done — ROADMAP OQ1 annotated resolved 2026-09-18
 24. OQ2: accept Alex's captures as permanent `client/testdata/` fixtures + draft his reply email (Medium, S)
 25. OQ4: affirm FNV-64a `Strong` default as standing decision (Low, S)
 26. OQ5: promote or kill the ~25 open-low archive items (asked 09-10 and 09-11, still pending) (Low, S)
@@ -182,8 +182,8 @@ items verified by this session are marked ✅-verified where the verification WA
 
 **Process/docs hygiene**
 
-35. Sweep TODO_LIST again after the extraction lands (rows 1/2 will need refresh) (Medium, S)
-36. ANNOTATE the 19:11 report + this report once their claims are superseded (docs-health inline markers) (Low, S)
+35. ~~Sweep TODO_LIST again after the extraction lands (rows 1/2 will need refresh) (Medium, S)~~ done — rebuilt 2026-09-18 (20-44 §a.9) and again at the 2026-09-23 docs-health pass (7 rows)
+36. ~~ANNOTATE the 19:11 report + this report once their claims are superseded (docs-health inline markers) (Low, S)~~ done — 19-11 annotated 2026-09-18 (20-44 §a.8); this file annotated at the 2026-09-23 docs-health pass
 37. Add `.buildflow.yml` (or decide against) for go-etag fleet consistency (Low, S)
 38. Build gate for go.mod-touching daemon commits: hook or sweep rule so a red master can't land silently (Medium, M)
 39. AGENTS.md: add the verify-after-every-edit + concurrent-session-check lessons to the cross-cutting section (Medium, S)
@@ -191,8 +191,8 @@ items verified by this session are marked ✅-verified where the verification WA
 
 **cqrs-htmx (flagged, other repo's list)**
 
-41. Push its 4 remaining commits; commit or discard `M readiness.go` (High, S)
-42. Backfill its TODO_LIST: the two harvested-out items (alignment, standalone failures) are done there too (Low, S)
+41. ~~Push its 4 remaining commits; commit or discard `M readiness.go` (High, S)~~ resolved — verified pushed/settled by 2026-09-18 checks (report 2026-09-18_19-11 c. noted them done; origin in sync)
+42. ~~Backfill its TODO_LIST: the two harvested-out items (alignment, standalone failures) are done there too (Low, S)~~ moot — both items verified done 2026-09-18 (19-49 §a); no backfill needed
 
 **Smaller polish**
 

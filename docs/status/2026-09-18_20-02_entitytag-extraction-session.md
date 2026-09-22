@@ -88,9 +88,9 @@ a re-read before landing).
 
 | Item                         | Works                                                                                                 | Open                                                                                                                                                                     | Blocker                                  | Effort |
 | ---------------------------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- | ------ |
-| Theme 2 (typed client cache) | Shared type exists; comparisons typed; direction clean                                                | `cacheEntry` still stores the validator as a raw string; parsed `ETag` should live on the entry (storedResponse evolution) — TODO_LIST row 7                             | None                                     | M      |
+| ~~Theme 2 (typed client cache)~~ | ~~Shared type exists; comparisons typed; direction clean~~ done at `07fe65c` — `storedResponse` + `storedValidator` (parsed once at store time); `weaklyMatchesValidator` deleted | —                                                                                                                                                                    | —                                        | M      |
 | Go 1.27.1 adoption           | go.mod, CI pins, docs, and all gates green under `GOTOOLCHAIN=auto`; AGENTS.md documents the override | Local dev shells on go1.26.7 with `GOTOOLCHAIN=local` still fail — the persisted `go env` is deliberately untouched; also gopls/LSP dead all session for the same reason | User config / toolchain install decision | S      |
-| Docs wiring                  | AGENTS/CHANGELOG/ROADMAP/TODO_LIST updated                                                            | FEATURES.md + README.md still describe the two-package world; no `entitytag` mention                                                                                     | None                                     | S      |
+| ~~Docs wiring~~                  | AGENTS/CHANGELOG/ROADMAP/TODO_LIST updated                                                            | done — FEATURES updated 2026-09-18; README package table + install rows for `entitytag`/`metrics` added at the 2026-09-23 docs-health pass                                                              | —                                        | S      |
 | nolint removal on `ETag{}`   | Lint is green with the directive removed                                                              | Root cause of why exhaustruct_v5 stopped flagging the alias zero-value is unknown; suppression is now absent if the situation changes                                    | Investigation only                       | S      |
 
 ## c) NOT STARTED (per living docs — none re-verified as started elsewhere)
@@ -169,15 +169,15 @@ TODO_LIST only items 1-12; the rest are ROADMAP fuel).
 | #  | Task                                                                                                                             | Impact | Effort | Category      |
 | -- | -------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------- |
 | 1  | Resolve the local toolchain split: install go1.27.1 or set `GOTOOLCHAIN=auto` persistently (unblocks LSP, kills session noise)   | High   | S      | Bug           |
-| 2  | Update FEATURES.md and README.md for the `entitytag` package + `Strength.IsValid` (stale inventory)                              | High   | S      | Documentation |
+| 2  | ~~Update FEATURES.md and README.md for the `entitytag` package + `Strength.IsValid` (stale inventory)~~ FEATURES done 2026-09-18; README package table + install row done 2026-09-23 docs-health pass | High   | S      | Documentation |
 | 3  | Investigate why exhaustruct_v5 no longer flags `ETag{}` post-alias; record root cause in AGENTS.md, restore protection if needed | Medium | S      | Quality       |
-| 4  | TODO_LIST row 7: store parsed `entitytag.ETag` on `cacheEntry` (storedResponse evolution)                                        | Medium | M      | Feature       |
-| 5  | Verify the deprecated-shim parity suite actually pins wrapper indirection (add explicit type-identity assertions if not)         | Medium | S      | Quality       |
-| 6  | Cut v0.3.2 (typed `Code` surface + BREAKING sentinel change + min-Go 1.27.1 + entitytag package) with full release gates         | High   | M      | Release       |
-| 7  | TODO row 3: single-source error-code list via `allETagErrorCodes`                                                                | Medium | S      | Quality       |
-| 8  | TODO row 4: benchmark backfill for typed-code change (-benchmem -count=6 baselines)                                              | Medium | S      | Quality       |
-| 9  | TODO row 5: GoDoc examples for `Code`/`DomainOf`/`InDomain`                                                                      | Low    | S      | Documentation |
-| 10 | TODO row 6 + row on error docs: docs-health VERIFY/ANNOTATE passes                                                               | Low    | S      | Documentation |
+| 4  | ~~TODO_LIST row 7: store parsed `entitytag.ETag` on `cacheEntry` (storedResponse evolution)~~ done at `07fe65c`                                        | Medium | M      | Feature       |
+| 5  | ~~Verify the deprecated-shim parity suite actually pins wrapper indirection (add explicit type-identity assertions if not)~~ done — `deprecated_test.go` carries compile-time type-identity assertions + wrapper smokes (shipped at `a5de386`, verified present 2026-09-23) | Medium | S      | Quality       |
+| 6  | ~~Cut v0.3.2 (typed `Code` surface + BREAKING sentinel change + min-Go 1.27.1 + entitytag package) with full release gates~~ done as v0.4.0 — tagged `16369cc` 2026-09-18 | High   | M      | Release       |
+| 7  | ~~TODO row 3: single-source error-code list via `allETagErrorCodes`~~ done at `16369cc`                                                                | Medium | S      | Quality       |
+| 8  | ~~TODO row 4: benchmark backfill for typed-code change (-benchmem -count=6 baselines)~~ done (`reports/bench/2026-09-18_baseline-typed-code-stored-validator.txt`) | Medium | S      | Quality       |
+| 9  | ~~TODO row 5: GoDoc examples for `Code`/`DomainOf`/`InDomain`~~ done at `fb6efab`                                                                      | Low    | S      | Documentation |
+| 10 | ~~TODO row 6 + row on error docs: docs-health VERIFY/ANNOTATE passes~~ done 2026-09-18 (report 2026-09-18_20-44 §a.7–a.8)                                                               | Low    | S      | Documentation |
 | 11 | Add `Example` functions for the `entitytag` package (ParseETag round-trip, weak vs strong)                                       | Low    | S      | Documentation |
 | 12 | Decide OQ2: Alex reply email + `client/testdata/` fixtures                                                                       | Medium | S      | Decision      |
 | 13 | Decide OQ3: tag-triggered Release workflow vs documented manual-only                                                             | Medium | S      | Decision      |
@@ -208,16 +208,16 @@ TODO_LIST only items 1-12; the rest are ROADMAP fuel).
 | 38 | Concurrent-session convention (announce file set; or session locks)                                                              | Medium | S      | Process       |
 | 39 | Benchmark A/B: codify the interleave + allocs-equality protocol in AGENTS.md benchmark discipline                                | Low    | S      | Process       |
 | 40 | Post-change doc checklist (six living docs) to stop FEATURES/README drift                                                        | Medium | S      | Process       |
-| 41 | Sweep ROADMAP Theme 2 wording: mark the subpackage half done, point at TODO row 7                                                | Low    | S      | Documentation |
+| 41 | ~~Sweep ROADMAP Theme 2 wording: mark the subpackage half done, point at TODO row 7~~ done 2026-09-23 docs-health pass — Theme 2 marked COMPLETE (`07fe65c`)                                                              | Low    | S      | Documentation |
 | 42 | `Strength.String()` method (archive item) if OQ5 promotes it                                                                     | Low    | S      | Feature       |
 | 43 | obs-text validation in the parser (archive item) if OQ5 promotes it                                                              | Low    | S      | Feature       |
 | 44 | Single-pass `ParseETagList` (archive item) if OQ5 promotes it                                                                    | Low    | S      | Feature       |
 | 45 | Isolated parser benchmarks (archive item) if OQ5 promotes it                                                                     | Low    | M      | Quality       |
-| 46 | erraudit `nolint-audit .` pass to revalidate the drainAndClose suppressions post-refactor                                        | Low    | S      | Quality       |
+| 46 | ~~erraudit `nolint-audit .` pass to revalidate the drainAndClose suppressions post-refactor~~ re-confirmed 2026-09-23: 2 needed, 0 stale                                                              | Low    | S      | Quality       |
 | 47 | Re-run full fuzz jobs at CI duration (not 8s smoke) before the next tag                                                          | Medium | M      | Quality       |
-| 48 | Push cqrs-htmx's 7 alignment commits (carried from 19:11 report; still open there)                                               | High   | S      | Feature       |
-| 49 | Fix cqrs-htmx pre-existing `GOWORK=off` failures (carried)                                                                       | Low    | M      | Bug           |
-| 50 | Consumer sweep after v0.3.2: httputil/cqrs-htmx version surfaces + workspace both-modes verify                                   | High   | M      | Quality       |
+| 48 | ~~Push cqrs-htmx's 7 alignment commits (carried from 19:11 report; still open there)~~ verified pushed — 2026-09-18 checks (report 2026-09-18_19-49 §a)                                            | High   | S      | Feature       |
+| 49 | ~~Fix cqrs-htmx pre-existing `GOWORK=off` failures (carried)~~ verified passing 2026-09-18 (report 2026-09-18_19-49 §a)                                                                            | Low    | M      | Bug           |
+| 50 | Consumer sweep after v0.3.2: httputil/cqrs-htmx version surfaces + workspace both-modes verify — still open for v0.4.0 (TODO_LIST #3, 2026-09-23)                                                   | High   | M      | Quality       |
 
 ## g) Questions I cannot answer myself
 
