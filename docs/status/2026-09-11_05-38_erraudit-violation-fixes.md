@@ -40,7 +40,7 @@
 ## b) PARTIALLY DONE
 
 1. ~~**erraudit default-mode run (without `--no-suppress`) never captured cleanly**~~ **done at `fc83490` follow-up:** Total Violations: 0 (all severities 0) — filtered `grep -vE '^\[feature:logger\]'`.
-2. **Final user-facing summary never delivered** — the session froze mid-verification instead of closing the loop.
+2. ~~**Final user-facing summary never delivered** — the session froze mid-verification instead of closing the loop.~~ closed — the 06:05 continuation session delivered the closure (verification loop green, docs landed); this residual note struck 2026-09-23 docs-health pass
 3. ~~Session todo list at cutoff: "Re-run erraudit to confirm zero"~~ **done at `fc83490` follow-up** — both modes captured; "Update CHANGELOG + AGENTS.md" done.
 
 ## c) NOT STARTED
@@ -80,12 +80,13 @@ Nothing destructive: no reverts, no broken builds, no lost work, tree clean. The
 10. ~~Update the `go-error-modernization` skill (stale `--no-suppress` row + sentinel learnings)~~ done for the flag row + reference doc (`--no-suppress` re-verified working on the root invocation 2026-09-11; old 2026-07-21 repro retired — its violation no longer fires on the current binary). Sentinel-learnings addition still open.
 11. Sweep sibling LarsArtmann Go repos for the same concrete-typed sentinel pattern (`var ErrX = errorfamily.New...`) — same erraudit finding class almost certainly exists there.
 12. ~~Old typed-errors-report open items #9 (GoDoc example) & #16 (Is across different context values)~~ done — `ExampleETagConfig_Validate` + `TestErrInvalidConfig_MatchesDerivedErrors`.
-13. Decide whether erraudit joins CI as a lint job (currently ad-hoc; invocation now documented in AGENTS.md Commands).
-14. v0.3.2 patch-release decision once items 1–6 land (go-release skill gates the tag). _(Items 1–6 landed; release decision still open — see (g)3.)_
-15. Post-release: verify pkg.go.dev renders the new sentinel doc comment correctly.
+13. ~~Decide whether erraudit joins CI as a lint job (currently ad-hoc; invocation now documented in AGENTS.md Commands).~~ still open — owner decision pending (ROADMAP-adjacent; surfaced again in reports 2026-09-11_06-05 c.3 and 2026-09-18_21-00 f#44)
+14. ~~v0.3.2 patch-release decision once items 1–6 land (go-release skill gates the tag). _(Items 1–6 landed; release decision still open — see (g)3.)_~~ superseded — the honest number was v0.4.0 (declared-type change of an exported symbol); shipped as v0.4.0 at `16369cc`, 2026-09-18
+15. ~~Post-release: verify pkg.go.dev renders the new sentinel doc comment correctly.~~ done — pkg.go.dev verified rendering v0.4.0 (all four directories) at release time, 2026-09-18 (report 2026-09-18_21-00 §a)
 
 ## g) Questions I cannot answer myself
 
 1. **drainAndClose posture:** is "2 documented deliberate ignores surfaced by `--no-suppress` audit mode" acceptable (nolint is honored in default mode), or do you want zero under `--no-suppress` too — and if so, which trade: `--disable ignored` on sweep runs, or a new client `Options.OnError` hook (public API; breaks the client's passthrough error philosophy)? _(Follow-up session adopted and documented the first option as the working default in AGENTS.md; owner can still override.)_
 2. ~~**Consumer breakage check:**~~ **closed by sweep at `fc83490` follow-up** — grepped every local project under `/home/lars/projects` for go-etag importers referencing `ErrInvalidConfig`: **zero files**. No local consumer uses the sentinel at all; the CHANGELOG entry covers hypothetical external consumers.
 3. **Release timing:** should the CHANGELOG entry ride `[Unreleased]` into a prompt v0.3.2 patch, or accumulate toward the next minor? _(Still open — blocking nothing; CI green on the exact tree.)_
+   _**Resolved:** accumulated into v0.4.0 — tagged `16369cc` 2026-09-18 with the sentinel interface change and the min-Go bump (report 2026-09-18_21-00)._

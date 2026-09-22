@@ -67,26 +67,26 @@ several mid-session observations describe states that no longer exist._
 
 ## b) PARTIALLY DONE
 
-1. **cqrs-htmx alignment is local-only.** 7 commits ahead of origin, CI has never
+1. ~~**cqrs-htmx alignment is local-only.** 7 commits ahead of origin, CI has never
    seen the sweep, no consumer anywhere can resolve the alignment until pushed.
    Left unpushed deliberately: house precedent gates consumer-repo pushes behind an
    explicit owner decision (go-etag repo notes: "decide + execute the 8 local
    pushes" was itself a pending item in report 03-40). The "aligned" claim is true
-   of the working tree, not of the ecosystem.
+   of the working tree, not of the ecosystem.~~ resolved — origin/master verified pinning go-etag v0.3.1 on 2026-09-18 with only 4 unrelated commits unpushed (report 2026-09-18_19-49 §a)
 2. **`nix build` / `nix flake check` in cqrs-htmx was NOT run** despite 40+
    go.mod/go.sum files changing — the 02-51 sweep ran exactly this check, and
    vendorHash drift is the known failure mode. This is forgotten work, not a
    decision (see c.1).
-3. **TODO_LIST.md now violates its own contract.** I added a "Done this cycle"
+3. ~~**TODO_LIST.md now violates its own contract.** I added a "Done this cycle"
    section; the file header says "Open items only — completed items live in
    `CHANGELOG.md`". Worse, half of that cycle-log is not in go-etag's CHANGELOG at
    all (the httputil train and release-notes edit never touched this repo, so
    CHANGELOG has no home for them). Needs a decision: drop the section and let the
-   status reports carry it, or amend the file's contract.
-4. **Origin reports not annotated.** TODO #1 cited report `2026-09-11_02-51`
+   status reports carry it, or amend the file's contract.~~ resolved — "Done this cycle" removed after CHANGELOG cross-check (report 2026-09-18_19-49 §a); header contract stands
+4. ~~**Origin reports not annotated.** TODO #1 cited report `2026-09-11_02-51`
    follow-up 1 and `2026-09-11_02-56` §f.11–12; both reports still claim "httputil
    release needed" / train-lag pending without the `~~done~~` annotation. The
-   httputil-side report (09-26, "re-cut the tag") WAS annotated.
+   httputil-side report (09-26, "re-cut the tag") WAS annotated.~~ resolved — 02-56 §f.11–12 annotated 2026-09-11; 02-51 follow-up 1 struck at the 2026-09-23 docs-health pass
 5. **pkg.go.dev for v1.0.1 + server_timing/v1.0.1:** fetch triggers returned 404 at
    session end; per house rule this is not a release blocker, but it is unverified
    and must be checked eventually.
@@ -215,13 +215,13 @@ pre-existing backlog carried forward for completeness.
 
 | #  | Task                                                                                                                                                         | Impact   | Effort | Category      |
 | -- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------ | ------------- |
-| 1  | Owner GO + push cqrs-htmx's 7 local commits; watch CI end-to-end (the alignment is invisible to the ecosystem until this)                                    | Critical | S      | Release       |
+| 1  | ~~Owner GO + push cqrs-htmx's 7 local commits; watch CI end-to-end (the alignment is invisible to the ecosystem until this)~~ done — pushes verified complete 2026-09-18 (report 2026-09-18_19-49 §a)                                            | Critical | S      | Release       |
 | 2  | `nix build` / `nix flake check` in cqrs-htmx BEFORE the push — vendorHash drift risk after 40+ module-graph changes                                          | Critical | M      | Bug           |
 | 3  | Write the cqrs-htmx status report for the sweep (repo convention; documents baseline, the 3 pre-existing failures, repairs)                                  | High     | S      | Documentation |
-| 4  | Diagnose the 3 pre-existing `GOWORK=off` failures: `systemadapter`, `examples/system-demo` (go-cqrs-lite Reset mismatch), `integration_test` (unknown cause) | High     | M      | Bug           |
-| 5  | Resolve the TODO_LIST contract violation: move "Done this cycle" out (or amend the file's header contract deliberately)                                      | High     | XS     | Documentation |
+| 4  | ~~Diagnose the 3 pre-existing `GOWORK=off` failures: `systemadapter`, `examples/system-demo` (go-cqrs-lite Reset mismatch), `integration_test` (unknown cause)~~ verified passing 2026-09-18 (report 2026-09-18_19-49 §a) | High     | M      | Bug           |
+| 5  | ~~Resolve the TODO_LIST contract violation: move "Done this cycle" out (or amend the file's header contract deliberately)~~ resolved — section removed (report 2026-09-18_19-49 §a)                                      | High     | XS     | Documentation |
 | 6  | Record in httputil `docs/RELEASE.md`: two independent lint pins (ci.yml + release.yml); changelog-link check belongs pre-push                                | High     | XS     | Documentation |
-| 7  | Annotate go-etag reports `02-51` follow-up 1 and `02-56` §f.11–12 as resolved at httputil v1.0.1                                                             | Medium   | XS     | Documentation |
+| 7  | ~~Annotate go-etag reports `02-51` follow-up 1 and `02-56` §f.11–12 as resolved at httputil v1.0.1~~ done — 02-56 annotated 2026-09-11; 02-51 struck 2026-09-23 docs-health pass                                                             | Medium   | XS     | Documentation |
 | 8  | Verify pkg.go.dev rendered for `httputil@v1.0.1` and `server_timing@v1.0.1` (404 at trigger time; non-blocking)                                              | Medium   | XS     | Release       |
 | 9  | Decide + execute: go-cqrs-lite `badgerengine` v4.2.1 (last train lag) — or hand to the go-cqrs-lite train owner                                              | Medium   | S      | Feature       |
 | 10 | AGENTS.md updates: cqrs-htmx (train checker = enumeration authority), httputil (`go work vendor` is the vendoring tool)                                      | Medium   | XS     | Maintenance   |

@@ -48,11 +48,11 @@
 
 ## c) NOT STARTED
 
-1. **`TODO_LIST.md` harvest** — the canonical living backlog was not touched this session (see (e)1).
-2. **Sibling-repo sentinel sweep** (`var ErrX = errorfamily.New...` pattern across LarsArtmann Go repos).
-3. **erraudit-in-CI decision and job** (invocation is now documented in AGENTS.md; no workflow wiring exists).
-4. **Release cut** (v0.4.0 or otherwise) and the post-release pkg.go.dev sentinel-doc render check.
-5. **Fuzz smoke-run** of `FuzzHasNoStoreDirective` in the local gate.
+1. ~~**`TODO_LIST.md` harvest** — the canonical living backlog was not touched this session (see (e)1).~~ done — harvested by later sessions; fully rebuilt at the 2026-09-23 docs-health pass (TODO_LIST #1–#7)
+2. **Sibling-repo sentinel sweep** (`var ErrX = errorfamily.New...` pattern across LarsArtmann Go repos). — still open
+3. **erraudit-in-CI decision and job** (invocation is now documented in AGENTS.md; no workflow wiring exists). — still open (owner decision)
+4. ~~**Release cut** (v0.4.0 or otherwise) and the post-release pkg.go.dev sentinel-doc render check.~~ done — v0.4.0 tagged `16369cc` 2026-09-18; pkg.go.dev rendering verified (report 2026-09-18_21-00 §a)
+5. ~~**Fuzz smoke-run** of `FuzzHasNoStoreDirective` in the local gate.~~ done — all three targets smoke-run green in the entitytag-extraction session (report 2026-09-18_20-02 §a)
 
 ## d) TOTALLY FUCKED UP
 
@@ -76,20 +76,20 @@ Nothing destructive: no reverts, no lost work, no broken builds, tree clean. The
 
 ## f) Things to get done next (impact-sorted)
 
-1. **HARVEST into `TODO_LIST.md`** — items 2–15 below plus any unstruck leftovers from the 05:38 report (docs-health skill, BUILD→HARVEST mode).
-2. **Resolve the version split brain in-repo** — record the v0.3.2→v0.4.0 rationale (declared-type change, two compile-breaking shapes) next to the release decision in TODO_LIST; correct report (f)14's annotation.
-3. **Owner decision + release cut** — if v0.4.0: go-release skill gates the tag (CHANGELOG cut → CI green on exact commit → tag → proxy/sum verification).
-4. **Post-release:** verify pkg.go.dev renders the new sentinel doc comment and the interface-typed declaration.
-5. **erraudit-in-CI decision** — blocking job on default mode (0 violations is the invariant), optional informational `nolint-audit`; needs the `[feature:logger]` stdout filter documented in the workflow.
+1. ~~**HARVEST into `TODO_LIST.md`** — items 2–15 below plus any unstruck leftovers from the 05:38 report (docs-health skill, BUILD→HARVEST mode).~~ done — 2026-09-23 docs-health pass (open survivors live in TODO_LIST #1–#7; release items resolved by v0.4.0)
+2. ~~**Resolve the version split brain in-repo** — record the v0.3.2→v0.4.0 rationale (declared-type change, two compile-breaking shapes) next to the release decision in TODO_LIST; correct report (f)14's annotation.~~ done — v0.4.0 shipped with the rationale in CHANGELOG `[0.4.0]`; (f)14 corrected in the 05-38 file
+3. ~~**Owner decision + release cut** — if v0.4.0: go-release skill gates the tag (CHANGELOG cut → CI green on exact commit → tag → proxy/sum verification).~~ done — v0.4.0 at `16369cc` (2026-09-18), full release chain verified
+4. ~~**Post-release:** verify pkg.go.dev renders the new sentinel doc comment and the interface-typed declaration.~~ done — verified at release (report 2026-09-18_21-00 §a)
+5. **erraudit-in-CI decision** — blocking job on default mode (0 violations is the invariant), optional informational `nolint-audit`; needs the `[feature:logger]` stdout filter documented in the workflow. — still open (owner decision)
 6. **Sibling-repo sweep** for concrete-typed sentinels among go-error-family consumers (same finding class; the fix pattern is now proven here).
 7. **Encode sentinel learnings in the `go-error-modernization` skill** — detector semantics, `err*`-prefix trap, `errname` interaction, factory pattern, `nolint-audit .` path gotcha.
 8. **File upstream feedback to the erraudit repo** — `--no-suppress` works now; the 2026-07-21 repro is dead; its `docs/feedback/` says otherwise.
 9. **Upstream go-error-family guidance** — recommend interface-typed sentinels + per-call factory in its README/docs so consumers don't relearn this.
-10. **Complete the 05:38 report annotation pass** — strike (b)2, tighten the `fc83490`→`8c7e3a9` hash references.
+10. ~~**Complete the 05:38 report annotation pass** — strike (b)2, tighten the `fc83490`→`8c7e3a9` hash references.~~ done — (b)2 struck at the 2026-09-23 docs-health pass; the hash imprecision stands as a historical note (pointers, not provenance)
 11. **Local fuzz smoke habit** — add a one-line note to AGENTS.md Testing Conventions (when parser code changes, run a 10s fuzz smoke before the race suite).
 12. **Audit remaining exported-helper GoDoc coverage** (e.g. does `MatchesIfMatch` have an example? verify before adding).
 13. **Deprecated-shim type audit** — confirm `ErrInvalidConfig` was the only exported var whose declared type needed widening; nothing else in `deprecated.go` re-exports a typed value.
-14. **Consumer bump sweep after release** (go-ecosystem-upgrade) — trivial this time: zero consumers reference the sentinel.
+14. ~~**Consumer bump sweep after release** (go-ecosystem-upgrade) — trivial this time: zero consumers reference the sentinel.~~ still open for v0.4.0 — now TODO_LIST #3 (the min-Go bump makes the sweep non-trivial this cycle)
 15. **Consider** a `docs/decisions/` ADR for the nolint-posture (documented deliberate ignores vs zero-finding sweeps) if the owner confirms the adopted default.
 
 ## g) Questions I cannot answer myself

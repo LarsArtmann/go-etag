@@ -59,9 +59,9 @@ that run and what was noticed along the way. No unrelated research was performed
 2. Unit test for `cloneHeader`'s nil branch — or proof the branch is dead (can
    `entry.header` ever be nil?) and deletion of the guard.
 3. Benchmark capture (post-change vs the git-reachable pre-change baseline).
-4. `TODO_LIST.md` HARVEST from section (f) — deliberately deferred per "wait for
-   instructions".
-5. Coverage check on the freshening paths (`persistFreshened`, `cloneHeader`).
+4. ~~`TODO_LIST.md` HARVEST from section (f) — deliberately deferred per "wait for
+   instructions".~~ done — open survivors live in TODO_LIST #5/#6 (2026-09-23 docs-health pass); the rest arrived via the 09-22 report's list
+5. Coverage check on the freshening paths (`persistFreshened`, `cloneHeader`). — still open (TODO_LIST #6)
 6. `FreshenFields` canonicalization at Options-validation time (see e/5).
 
 ## d) TOTALLY FUCKED UP
@@ -111,15 +111,15 @@ they were sloppy, not because they survived:
 | 4  | Coverage check: confirm `persistFreshened`/`cloneHeader` lines are exercised (`go test -coverprofile`)                             | Medium                    | S      |
 | 5  | Canonicalize (or reject) non-canonical `FreshenFields` names in Options validation — kills the invisible-key footgun               | High (UX)                 | M      |
 | 6  | Restructure `TestMergeHeaderPrefersExactThenCanonical` to a non-literal key so gopls stops flagging SA1008                         | Low                       | S      |
-| 7  | Run `erraudit nolint-audit .` once post-change (completeness; expect no drift)                                                     | Low                       | S      |
-| 8  | HARVEST section (f) into TODO_LIST.md (docs-health)                                                                                | Medium                    | S      |
-| 9  | Verify CI is green on the auto-daemon commit carrying the dedup (4ba1ed8)                                                          | Medium                    | S      |
+| 7  | ~~Run `erraudit nolint-audit .` once post-change (completeness; expect no drift)~~ re-confirmed 2026-09-23: 2 directives needed, 0 stale (docs-health pass)         | Low                       | S      |
+| 8  | ~~HARVEST section (f) into TODO_LIST.md (docs-health)~~ done 2026-09-23 (TODO_LIST #5–#7 carry the survivors)                                                     | Medium                    | S      |
+| 9  | ~~Verify CI is green on the auto-daemon commit carrying the dedup (4ba1ed8)~~ superseded — CI green since (v0.3.0→v0.4.0 all shipped; tag runs verified)            | Medium                    | S      |
 | 10 | AGENTS.md note: HEAD freshening commits through `persistFreshened` (single funnel invariant)                                       | Low                       | S      |
 | 11 | Grep spec_test.go for existing HEAD × FromCacheHeader coverage — close the b/1 verification gap                                    | Medium                    | S      |
 | 12 | Consider a coverage floor in CI if none exists (check workflow first)                                                              | Unknown until checked     | M      |
 | 13 | Audit other `-t 1` findings at the default threshold 5 to confirm the report is empty there too (clone baseline)                   | Low                       | S      |
 | 14 | Add `cloneHeader`-style stdlib-footgun notes to AGENTS.md gotchas if more Clone-guard sites ever appear                            | Low                       | S      |
-| 15 | Skim `docs/status/` backlog (2 modified files at session start) for unharvested items                                              | Medium                    | S      |
+| 15 | ~~Skim `docs/status/` backlog (2 modified files at session start) for unharvested items~~ done 2026-09-23 — every 2026-0* snapshot read end-to-end and annotated (docs-health full audit)                              | Medium                    | S      |
 | 16 | Consider whether `drainAndClose` suppressions should gain a dedicated spec test asserting the discard is safe under a failing body | Low                       | M      |
 | 17 | Double-check the deprecated root shim still compiles green after any future transport refactor (habit, not a current issue)        | Low                       | S      |
 

@@ -87,12 +87,12 @@ this session is its re-run with the same mandate plus "archive what's fully done
 
 1. **httputil release carrying go-etag v0.3.0 + cqrs-htmx's 43-module alignment**
    (TODO_LIST #1) — the keystone; needs the go-release flow and owner GO. Foreign-repo side.
-2. **TODO_LIST #2** — append the migration diff to the v0.3.0 GitHub Release notes.
-3. **TODO_LIST #3** — `FreshenPolicy` GoDoc example (verified absent from `client/example_test.go`).
-4. **TODO_LIST #4** — scope the workflow-level `GOTOOLCHAIN` pin (verified still workflow-level at `ci.yml:16`).
-5. **TODO_LIST #5** — `FreshenFields()` zero-arg footgun (verified at `client/options.go:79`: empty list ≡ `FreshenNone`, undocumented).
-6. **TODO_LIST #6** — "Interpretation decisions" column in `docs/rfc9111-conformance.md`.
-7. **TODO_LIST #7** — go-error-family `go list -m -u` sweep.
+2. ~~**TODO_LIST #2** — append the migration diff to the v0.3.0 GitHub Release notes.~~ done 2026-09-11 (report 2026-09-11_05-09 §a.3)
+3. ~~**TODO_LIST #3** — `FreshenPolicy` GoDoc example (verified absent from `client/example_test.go`).~~ done at `2fdb8e3` (`ExampleFreshenPolicy`)
+4. ~~**TODO_LIST #4** — scope the workflow-level `GOTOOLCHAIN` pin (verified still workflow-level at `ci.yml:16`).~~ done 2026-09-11 (report 2026-09-11_05-09 §a.5)
+5. ~~**TODO_LIST #5** — `FreshenFields()` zero-arg footgun (verified at `client/options.go:79`: empty list ≡ `FreshenNone`, undocumented).~~ done at `2fdb8e3` — normalized to return `FreshenNone()`
+6. ~~**TODO_LIST #6** — "Interpretation decisions" column in `docs/rfc9111-conformance.md`.~~ done 2026-09-11 (shipped as a section; report 2026-09-11_05-09 §a.7)
+7. ~~**TODO_LIST #7** — go-error-family `go list -m -u` sweep.~~ done 2026-09-11 — v0.10.0 current (report 2026-09-11_05-09 §a.8)
 8. **02-56 §f.1–10 consumer-repo loose ends** — `nix build` in six repos, lint/vet on go-github-kit, residual whole-type sweeps, the 8 local commits per repo. Foreign repos; owner-gated.
 9. **ROADMAP Open Question 5 decision** — promote-or-bury the ~25 residual open-low August items (owner call; now formally parked instead of living only in old reports).
 10. **Pushing** — nothing pushed (house rule); the daemon's commits are local.
@@ -145,19 +145,19 @@ Grouped, impact-ordered. 1–7 mirror TODO_LIST (kept in sync, not duplicated in
 
 **go-etag backlog (= TODO_LIST, owner-gated where marked):**
 
-1. Cut the httputil release carrying v0.3.0; then align cqrs-htmx's 43 train-lag modules (TODO #1; go-release flow + GO).
-2. `gh release edit v0.3.0` to append the migration diff (TODO #2; GO — the block is written, it's a paste).
-3. `FreshenPolicy` GoDoc example with Output (TODO #3).
-4. Scope `GOTOOLCHAIN` pin to test/fuzz jobs or pin govulncheck (TODO #4; policy call).
-5. Document/normalize `FreshenFields()` zero-arg ≡ `FreshenNone()` (TODO #5).
-6. "Interpretation decisions" column in `docs/rfc9111-conformance.md` (TODO #6).
-7. go-error-family update sweep (TODO #7).
+1. ~~Cut the httputil release carrying v0.3.0; then align cqrs-htmx's 43 train-lag modules (TODO #1; go-release flow + GO).~~ done — httputil v1.0.1 released carrying go-etag v0.3.1; cqrs-htmx alignment executed locally (report 2026-09-11_05-09 §a.1–a.2; pushes verified by report 2026-09-18_19-49 §a)
+2. ~~`gh release edit v0.3.0` to append the migration diff (TODO #2; GO — the block is written, it's a paste).~~ done — inserted under the Breaking section (report 2026-09-11_05-09 §a.3)
+3. ~~`FreshenPolicy` GoDoc example with Output (TODO #3).~~ done at `2fdb8e3` (`ExampleFreshenPolicy`, report 2026-09-11_05-09 §a.4)
+4. ~~Scope `GOTOOLCHAIN` pin to test/fuzz jobs or pin govulncheck (TODO #4; policy call).~~ done — pin scoped to the three gated jobs; govulncheck deliberately unpinned (report 2026-09-11_05-09 §a.5)
+5. ~~Document/normalize `FreshenFields()` zero-arg ≡ `FreshenNone()` (TODO #5).~~ done at `2fdb8e3` (report 2026-09-11_05-09 §a.6)
+6. ~~"Interpretation decisions" column in `docs/rfc9111-conformance.md` (TODO #6).~~ done (report 2026-09-11_05-09 §a.7)
+7. ~~go-error-family update sweep (TODO #7).~~ done — current (report 2026-09-11_05-09 §a.8)
 
 **This session's doc loose ends:**
 
 8. Run the `UNMATCHED`/doubled-pipe artifact grep over all 21 annotated files (§b.3).
-9. Open and verify `CONTRIBUTING.md` reflects its `721cfbd` claim; fix if stale (§b.4).
-10. Open and verify `docs/DOMAIN_LANGUAGE.md` against current code (`FreshenPolicy` term should exist; `PreserveOn304` should not).
+9. ~~Open and verify `CONTRIBUTING.md` reflects its `721cfbd` claim; fix if stale (§b.4).~~ done 2026-09-23 docs-health pass — CONTRIBUTING re-read; min-Go corrected to 1.27+, `entitytag`/`metrics` layout rows and the GOTOOLCHAIN note added
+10. ~~Open and verify `docs/DOMAIN_LANGUAGE.md` against current code (`FreshenPolicy` term should exist; `PreserveOn304` should not).~~ done — verified current 2026-09-23; stale `server/entity_tag.go`/`cacheEntry.etag` pointers corrected and `Code`/`Domain`/`storedResponse` terms added
 11. Read `agents-quality-guide.md` and re-score AGENTS.md against the 5-dimension rubric (§b.1).
 12. Trial `annotate-prose.py --dry-run` against one already-annotated file to validate the tooling for future passes (§b.2).
 13. Adopt a standing rule (AGENTS.md Repo Workflow Notes): docs-health fixes commit deliberately, per wave, before the daemon wakes.
