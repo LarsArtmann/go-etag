@@ -47,6 +47,18 @@ Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 | Cache telemetry (`Stats{Hits, Stored, Entries}`)                                                                                  | FULLY_FUNCTIONAL | `TestResponseCacheStats`                                                                                                 |
 | Real-wire verification via `httptest.Server` + real `http.Client`                                                                 | FULLY_FUNCTIONAL | `client/integration_test.go` (canonical forms, bodiless 304, Age flow)                                                   |
 
+## Metrics companion (`metrics/`, package `metrics`)
+
+Moved in from `httputil/etagmetrics` (2026-09-22); details: `docs/planning/2026-09-22_23-25_move-etagmetrics-into-go-etag-metrics.md`.
+
+| Feature                                                                          | Status           | Evidence / Notes                                                                                              |
+| -------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| `Attach(cfg)` — counting hooks on a config copy, pre-existing hooks preserved     | FULLY_FUNCTIONAL | `metrics/metrics.go`; `TestAttach_ChainsExistingHooks` (user hooks fire after counting)                        |
+| Atomic counters `Generated` / `NotModified` / `BufferOverflows` + `Snapshot()`    | FULLY_FUNCTIONAL | `TestAttach_CountsFreshGET`, `TestAttach_CountsConditional304`, `TestAttach_CountsBufferOverflow`              |
+| `HitRatio()` = `NotModified / Generated` (exact denominator; fixed vs httputil)   | FULLY_FUNCTIONAL | `TestAttach_CountsConditional304` (1/2), `TestHitRatio_ZeroBeforeEvents`, `TestHitRatio_AdoptedTag304DoesNotCountAsGenerated` |
+| Overflow contract — streamed overflow fires `OnBufferOverflow`, not `OnETagGenerated` | FULLY_FUNCTIONAL | `TestAttach_CountsBufferOverflow`                                                                          |
+| Hook overhead benchmark (~9 ns/op over hook-less baseline)                        | FULLY_FUNCTIONAL | `BenchmarkETagMetricsHookOverhead` vs `BenchmarkETagPlainNoHooks`                                              |
+
 ## Root package (deprecated shim)
 
 | Feature                                                          | Status           | Evidence / Notes                                                                                                                                                                                           |

@@ -243,6 +243,30 @@ cfg.On304 = func(etag.ETag) { cacheHits.Add(1) }
 See `ExampleNew_observabilityHooks` in the [server package GoDoc](https://pkg.go.dev/github.com/larsartmann/go-etag/server)
 for a runnable version deriving a hit ratio from plain counters.
 
+### Ready-made counters: the metrics package
+
+If hand-wiring counters is more ceremony than you want,
+[`github.com/larsartmann/go-etag/metrics`](https://pkg.go.dev/github.com/larsartmann/go-etag/metrics)
+attaches them in one call — and preserves any hooks you already installed
+(yours run after the counting):
+
+```go
+import "github.com/larsartmann/go-etag/metrics"
+
+cfg, counters := metrics.Attach(etag.DefaultETagConfig())
+handler := etag.New(cfg)(mux)
+
+// elsewhere:
+slog.Info("etag cache", "hit_ratio", counters.HitRatio())
+```
+
+`Counters` exposes plain `atomic.Int64` fields (`Generated`, `NotModified`,
+`BufferOverflows`), a `Snapshot()` copy, and `HitRatio()` — the fraction of
+tag-computing responses answered 304 (`NotModified / Generated`; both hooks
+fire for a 304 on a computed tag, so `Generated` alone is the exact
+denominator). Exposition format stays yours: the package is metric-agnostic
+on purpose, so Prometheus, OpenTelemetry, or slog read the same counters.
+
 ## Strong vs Weak Validators
 
 RFC 7232 §2.1 defines two validator strengths:

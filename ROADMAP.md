@@ -34,6 +34,10 @@ prevents. Directions (decision open — see Open Questions):
 
 ### 3. Scale, persistence, and observability
 
+- Server-side observability is complete — the `metrics/` package (moved in
+  from `httputil/etagmetrics`, 2026-09-22) ships ready-made counters for the
+  server hooks; no telemetry SDK dependency enters the module unless a
+  concrete consumer asks for an exporter sub-module.
 - Client observability hooks (`OnHit` / `OnStore` / `OnFreshen` /
   `OnInvalidate`) mirroring the server's — `Stats()` suffices until a consumer
   asks.
