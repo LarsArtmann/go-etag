@@ -938,3 +938,66 @@ func TestCloneHeaderNilReturnsEmpty(t *testing.T) {
 		t.Errorf("cloneHeader(nil) result is not writable: Get = %q", got)
 	}
 }
+
+// TestFreshenFromHeadKeepsValidatorWhenHeaderLacksETag pins the
+// persistFreshened validator fallback: a HEAD-freshened entry whose header
+// set carries no ETag field still revalidates later with the stored
+// validator wire instead of orphaning the entry. The HEAD confirms via
+// Last-Modified alone (the RFC 9111 §4.3.5 comparable-validator rule), so
+// no ETag ever flows into the freshened header and only the fallback keeps
+// the validator alive.
+func TestFreshenFromHeadKeepsValidatorWhenHeaderLacksETag(t *testing.T) {
+	t.Parallel()
+
+	stub := &recordedStub{steps: []stubStep{
+		{
+			status: http.StatusOK,
+			header: stubHeader(
+				headerPair{"ETag", `"v1"`},
+				headerPair{"Last-Modified", "tue, 01 jan 2025 00:00:00 gmt"},
+				headerPair{"Date", "date-one"},
+			),
+			body: "payload",
+		},
+		{
+			status: http.StatusOK,
+			header: stubHeader(
+				headerPair{"Last-Modified", "tue, 01 jan 2025 00:00:00 gmt"},
+				headerPair{"Date", "date-two"},
+			),
+			body: "",
+		},
+		{status: http.StatusNotModified, header: stubHeader(), body: ""},
+	}}
+
+	transport := NewTransport(stub, Options{})
+	url := "https://api.dev.test/articles"
+
+	fetch(t, transport, newGetRequest(t, url))
+
+	entry, ok := transport.cache.get(url)
+	if !ok {
+		t.Fatalf("priming GET stored no entry")
+	}
+
+	etagless := entry
+	etagless.header = entry.header.Clone()
+	etagless.header.Del("ETag")
+	transport.cache.set(url, etagless)
+
+	fetch(t, transport, newSpecRequest(t, http.MethodHead, url))
+
+	if got := transport.Stats().Entries; got != 1 {
+		t.Fatalf("entries after confirming HEAD = %d, want the freshened entry kept", got)
+	}
+
+	_, header, _ := fetch(t, transport, newGetRequest(t, url))
+
+	if got := stub.lastValidator(); got != `"v1"` {
+		t.Errorf("revalidation validator = %q, want the stored %q (the fallback kept it)", got, `"v1"`)
+	}
+
+	if got := header.Get("Date"); got != "date-two" {
+		t.Errorf("Date = %q, want the HEAD's date-two (the freshening ran)", got)
+	}
+}
