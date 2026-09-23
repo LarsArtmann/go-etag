@@ -17,7 +17,7 @@ Starting state: 8 violations (7 ERROR, 1 WARNING). The `erraudit` tool flagged i
 ### Audit Violations Resolved (8/8 → 0)
 
 | # | Violation                            | Location                   | Fix                                                                                                              |
-| - | ------------------------------------ | -------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+|---|---|---|---|
 | 1 | Ignored `h.Write` error              | `etag.go:57`               | Check error; panic with `Orchestration` error (`ErrCodeHashWriteFailed`) — hash.Hash contract violation is a bug |
 | 2 | Ignored `ResponseWriter.Write` error | `etag.go:178` (flush path) | New `ETagConfig.OnError` callback receives classified `*errorfamily.Error`                                       |
 | 3 | Ignored `ResponseWriter.Write` error | `etag.go:326` (Flush path) | Same `OnError` callback                                                                                          |
@@ -30,7 +30,7 @@ Starting state: 8 violations (7 ERROR, 1 WARNING). The `erraudit` tool flagged i
 ### New Error Codes Added
 
 | Code                          | Family        | When                                           |
-| ----------------------------- | ------------- | ---------------------------------------------- |
+|---|---|---|
 | `http.etag_config_invalid`    | Rejection     | ETagConfig field value invalid                 |
 | `http.etag_hash_write_failed` | Orchestration | hash.Write returned error (contract violation) |
 

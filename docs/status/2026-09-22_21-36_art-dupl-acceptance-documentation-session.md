@@ -136,7 +136,7 @@ directly observed — no new research.
 ## f) NEXT TASKS (up to 50, ranked; brainstorm per user request — most are ROADMAP fuel, HARVEST should apply routing rigor)
 
 | #  | Task                                                                                                                                                                                                                                                     | Impact | Effort | Category      |
-| -- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------------- |
+|---|---|---|---|---|
 | 1  | Decide enforcement policy for the accepted clone (see g.1), then implement it (baseline file or CI assert "exactly 1 group")                                                                                                                             | High   | M      | Quality       |
 | ~~2~~  | ~~HARVEST this report's list into TODO_LIST.md / ROADMAP.md (docs-health HARVEST) so it does not die in this timestamped file~~ done 2026-09-23 docs-health pass (TODO_LIST #1–#7; ROADMAP OQ8)                                                          | ~~High~~   | ~~S~~      | ~~Documentation~~ |
 | ~~3~~  | ~~Look at the 1-line `go.mod` change inside daemon commit `969d077` (not authored this session)~~ done 2026-09-23 — it relaxed `go 1.27.1` → `go 1.27`; builds green (go-error-family needs only 1.26); floor decision for v0.5.0 routed to TODO_LIST #2 | ~~Medium~~ | ~~S~~      | ~~Cleanup~~       |

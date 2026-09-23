@@ -8,7 +8,7 @@
 ## Original findings (4 ERROR violations)
 
 | # | Type                     | Location                  | Finding                                                                     |
-| - | ------------------------ | ------------------------- | --------------------------------------------------------------------------- |
+|---|---|---|---|
 | 1 | `sentinel_concrete_type` | `server/errors.go:39`     | `ErrInvalidConfig` declared `*errorfamily.Error`; must be `error` interface |
 | 2 | `sentinel_concrete_type` | `deprecated.go:77`        | same, in the deprecated root shim                                           |
 | 3 | `ignored`                | `client/transport.go:583` | `_, _ = io.Copy(io.Discard, resp.Body)` blank discard                       |

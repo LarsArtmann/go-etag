@@ -41,7 +41,7 @@ Roadmap epics (Theme 1 §4.2 freshness design doc, Theme 3 client hooks spike, v
 Sorted by importance / impact / effort / customer value. OWNER = explicit owner decision or permission first. Est = focused estimate.
 
 | #   | Task                                                                                                                                                                                      | Importance | Impact | Effort | Est  | Tier    |
-| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | ------ | ---- | ------- |
+|---|---|---|---|---|---|---|
 |~~M1~~ done — `80bc256` cut; `entitytag/v0.6.0`→`80bc256`, `server/v0.6.0`→`609bf83` (report 16:40 a1)|~~**Staircase part 1 (OWNER GO):** final gate run, CHANGELOG cut (`chore(release): cut CHANGELOG v0.6.0`), entitytag stair (tidy/verify/GOWORK=off build+race/CI green/annotated `entitytag/v0.6.0`/proxy+sum), server stair (same → `server/v0.6.0`)~~|~~Critical~~|~~High~~|~~S/M~~|~~60m~~|~~1%~~|
 |~~M2~~ done — client/metrics/root stairs, clean-room ×5, GitHub Release (report 16:40 a1–a2)|~~**Staircase part 2:** client stair, metrics stair, root stair (final tidy, root tag `v0.6.0`, frozen CI run), clean-room `go get` ×5 + smokes (Attach/HitRatio, NewTransport, New, ParseETag), GitHub Release Latest non-prerelease, train bumped for next cycle~~|~~Critical~~|~~High~~|~~M~~|~~90m~~|~~1%~~|
 |~~M3~~ done — report 16:40 a3|~~**Post-release proof:** nested-tag CI runs ×4 green (trigger-fix proof), pkg.go.dev ×5 renders, dependabot nested manifests recover, post-tag `go work sync` idempotency added to the gate, root go.sum pruned~~|~~High~~|~~High~~|~~S~~|~~45m~~|~~1%~~|
@@ -79,7 +79,7 @@ Sorted by importance / impact / effort / customer value. OWNER = explicit owner 
 Every task ends with its verification step (V = the AGENTS.md gate subset relevant to the change). Sorted by parent (execution order); parents ordered per §2.
 
 | #     | Task (≤12 min)                                                                                                                                    | Parent | Est |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | --- |
+|---|---|---|---|
 | F1    | Final `scripts/pre-release-check.sh` run on the release-prep commit (exit 0 required)                                                             | M1     | 10m |
 | F2    | Re-read CHANGELOG `[Unreleased]`; verify it covers split + fuzz-fix + directive-fix                                                                | M1     | 6m  |
 | F3    | Cut CHANGELOG: `[Unreleased]` → `[0.6.0] - 2026-09-23`, empty placeholders, compare links                                                          | M1     | 8m  |

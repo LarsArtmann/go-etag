@@ -155,27 +155,27 @@
 ## f) Next 50 things to get done
 
 | #   | Priority | Task                                                                                                                                                  | Effort |
-| --- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+|---|---|---|---|
 | ~~1~~   | ~~P0~~       | ~~Delete unused `hashUint64HexChars` constant~~ done at `e0fe51f`                                                                                     | ~~XS~~     |
 | ~~2~~   | ~~P0~~       | ~~Fix `hexEncode` allocation regression (restore stack-allocated path)~~ done at `e0fe51f`                                                            | ~~S~~      |
 | ~~3~~   | ~~P0~~       | ~~Commit uncommitted `AGENTS.md` + `CHANGELOG.md`~~ done (daemon committed; history verified)                                                         | ~~XS~~     |
 | ~~4~~   | ~~P0~~       | ~~Update stale `docs/review-and-roadmap.md`~~ done at `e0fe51f`                                                                                       | ~~S~~      |
 | ~~5~~   | ~~P1~~       | ~~Add fuzz tests for `ParseETag` / `ParseETagList`~~ done at `e0fe51f`                                                                                | ~~S~~      |
-| 6   | P1       | Add boundary test: body exactly `MaxBufferSize` — open                                                                                                | XS     |
-| 7   | P1       | Test: `Skip` + `HEAD` interaction — open                                                                                                              | XS     |
-| 8   | P1       | Test: `SkipIfPresent` + buffer overflow interaction — open                                                                                            | XS     |
+|~~6~~|~~P1~~|~~Add boundary test: body exactly `MaxBufferSize` — open~~|~~XS~~| dies per OQ5 — open-low since August, revive on demand (ROADMAP OQ5)
+|~~7~~|~~P1~~|~~Test: `Skip` + `HEAD` interaction — open~~|~~XS~~| dies per OQ5 — open-low since August, revive on demand (ROADMAP OQ5)
+|~~8~~|~~P1~~|~~Test: `SkipIfPresent` + buffer overflow interaction — open~~|~~XS~~| dies per OQ5 — open-low since August, revive on demand (ROADMAP OQ5)
 | ~~9~~   | ~~P1~~       | ~~Test: all 2xx cacheable status codes~~ done at `c759373`                                                                                            | ~~XS~~     |
 | ~~10~~  | ~~P1~~       | ~~Test: handler calls `WriteHeader` multiple times~~ done at `c759373`                                                                                | ~~XS~~     |
 | ~~11~~  | ~~P1~~       | ~~Property test: ETag round-trip (compute → String → Parse)~~ done at `e0fe51f` (fuzz round-trip)                                                     | ~~S~~      |
 | ~~12~~  | ~~P1~~       | ~~Write migration guide (`docs/migration/v0.2.md`)~~ done — written `e0fe51f`, removed `8890f8d` (fiction)                                            | ~~M~~      |
 | ~~13~~  | ~~P1~~       | ~~Update CONTRIBUTING.md commands~~ done at `721cfbd`                                                                                                 | ~~XS~~     |
-| 14  | P2       | Reduce `ParseETagList` allocations via `sync.Pool` or pre-allocation — open                                                                           | M      |
-| 15  | P2       | Add benchmarks for large bodies (1 KB, 100 KB, 1 MB) — open                                                                                           | S      |
+|~~14~~|~~P2~~|~~Reduce `ParseETagList` allocations via `sync.Pool` or pre-allocation — open~~|~~M~~| done — parse made allocation-free (benchmarks `reports/bench/2026-09-18_after-typed-validator.txt`); pooling unnecessary
+|~~15~~|~~P2~~|~~Add benchmarks for large bodies (1 KB, 100 KB, 1 MB) — open~~|~~S~~| dies per OQ5 — open-low since August, revive on demand (ROADMAP OQ5)
 | ~~16~~  | ~~P2~~       | ~~Streaming hash support (`hash.Hash` interface option)~~ Won't implement — conflicts with buffer-and-compare architecture                            | ~~M~~      |
-| 17  | P2       | GoDoc example for `MatchesIfMatch` (lost-update pattern) — open                                                                                       | XS     |
+|~~17~~|~~P2~~|~~GoDoc example for `MatchesIfMatch` (lost-update pattern) — open~~|~~XS~~| done — README "Conditional Request Helpers" lost-update example
 | ~~18~~  | ~~P2~~       | ~~Align `EntityTag` vs `ETag` naming in commit history / docs~~ done — `ETag` everywhere                                                              | ~~XS~~     |
-| 19  | P2       | Add `GoString()` method to `ETag` for debug output — open (low)                                                                                       | XS     |
-| 20  | P2       | Document backslash avoidance in generated tags — open (low)                                                                                           | XS     |
+|~~19~~|~~P2~~|~~Add `GoString()` method to `ETag` for debug output — open (low)~~|~~XS~~| Won't implement — OQ5 (low); `IsValid`/`IsWeak` cover the debug need
+|~~20~~|~~P2~~|~~Document backslash avoidance in generated tags — open (low)~~|~~XS~~| dies per OQ5 — open-low since August, revive on demand (ROADMAP OQ5)
 | ~~21~~  | ~~P2~~       | ~~RFC 7232 §2.4: Preserve `Vary` header on 304~~ done — handler metadata incl. Vary survives 304 (`TestSpec_RFC7232_NotModifiedMetadata`, 2026-09-10) | ~~S~~      |
 | ~~221~~ | ~~P3~~       | ~~`If-Modified-Since` support (RFC 7232 §3.3)~~ (typo-row duplicate of #22 — Won't implement server-side)                                             | ~~M~~      |
 | ~~23~~  | ~~P3~~       | ~~`If-Unmodified-Since` support (RFC 7232 §3.4)~~ Won't implement — out of scope                                                                      | ~~M~~      |
@@ -188,7 +188,7 @@
 | ~~30~~  | ~~P3~~       | ~~Version tag `v0.2.0`~~ done — v0.1.0 first (`3a7d532` era), v0.2.0 at `be19640`                                                                     | ~~XS~~     |
 | ~~31~~  | ~~P3~~       | ~~GoDoc badge / pkg.go.dev submission~~ done — live since v0.1.1                                                                                      | ~~XS~~     |
 | ~~32~~  | ~~P3~~       | ~~Consider subpackage split: `entitytag` vs `middleware`~~ done at `bc5a551` (server/ + client/ split instead)                                        | ~~M~~      |
-| 33  | P3       | ABNF validation for `obs-text` in `ParseETag` — open                                                                                                  | S      |
+|~~33~~|~~P3~~|~~ABNF validation for `obs-text` in `ParseETag` — open~~|~~S~~| dies per OQ5 — fuzz round-trip pins no-panic; strict obs-text rejection revive on demand (ROADMAP OQ5)
 | ~~34~~  | ~~P3~~       | ~~`//go:generate` directives if codegen planned~~ Won't implement — no codegen                                                                        | ~~S~~      |
 | ~~35~~  | ~~P3~~       | ~~Allocation profiling and optimization pass~~ done at `e0fe51f` (zero-alloc hex; remaining allocs documented)                                        | ~~M~~      |
 | ~~36~~  | ~~P3~~       | ~~Consider `Skip` as a `func(*http.Request) bool` interface for composability~~ done — `Skip` IS `func(*http.Request) bool` since `15114b3`           | ~~S~~      |
@@ -198,10 +198,10 @@
 | ~~40~~  | ~~P3~~       | ~~Consider `Cache-Control` integration~~ Won't implement — callers own Cache-Control (guidance shipped at `721cfbd`: README "Cache policy" section)   | ~~M~~      |
 | ~~41~~  | ~~P3~~       | ~~Add `ETag.IsEmpty()` vs `ETag.IsValid()` distinction~~ done — `IsValid()` shipped; zero-value is the empty case                                     | ~~XS~~     |
 | ~~42~~  | ~~P3~~       | ~~Document FNV-64a collision probability in GoDoc~~ done — documented in `entity_tag.go` + README                                                     | ~~XS~~     |
-| 43  | P3       | Add `BenchmarkParseETagList` with realistic header sizes — open                                                                                       | XS     |
+|~~43~~|~~P3~~|~~Add `BenchmarkParseETagList` with realistic header sizes — open~~|~~XS~~| dies per OQ5 — open-low since August, revive on demand (ROADMAP OQ5)
 | ~~44~~  | ~~P3~~       | ~~Consider `ETag` as `json.Marshaler`/`json.Unmarshaler`~~ Won't implement — no consumer demand                                                       | ~~S~~      |
 | ~~45~~  | ~~P3~~       | ~~Add `Equal(ETag) bool` convenience method (defaults to weak)~~ Won't implement — `WeakEqual`/`StrongEqual` are explicit                             | ~~XS~~     |
-| 46  | P3       | Consider `Strength.String()` method for logging — open (low)                                                                                          | XS     |
+|~~46~~|~~P3~~|~~Consider `Strength.String()` method for logging — open (low)~~|~~XS~~| Won't implement — OQ5 (low); `IsValid`/`IsWeak` cover the logging need
 | ~~47~~  | ~~P3~~       | ~~Add `docs/architecture.md` with design decisions~~ Won't implement — AGENTS.md carries the architecture; `docs/decisions/` carries ADRs             | ~~S~~      |
 | ~~48~~  | ~~P3~~       | ~~Consider `ETagHeader` custom type for `http.Header` integration~~ Won't implement — plain string constants suffice                                  | ~~M~~      |
 | ~~49~~  | ~~P3~~       | ~~Add negative tests: nil `HashFunc`, nil `Skip`~~ done at `15114b3` (default-fn tests; Skip true/false paths)                                        | ~~XS~~     |
@@ -234,7 +234,7 @@ _**Resolved:** split happened differently at `bc5a551` — server/ + client/ pac
 ## Verification Snapshot
 
 | Check                          | Result                      |
-| ------------------------------ | --------------------------- |
+|---|---|
 | `go build ./...`               | PASS                        |
 | `go vet ./...`                 | PASS                        |
 | `go test -race -count=1 ./...` | PASS (63 tests)             |

@@ -11,7 +11,7 @@
 ## a) FULLY DONE
 
 | Item                                                                                                                                                                                                                    | Evidence                                               |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+|---|---|
 | Gap analysis of both error systems (5 go-etag codes vs ~68 httputil codes; typed vs untyped; routing helpers; template model; stdlib classifications)                                                                   | Session research, verified via `go doc` + source reads |
 | `server/code.go`: typed `Code` + `Domain`, `Domain()`, 6 family constructors + 6 `Wrap*` methods (exact httputil parity), `DomainOf`, `InDomain` via `errors.AsType[errorfamily.Coded]`                                 | `server/code.go`                                       |
 | Typed internal constants `codeETagWriteFailed` … `codeHashWriteFailed` mirroring the exported untyped strings                                                                                                           | `server/errors.go:35-44`                               |
@@ -27,7 +27,7 @@
 ## b) PARTIALLY DONE
 
 | Item              | What's missing                                                                                                                                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|---|---|
 | Doc hygiene       | `TODO_LIST.md` not harvested from section (f); dprint markdown formatting not run on the edited `.md` files                                                                                                   |
 | LSP hygiene       | Stale gopls/golangci-ls diagnostics (`indexByte`, err113, golines) kept firing all session; verified stale via real CLI runs each time (AGENTS rule followed), but never `lsp_restart`ed to silence the noise |
 | Performance claim | "No perf impact (compile-time constants, error paths only)" is reasoned but not benchmark-backed; no smoke `-bench=.` run, no `reports/bench/` baseline                                                       |

@@ -64,7 +64,7 @@ Sorted by importance / impact / effort / customer value. OWNER = needs an explic
 owner decision or permission before execution.
 
 | #   | Task                                                                                                                                                                                                                                                                                                                                                                       | Importance                                                                                                                                                             | Impact | Effort | Est  | Tier    |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ---- | ------- |
+|---|---|---|---|---|---|---|
 |~~M1~~ done — shipped with v0.5.0 (`af2b6d1`; report 04-52 §b)|~~**Owner decision batch** (one structured prompt): go-directive floor for v0.5.0 (restore `1.27.1` vs accept `1.27`), OQ2 Alex fixtures/email, OQ3 release workflow, OQ4 FNV affirm, OQ5 open-low items, OQ6 shim scope, OQ7 constructor trim, OQ8 art-dupl enforcement~~|~~Critical~~|~~High~~|~~S~~|~~30m~~|~~1%~~|
 |~~M2~~ done — shipped with v0.5.0 (`af2b6d1`; report 04-52 §b)|~~**Release v0.5.0** per the go-release runbook: apply M1's floor decision, CHANGELOG cut (`chore(release): cut CHANGELOG v0.5.0`), commit immediately (daemon race), CI green on exact commit, annotated tag, proxy `.info`-hash + sum.golang.org, clean-room `go get …/metrics@v0.5.0` + build + run, GitHub Release Latest non-prerelease, post-release pkg.go.dev verify~~|~~Critical~~|~~High~~|~~M~~|~~90m~~|~~1%~~|
 |~~M3~~ done — shipped with v0.5.0 (`af2b6d1`; report 04-52 §b)|~~**Consumer propagation sweep** (go-ecosystem-upgrade): all six in-house consumers → v0.5.0; version surfaces first (flake.nix inputs, vendorHash, CI pins, DiscordSync drift-guard); commit after each gate; `nix build` where go.sum changed; both GOWORK modes on workspace repos~~|~~Critical~~|~~High~~|~~M~~|~~100m~~|~~4%~~|
@@ -101,7 +101,7 @@ Sorted within each parent by execution order; every task ends with a verificatio
 step where applicable (V = run the AGENTS.md gate subset relevant to the change).
 
 | #   | Task                                                                                                                               | Parent | Est |
-| --- | ---------------------------------------------------------------------------------------------------------------------------------- | ------ | --- |
+|---|---|---|---|
 | F1  | Draft the 8-question structured decision prompt (go floor, OQ2–OQ8) with one-line evidence each                                    | M1     | 10m |
 | F2  | Deliver prompt to owner; record answers verbatim in ROADMAP (annotate open questions) + TODO_LIST                                  | M1     | 5m  |
 | F3  | Apply the go-floor decision: restore `go 1.27.1` in go.mod OR update README badge + AGENTS + CI-pin story for `1.27`               | M1/M2  | 6m  |
