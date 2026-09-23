@@ -197,7 +197,7 @@ roadmap-level ideas in `ROADMAP.md` — this list is brainstorm input, not a com
 |~~47~~ dies per OQ5 — standing practice; revive on the next error-surface change|~~Run `erraudit --no-suppress` on the next error-surface change~~|~~Low~~|~~S~~|~~Quality~~|
 |~~48~~ superseded — release-gate guards + tag-only-after-CI doctrine cover the class|~~Design a build-gate so go.mod commits cannot land red (hook or sweep rule)~~|~~Medium~~|~~M~~|~~Quality~~|
 | ~~49~~ | ~~docs-health VERIFY pass on remaining ROADMAP claims (OQ3 done via item 16)~~ done 2026-09-23 — OQ1 resolution verified, Theme 2 marked complete, OQ8 added                                                                     | ~~Low~~      | ~~S~~      | ~~Documentation~~ |
-| 50 | Extend client fuzz coverage beyond `FuzzHasNoStoreDirective` (Cache-Control variants)                                                                                                                                            | Medium   | M      | Quality       |
+|~~50~~|~~Extend client fuzz coverage beyond `FuzzHasNoStoreDirective` (Cache-Control variants)~~|~~Medium~~|~~M~~|~~Quality~~| carried — `TODO_LIST.md` #2 (M16 Cache-Control corpus)
 
 ## g) Questions I cannot answer myself
 

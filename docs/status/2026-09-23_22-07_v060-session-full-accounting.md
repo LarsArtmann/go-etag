@@ -92,51 +92,51 @@ skill's canonical format is HTML; not propagated back into the skill).
 
 ## b) PARTIALLY DONE
 
-1. **go-github-kit's nix lane is red from my bump and the fix is unfinished.**
-   Found while writing THIS report (F24 never included a nix build for kit —
-   my sweep gap): my `go get` copied go-etag v0.6.0's `go 1.27.1` floor into
-   kit's go.mod, and kit's `packages.default = pkgs.buildGoModule` builds with
-   nixpkgs go_1_26 (1.26.7) under `GOTOOLCHAIN=local` → the go-modules FOD
-   fails ("requires go >= 1.27.1"). First fix attempt (`go = pkgs.go_1_27;`)
-   did NOT propagate to the FOD; reverted. The working fix is the
-   library-policy pattern (`goPkgAttr = "go_1_27"` — but kit uses raw
-   buildGoModule, so it needs the pkgs-level go override or the go-standard
-   module). Kit's Go tests themselves pass (GOTOOLCHAIN=auto); only the hermetic
-   nix path is broken. Top of the next list.
-2. **M15 httputil mirror-test:** verified UNPINNED (httputil declares its own
-   `http.hijack_unsupported` string; no test pins go-etag's errorTemplates) —
-   the upstream mirror test (F56) is not written.
-3. **pkg.go.dev ×5:** root + entitytag fully rendered and verified; server/
-   client/metrics rest on the root page's module directory listing + proxy zips
-   + dependabot resolution (agentic_fetch's token died mid-check; explicitly a
-   non-gate per AGENTS, but F17 said ×5 and 2.5/5 is what happened).
-4. **release.yml is untested live.** Extraction + failure path + actionlint
-   verified locally; no tag has triggered it yet. The next release is its
-   first real run — the workflow that automates releases has itself never
-   released anything.
-5. **CHANGELOG has no [Unreleased] entries for the post-release work** (M7
-   gate changes, parity test, Strength specs, release.yml, art-dupl
-   enforcement, Validate doc). The docs-only⇒no-entry micro-policy (M18) was
-   never adopted, so by the current doctrine these belong in [Unreleased] —
-   nothing written.
-6. **M11 benchstat + five-module no-drift proof:** deliberately deferred, then
-   never revisited. The split's "zero perf drift" claim is asserted nowhere
-   with numbers.
+~~1. **go-github-kit's nix lane is red from my bump and the fix is unfinished.**~~
+   ~~Found while writing THIS report (F24 never included a nix build for kit —~~
+   ~~my sweep gap): my `go get` copied go-etag v0.6.0's `go 1.27.1` floor into~~
+   ~~kit's go.mod, and kit's `packages.default = pkgs.buildGoModule` builds with~~
+   ~~nixpkgs go_1_26 (1.26.7) under `GOTOOLCHAIN=local` → the go-modules FOD~~
+   ~~fails ("requires go >= 1.27.1"). First fix attempt (`go = pkgs.go_1_27;`)~~
+   ~~did NOT propagate to the FOD; reverted. The working fix is the~~
+   ~~library-policy pattern (`goPkgAttr = "go_1_27"` — but kit uses raw~~
+   ~~buildGoModule, so it needs the pkgs-level go override or the go-standard~~
+   ~~module). Kit's Go tests themselves pass (GOTOOLCHAIN=auto); only the hermetic~~
+   ~~nix path is broken. Top of the next list.~~ carried — `TODO_LIST.md` #1 (top; pattern question routed to ROADMAP OQ12)
+~~2. **M15 httputil mirror-test:** verified UNPINNED (httputil declares its own~~
+   ~~`http.hijack_unsupported` string; no test pins go-etag's errorTemplates) —~~
+   ~~the upstream mirror test (F56) is not written.~~ carried — `TODO_LIST.md` #3 (M15/F56)
+~~3. **pkg.go.dev ×5:** root + entitytag fully rendered and verified; server/~~
+   ~~client/metrics rest on the root page's module directory listing + proxy zips~~
+   ~~+ dependabot resolution (agentic_fetch's token died mid-check; explicitly a~~
+   ~~non-gate per AGENTS, but F17 said ×5 and 2.5/5 is what happened).~~ carried — `TODO_LIST.md` #5 (finish ×5)
+~~4. **release.yml is untested live.** Extraction + failure path + actionlint~~
+   ~~verified locally; no tag has triggered it yet. The next release is its~~
+   ~~first real run — the workflow that automates releases has itself never~~
+   ~~released anything.~~ carried — `TODO_LIST.md` #4; the AGENTS entry now carries the untested-live honesty note (this pass)
+~~5. **CHANGELOG has no [Unreleased] entries for the post-release work** (M7~~
+   ~~gate changes, parity test, Strength specs, release.yml, art-dupl~~
+   ~~enforcement, Validate doc). The docs-only⇒no-entry micro-policy (M18) was~~
+   ~~never adopted, so by the current doctrine these belong in [Unreleased] —~~
+   ~~nothing written.~~ done 2026-09-23 docs-health pass — `CHANGELOG.md` [Unreleased] carries all of it (Added/Changed)
+~~6. **M11 benchstat + five-module no-drift proof:** deliberately deferred, then~~
+   ~~never revisited. The split's "zero perf drift" claim is asserted nowhere~~
+   ~~with numbers.~~ carried — `TODO_LIST.md` #2 (M11)
 
 ## c) NOT STARTED (carried, renumbered in TODO_LIST)
 
-M16 fuzz expansion (`FuzzStoredValidatorWeaklyMatches`, `FuzzMergeHeader`,
-directive corpus) · M17 spec pin-ups (request `no-cache` §5.2.2.2, HEAD ×
-`Uncompressed`, `restoreMismatchedValidator` restricted mode) · M12
-erraudit-in-CI · M14 dependency sanity (gosec note, go-error-family v0.10.1
-diff read) · M18 process micro-policies · M19 README sections (Middleware
-Chaining, Troubleshooting, CDN ETag-stripping) · M20 CI polish
-(`workflow_dispatch` for ci.yml, LICENSE/README drift check, dprint decision)
-· M21 ROADMAP annotations · M22 Theme 1 freshness design doc · M23 client
-hooks spike · M24 v1.0.0 criteria (checklist seeded in AGENTS) · M25 public
-presence · M26 daemon root-cause upstream · M27 consumer-repo leftovers
-(library-policy 307-line formatter gate, cqrs-htmx toolchain pin, DiscordSync
-mime + disk-space test failures).
+~~M16 fuzz expansion (`FuzzStoredValidatorWeaklyMatches`, `FuzzMergeHeader`,~~
+~~directive corpus) · M17 spec pin-ups (request `no-cache` §5.2.2.2, HEAD ×~~
+~~`Uncompressed`, `restoreMismatchedValidator` restricted mode) · M12~~
+~~erraudit-in-CI · M14 dependency sanity (gosec note, go-error-family v0.10.1~~
+~~diff read) · M18 process micro-policies · M19 README sections (Middleware~~
+~~Chaining, Troubleshooting, CDN ETag-stripping) · M20 CI polish~~
+~~(`workflow_dispatch` for ci.yml, LICENSE/README drift check, dprint decision)~~
+~~· M21 ROADMAP annotations · M22 Theme 1 freshness design doc · M23 client~~
+~~hooks spike · M24 v1.0.0 criteria (checklist seeded in AGENTS) · M25 public~~
+~~presence · M26 daemon root-cause upstream · M27 consumer-repo leftovers~~
+~~(library-policy 307-line formatter gate, cqrs-htmx toolchain pin, DiscordSync~~
+~~mime + disk-space test failures).~~ carried — `TODO_LIST.md` #1–#7 (2026-09-23 docs-health pass; M21's annotations landed in `ROADMAP.md` this pass)
 
 ## d) TOTALLY FUCKED UP (what I forgot, in order of embarrassment)
 
@@ -184,154 +184,154 @@ mime + disk-space test failures).
 
 ## e) WHAT WE SHOULD IMPROVE
 
-1. **"nix build whenever go.sum changed" needs to be a checklist line per
-   consumer, not prose.** The recipe exists; enforcement doesn't. A
-   sweep-script skeleton (per-consumer steps: surface grep → bump → directive
-   check → tests → lint-diff → flake grep → nix build if vendor surface →
-   commit) would have caught d1 and d3 mechanically.
-2. **Post-`go get` directive verification joins every bump** (grep `^go `
-   before/after; restore patch floors with `go mod edit -go=1.27.1`). Recorded
-   in AGENTS today; belongs in the eventual sweep script too.
-3. **Watch remote CI for consumer-repo commits you caused**, even when local
-   gates are green — their CI encodes gates I don't run (their lint config,
-   their strict modes). A 30-second `gh run list --commit` closes it.
-4. **Unverified-by-default is the honest state for any workflow I write**:
-   until release.yml fires once, its entry in AGENTS should say so (it
-   currently reads as settled doctrine).
-5. **Daemon-race protocol:** `git log` + `gh run list --workflow CI` after
-   every push instead of chained watch commands (two watches attached to the
-   wrong run today).
-6. **The parallel-lane protocol worked** (docs-only from their side while the
-   release ran; their report caught my untracked go.sum window; my lane
-   executed their findings) — but it ran on mutual vigilance twice. The
-   RELEASE-IN-FLIGHT marker (15:35 §f.28) stays the right machine guard.
+~~1. **"nix build whenever go.sum changed" needs to be a checklist line per~~
+   ~~consumer, not prose.** The recipe exists; enforcement doesn't. A~~
+   ~~sweep-script skeleton (per-consumer steps: surface grep → bump → directive~~
+   ~~check → tests → lint-diff → flake grep → nix build if vendor surface →~~
+   ~~commit) would have caught d1 and d3 mechanically.~~ carried — `TODO_LIST.md` #4 (sweep-script skeleton)
+~~2. **Post-`go get` directive verification joins every bump** (grep `^go `~~
+   ~~before/after; restore patch floors with `go mod edit -go=1.27.1`). Recorded~~
+   ~~in AGENTS today; belongs in the eventual sweep script too.~~ done — recorded in the `AGENTS.md` consumer recipe (re-check the `go` directive after go get)
+~~3. **Watch remote CI for consumer-repo commits you caused**, even when local~~
+   ~~gates are green — their CI encodes gates I don't run (their lint config,~~
+   ~~their strict modes). A 30-second `gh run list --commit` closes it.~~ carried — `TODO_LIST.md` #1 (remote-CI verification batch)
+~~4. **Unverified-by-default is the honest state for any workflow I write**:~~
+   ~~until release.yml fires once, its entry in AGENTS should say so (it~~
+   ~~currently reads as settled doctrine).~~ done 2026-09-23 docs-health pass — AGENTS release.yml paragraph states it is locally verified only
+~~5. **Daemon-race protocol:** `git log` + `gh run list --workflow CI` after~~
+   ~~every push instead of chained watch commands (two watches attached to the~~
+   ~~wrong run today).~~ carried — `TODO_LIST.md` #6 (M18 process micro-policies)
+~~6. **The parallel-lane protocol worked** (docs-only from their side while the~~
+   ~~release ran; their report caught my untracked go.sum window; my lane~~
+   ~~executed their findings) — but it ran on mutual vigilance twice. The~~
+   ~~RELEASE-IN-FLIGHT marker (15:35 §f.28) stays the right machine guard.~~ carried — `TODO_LIST.md` #6 (RELEASE-IN-FLIGHT marker)
 
 ## f) NEXT — up to 50, sorted by impact (brainstorm, not commitment)
 
 **Close the session's own loose ends:**
-1. go-github-kit flake: make the go-modules FOD build with go_1_27 (pkgs-level
-   go override or the go-standard module), vendorHash rotate if needed, `nix
-   build` green, commit.
-2. Watch the next root tag fire release.yml end-to-end (or add a dispatch-safe
-   dry-run mode first).
-3. Write CHANGELOG [Unreleased] entries for the post-release work (M7, parity
-   test, Strength specs, release.yml, dupl gate, Validate doc).
-4. Leave a dated note in cqrs-htmx's tree about their pre-existing red lint
-   (dashboardui golines/mnd/prealloc) so the next reader doesn't blame the
-   sweep.
-5. Finish pkg.go.dev ×5 properly (server/client/metrics page fetches).
-6. M11: benchstat install + five-module no-drift baseline (the split's zero-
-   drift claim, with numbers).
-7. M15/F56: upstream the httputil mirror test pinning go-etag errorTemplates
-   (verify-before-filing first).
-8. Re-measure client coverage once; reconcile FEATURES 99.7% vs plan 99.1%.
-9. Verify DiscordSync's remaining flake-pin drifts (httputil, go-cqrs-lite) —
-   pre-existing, but they will bite their next `nix build`; report upstream.
-10. Run `go work sync` idempotency check against the RELEASED tree in a fresh
-    clone (the gate proves it locally; fresh-clone parity is the 15:06 e2
-    habit).
-11. Script the fresh-clone pre-push smoke (`git clone . /tmp/x && go build
-    $PACKAGES`) — 15:06 e2, still not institutionalized.
-12. Write the sweep-script skeleton from e1 (per-consumer steps as a
-    `scripts/` template in go-etag for future trains).
+~~1. go-github-kit flake: make the go-modules FOD build with go_1_27 (pkgs-level~~
+   ~~go override or the go-standard module), vendorHash rotate if needed, `nix~~
+   ~~build` green, commit.~~ carried — `TODO_LIST.md` #1
+~~2. Watch the next root tag fire release.yml end-to-end (or add a dispatch-safe~~
+   ~~dry-run mode first).~~ carried — `TODO_LIST.md` #4
+~~3. Write CHANGELOG [Unreleased] entries for the post-release work (M7, parity~~
+   ~~test, Strength specs, release.yml, dupl gate, Validate doc).~~ done 2026-09-23 docs-health pass — CHANGELOG [Unreleased] written
+~~4. Leave a dated note in cqrs-htmx's tree about their pre-existing red lint~~
+   ~~(dashboardui golines/mnd/prealloc) so the next reader doesn't blame the~~
+   ~~sweep.~~ carried — `TODO_LIST.md` #1
+~~5. Finish pkg.go.dev ×5 properly (server/client/metrics page fetches).~~ carried — `TODO_LIST.md` #5
+~~6. M11: benchstat install + five-module no-drift baseline (the split's zero-~~
+   ~~drift claim, with numbers).~~ carried — `TODO_LIST.md` #2
+~~7. M15/F56: upstream the httputil mirror test pinning go-etag errorTemplates~~
+   ~~(verify-before-filing first).~~ carried — `TODO_LIST.md` #3
+~~8. Re-measure client coverage once; reconcile FEATURES 99.7% vs plan 99.1%.~~ done 2026-09-23 docs-health pass — fresh -cover run; FEATURES re-stamped at the v0.6.0+ tree
+~~9. Verify DiscordSync's remaining flake-pin drifts (httputil, go-cqrs-lite) —~~
+   ~~pre-existing, but they will bite their next `nix build`; report upstream.~~ carried — `TODO_LIST.md` #1
+~~10. Run `go work sync` idempotency check against the RELEASED tree in a fresh~~
+    ~~clone (the gate proves it locally; fresh-clone parity is the 15:06 e2~~
+    ~~habit).~~ carried — `TODO_LIST.md` #4
+~~11. Script the fresh-clone pre-push smoke (`git clone . /tmp/x && go build~~
+    ~~$PACKAGES`) — 15:06 e2, still not institutionalized.~~ carried — `TODO_LIST.md` #4
+~~12. Write the sweep-script skeleton from e1 (per-consumer steps as a~~
+    ~~`scripts/` template in go-etag for future trains).~~ carried — `TODO_LIST.md` #4
 
 **Product surface:**
-13. M16 fuzz expansion: `FuzzStoredValidatorWeaklyMatches` (symmetry,
-    unparseable⇒false), `FuzzMergeHeader`, Cache-Control directive corpus.
-14. M17 spec pin-ups: request `no-cache` §5.2.2.2, HEAD-freshening ×
-    `Uncompressed`, `restoreMismatchedValidator` restricted mode + dual-key.
-15. M19 README: "Middleware Chaining" (3 compose examples), "Troubleshooting"
-    (4 Q/A), CDN ETag-stripping paragraph.
-16. M19: `docs/rfc9111-conformance.md` client-module-consumability note.
-17. M20: `workflow_dispatch` on ci.yml; LICENSE/README drift check; dprint
-    decision written down.
-18. M12: erraudit-in-CI (the posture question died with the owner batch —
-    default to blocking-default-mode + informational nolint-audit; confirm or
-    override).
-19. M13: coverage floors per module + CI gate, or explicit drop (numbers first,
-    per item 8).
-20. M14: gosec sanity note on the errorfamily template surface + read
-    go-error-family v0.10.0→v0.10.1 diff (bumped blind earlier today).
-21. M18: process micro-policies (archive-gate numbered-item detector,
-    before→after scoring, docs-only⇒no-CHANGELOG rule made real, PARTIAL house
-    style).
-22. M21: ROADMAP annotations (OQ1 history, otel unblocked-by-architecture).
+~~13. M16 fuzz expansion: `FuzzStoredValidatorWeaklyMatches` (symmetry,~~
+    ~~unparseable⇒false), `FuzzMergeHeader`, Cache-Control directive corpus.~~ carried — `TODO_LIST.md` #2 (M16)
+~~14. M17 spec pin-ups: request `no-cache` §5.2.2.2, HEAD-freshening ×~~
+    ~~`Uncompressed`, `restoreMismatchedValidator` restricted mode + dual-key.~~ carried — `TODO_LIST.md` #2 (M17)
+~~15. M19 README: "Middleware Chaining" (3 compose examples), "Troubleshooting"~~
+    ~~(4 Q/A), CDN ETag-stripping paragraph.~~ carried — `TODO_LIST.md` #5 (M19)
+~~16. M19: `docs/rfc9111-conformance.md` client-module-consumability note.~~ carried — `TODO_LIST.md` #5 (M19)
+~~17. M20: `workflow_dispatch` on ci.yml; LICENSE/README drift check; dprint~~
+    ~~decision written down.~~ carried — `TODO_LIST.md` #4 (M20)
+~~18. M12: erraudit-in-CI (the posture question died with the owner batch —~~
+    ~~default to blocking-default-mode + informational nolint-audit; confirm or~~
+    ~~override).~~ carried — `TODO_LIST.md` #3 (M12)
+~~19. M13: coverage floors per module + CI gate, or explicit drop (numbers first,~~
+    ~~per item 8).~~ carried — `TODO_LIST.md` #3 (M13)
+~~20. M14: gosec sanity note on the errorfamily template surface + read~~
+    ~~go-error-family v0.10.0→v0.10.1 diff (bumped blind earlier today).~~ carried — `TODO_LIST.md` #3 (M14)
+~~21. M18: process micro-policies (archive-gate numbered-item detector,~~
+    ~~before→after scoring, docs-only⇒no-CHANGELOG rule made real, PARTIAL house~~
+    ~~style).~~ carried — `TODO_LIST.md` #6 (M18)
+~~22. M21: ROADMAP annotations (OQ1 history, otel unblocked-by-architecture).~~ done 2026-09-23 docs-health pass — OQ1 history + otel notes in ROADMAP
 
 **Epics:**
-23. M22: Theme 1 freshness design doc (§4.2 opt-in serving; max-age/Expires
-    parsing; serve-within-freshness).
-24. M23: client hooks spike (`OnHit`/`OnStore`/`OnFreshen`/`OnInvalidate`,
-    impossibility analysis, `ClientCounters` sketch).
-25. M24: v1.0.0 criteria doc fleshed out from the AGENTS seed (deletion
-    mini-staircase + consumer audit + release notes).
-26. M25: public presence (comparison table vs other Go ETag libs, awesome-go
-    draft, website-launch go/no-go).
-27. M26: daemon root-cause upstream (pma/buildflow go-directive rewrites ×2 +
-    today's go-get variant — one investigation, three incidents).
-28. M27: consumer-repo leftovers (library-policy 307-line formatter gate,
-    cqrs-htmx flake toolchain pin 1.26.7 < floor, DiscordSync mime +
-    disk-space test failures).
+~~23. M22: Theme 1 freshness design doc (§4.2 opt-in serving; max-age/Expires~~
+    ~~parsing; serve-within-freshness).~~ carried — `TODO_LIST.md` #7 (M22)
+~~24. M23: client hooks spike (`OnHit`/`OnStore`/`OnFreshen`/`OnInvalidate`,~~
+    ~~impossibility analysis, `ClientCounters` sketch).~~ carried — `TODO_LIST.md` #7 (M23)
+~~25. M24: v1.0.0 criteria doc fleshed out from the AGENTS seed (deletion~~
+    ~~mini-staircase + consumer audit + release notes).~~ carried — `TODO_LIST.md` #7 (M24)
+~~26. M25: public presence (comparison table vs other Go ETag libs, awesome-go~~
+    ~~draft, website-launch go/no-go).~~ carried — `TODO_LIST.md` #7 (M25)
+~~27. M26: daemon root-cause upstream (pma/buildflow go-directive rewrites ×2 +~~
+    ~~today's go-get variant — one investigation, three incidents).~~ carried — `TODO_LIST.md` #7 (M26)
+~~28. M27: consumer-repo leftovers (library-policy 307-line formatter gate,~~
+    ~~cqrs-htmx flake toolchain pin 1.26.7 < floor, DiscordSync mime +~~
+    ~~disk-space test failures).~~ carried — `TODO_LIST.md` #7 (M27)
 
 **Debt and hygiene:**
-29. AGENTS: the erraudit `--explain` flag mention — restore or drop (F73).
-30. AGENTS: runner-noise note for the benign "unknown linters in //nolint:
-    erraudit" golangci warning (15:35 §f.9).
-31. M10 residue: a tiny link-lint script (compare/release links) committed so
-    the manual sweep becomes a command.
-32. Dependabot: confirm all four nested manifests show green scheduled runs
-    over the next days (today's recovery was point-in-time).
-33. `docs/status/` archive convention + numbered-item detector (M18 overlap).
-34. OQ7 follow-through: verify the six-constructor mirror against
-    go-error-family's own docs (my keep-six call cited parity, not their
-    source).
-35. `NewETag("")` doc note (empty opaque ⇒ invalid; intentional zero-value
-    doctrine — 15:35 §f.26).
-36. Document-as-accepted: `Stats` int64/int mix, exported atomic `Counters`
-    fields, wrapper 2-bool+int state (revisit at v1.0.0 design pass).
-37. Fuzz seeds from today's clean-room smoke inputs wired into the CI fuzz job
-    (M16 overlap).
-38. cqrs-htmx: run their `scripts/check-go-toolchain.sh` once on my sweep
-    commit's tree (I ran drift/train but not that checker — TODO #3's lane).
-39. library-policy: confirm their CI went green post-bump (I verified local
-    build + binary; not their remote CI — the cqrs-htmx lesson applied).
-40. nsfw-classifier: same remote-CI check (their daemon-committed vendorHash
-    rotation landed after my last look).
-41. DiscordSync: same remote-CI check (drift-guard + tests in their CI).
-42. httputil: same remote-CI check (their CI jobs on `494a855`).
-43. go-github-kit: same remote-CI check (items 1 + their CI).
-44. go-etag: dependabot alerts page after the graph rebuilds (post-split
-    manifest set may surface new advisories for nested manifests).
-45. Consider `workflow_dispatch` on release.yml with an explicit ref input so
-    a botched release page can be re-derived without a re-tag (releases are
-    idempotent but notes aren't re-extractable today).
-46. CHANGELOG: note release.yml's notes-format (section extraction) in the
-    release conventions so future cuts keep the section format stable.
-47. ROADMAP OQ5: the "die with archives" verdict should name WHERE revival
-    proposals go (TODO_LIST) so the decision is executable, not just
-    recorded.
-48. Sweep the `/tmp` scratch state (fleet lists, gate logs, baseline copies)
-    into `reports/` or delete — durability rule from the upgrade skill.
-49. AGENTS: add release.yml to the Commands/Workflow section map so sessions
-    know releases are automated now.
-50. A one-page "v0.6.0 postmortem-free timeline" in docs/ (tag→commit→gate
-    table) as the template the v0.7.0 staircase copies verbatim.
+~~29. AGENTS: the erraudit `--explain` flag mention — restore or drop (F73).~~ done 2026-09-23 docs-health pass — deliberate drop recorded in AGENTS (Known tool noise)
+~~30. AGENTS: runner-noise note for the benign "unknown linters in //nolint:~~
+    ~~erraudit" golangci warning (15:35 §f.9).~~ done 2026-09-23 docs-health pass — AGENTS Known tool noise note
+~~31. M10 residue: a tiny link-lint script (compare/release links) committed so~~
+    ~~the manual sweep becomes a command.~~ carried — `TODO_LIST.md` #4
+~~32. Dependabot: confirm all four nested manifests show green scheduled runs~~
+    ~~over the next days (today's recovery was point-in-time).~~ carried — `TODO_LIST.md` #1
+~~33. `docs/status/` archive convention + numbered-item detector (M18 overlap).~~ carried — `TODO_LIST.md` #6 (M18)
+~~34. OQ7 follow-through: verify the six-constructor mirror against~~
+    ~~go-error-family's own docs (my keep-six call cited parity, not their~~
+    ~~source).~~ carried — `TODO_LIST.md` #3 (M14 fold)
+~~35. `NewETag("")` doc note (empty opaque ⇒ invalid; intentional zero-value~~
+    ~~doctrine — 15:35 §f.26).~~ carried — `TODO_LIST.md` #5
+~~36. Document-as-accepted: `Stats` int64/int mix, exported atomic `Counters`~~
+    ~~fields, wrapper 2-bool+int state (revisit at v1.0.0 design pass).~~ done 2026-09-23 docs-health pass — ROADMAP Parked, Data-model accepted-as-is items
+~~37. Fuzz seeds from today's clean-room smoke inputs wired into the CI fuzz job~~
+    ~~(M16 overlap).~~ carried — `TODO_LIST.md` #2 (M16 seeds)
+~~38. cqrs-htmx: run their `scripts/check-go-toolchain.sh` once on my sweep~~
+    ~~commit's tree (I ran drift/train but not that checker — TODO #3's lane).~~ carried — `TODO_LIST.md` #1
+~~39. library-policy: confirm their CI went green post-bump (I verified local~~
+    ~~build + binary; not their remote CI — the cqrs-htmx lesson applied).~~ carried — `TODO_LIST.md` #1
+~~40. nsfw-classifier: same remote-CI check (their daemon-committed vendorHash~~
+    ~~rotation landed after my last look).~~ carried — `TODO_LIST.md` #1
+~~41. DiscordSync: same remote-CI check (drift-guard + tests in their CI).~~ carried — `TODO_LIST.md` #1
+~~42. httputil: same remote-CI check (their CI jobs on `494a855`).~~ carried — `TODO_LIST.md` #1
+~~43. go-github-kit: same remote-CI check (items 1 + their CI).~~ carried — `TODO_LIST.md` #1
+~~44. go-etag: dependabot alerts page after the graph rebuilds (post-split~~
+    ~~manifest set may surface new advisories for nested manifests).~~ carried — `TODO_LIST.md` #1
+~~45. Consider `workflow_dispatch` on release.yml with an explicit ref input so~~
+    ~~a botched release page can be re-derived without a re-tag (releases are~~
+    ~~idempotent but notes aren't re-extractable today).~~ carried — `TODO_LIST.md` #4
+~~46. CHANGELOG: note release.yml's notes-format (section extraction) in the~~
+    ~~release conventions so future cuts keep the section format stable.~~ done 2026-09-23 docs-health pass — AGENTS release.yml paragraph records the section-extraction format constraint
+~~47. ROADMAP OQ5: the "die with archives" verdict should name WHERE revival~~
+    ~~proposals go (TODO_LIST) so the decision is executable, not just~~
+    ~~recorded.~~ done — ROADMAP OQ5 already names the revival path (re-enter via TODO_LIST on demand)
+~~48. Sweep the `/tmp` scratch state (fleet lists, gate logs, baseline copies)~~
+    ~~into `reports/` or delete — durability rule from the upgrade skill.~~ resolved — /tmp is ephemeral; the fleet list is reproduced in this session's 16:40 report (f1) and the sweep evidence in reports/
+~~49. AGENTS: add release.yml to the Commands/Workflow section map so sessions~~
+    ~~know releases are automated now.~~ done — documented in AGENTS Release Conventions (release.yml paragraph)
+~~50. A one-page "v0.6.0 postmortem-free timeline" in docs/ (tag→commit→gate~~
+    ~~table) as the template the v0.7.0 staircase copies verbatim.~~ superseded — the AGENTS multi-module staircase runbook is the copyable template
 
 ## g) QUESTIONS I CANNOT ANSWER MYSELF
 
-1. **cqrs-htmx's red lint:** their master has been red on
-   dashboardui lint debt (golines/mnd/prealloc) across at least six commits,
-   before and after my sweep. Is that lane yours/another session's active
-   work (like nsfw's was), or do you want me to drive it green in their repo?
-2. **go-github-kit's nix lane (item 1):** their flake is plain
-   `pkgs.buildGoModule` and my `go = pkgs.go_1_27` didn't propagate to the
-   FOD — before I experiment further: is there a house pattern you prefer
-   (pkgs-level go override, or migrating kit onto the go-standard flake module
-   like library-policy)?
-3. **Release cadence for the staircase's proof:** release.yml's first live
-   fire will be whatever the next tag is. Do you want a v0.6.1 cut soon to
-   exercise it (trivial content: post-release tooling), or should the next
-   release wait for real content (M16/M17/M19), leaving the workflow
-   unproven until then?
+~~1. **cqrs-htmx's red lint:** their master has been red on~~
+   ~~dashboardui lint debt (golines/mnd/prealloc) across at least six commits,~~
+   ~~before and after my sweep. Is that lane yours/another session's active~~
+   ~~work (like nsfw's was), or do you want me to drive it green in their repo?~~ routed — ROADMAP OQ13 (owner's lane or ours)
+~~2. **go-github-kit's nix lane (item 1):** their flake is plain~~
+   ~~`pkgs.buildGoModule` and my `go = pkgs.go_1_27` didn't propagate to the~~
+   ~~FOD — before I experiment further: is there a house pattern you prefer~~
+   ~~(pkgs-level go override, or migrating kit onto the go-standard flake module~~
+   ~~like library-policy)?~~ routed — ROADMAP OQ12 (pattern preference); fix work in `TODO_LIST.md` #1
+~~3. **Release cadence for the staircase's proof:** release.yml's first live~~
+   ~~fire will be whatever the next tag is. Do you want a v0.6.1 cut soon to~~
+   ~~exercise it (trivial content: post-release tooling), or should the next~~
+   ~~release wait for real content (M16/M17/M19), leaving the workflow~~
+   ~~unproven until then?~~ routed — ROADMAP OQ11 (trivial v0.6.1 vs wait for content)
 
 ---
 

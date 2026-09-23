@@ -186,7 +186,7 @@ directly observed — no new research.
 | ~~47~~ | ~~Check FEATURES.md freshness (docs-health) — last touched before this session~~ done 2026-09-23 — metrics section present; coverage stamp refreshed (root 100.0 / server 98.6 / client 99.1 / entitytag 98.9 / metrics 96.8)                            | ~~Low~~    | ~~S~~      | ~~Documentation~~ |
 |~~48~~ done 2026-09-23 — ROADMAP Non-goals now records the Vary boundary explicitly|~~ROADMAP: record "Vary-aware secondary keys remain out of scope" as an explicit decision with date (currently only an AGENTS.md gotcha)~~|~~Low~~|~~S~~|~~Documentation~~|
 |~~49~~ done — both-mode verification ran through the v0.6.0 staircase and sweeps (report 16:40 a1/a4)|~~Verify `go.work` workspace consumers (if any) still resolve after recent daemon go.mod touches (GOWORK=off + workspace MVS per recipe)~~|~~Low~~|~~S~~|~~Quality~~|
-| 50 | Write the cross-project lesson "tool preconditions live in env, not in the command name (golangci-lint inherits GOTOOLCHAIN)" to references/lessons.md in crush-config (by commit, not in-session write)                                                 | Low    | S      | Process       |
+|~~50~~|~~Write the cross-project lesson "tool preconditions live in env, not in the command name (golangci-lint inherits GOTOOLCHAIN)" to references/lessons.md in crush-config (by commit, not in-session write)~~|~~Low~~|~~S~~|~~Process~~| Won't implement here — belongs in the crush-config repo's references/lessons.md (cross-project lessons are committed there, never in-session)
 
 Items 1–14 are the actionable core; 15–50 are brainstorm-grade and should be
 routed to ROADMAP unless HARVEST promotes them.
