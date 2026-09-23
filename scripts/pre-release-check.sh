@@ -106,6 +106,10 @@ for mod in "${MODULES[@]}"; do
 	) || fail "go mod verify in $mod"
 done
 
+step "go.work tracked (the daemon's gitignore regeneration class)"
+[ -n "$(git ls-files go.work)" ] ||
+	fail "go.work is NOT tracked - the 2026-09-23 red-CI class: CI, lint, and fuzz resolve sibling modules through it. Check .gitignore's negation lines outside the buildflow markers."
+
 step "no replace directives (any go.mod)"
 for gomod in "${GOMODS[@]}"; do
 	if grep -qE '^[[:space:]]*replace[[:space:]]' "$gomod"; then
