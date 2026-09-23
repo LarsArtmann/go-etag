@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.6.0] - 2026-09-23
+
+### Changed
+
 - **Module split: one module becomes five.** Each package is now its own Go module released on a shared version train: `github.com/larsartmann/go-etag/entitytag` (zero dependencies), `…/server` (deps: entitytag, go-error-family), `…/client` (dep: entitytag — client consumers no longer pull the server middleware), `…/metrics` (dep: server), and the root module reduced to the deprecated v0.1.x alias shim (deleted at v1.0.0 as planned). All import paths are unchanged; a module's tag now delivers exactly what that module needs (`go get …/client` stops dragging in server code). A committed `go.work` (with version-qualified dev-only replaces) joins the five modules for local development and CI; every go.mod stays replace-free so proxy consumers always resolve tagged versions. Design record: `docs/modularization/2026-09-23_modularization-proposal.html`; release procedure (bottom-up tag staircase) in `AGENTS.md`.
 
 ### Fixed
@@ -149,7 +159,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BDD-style spec suite (`etag_bdd_test.go`) mapping RFC 7232 sections to behavioral expectations.
 - Fuzz tests for `ParseETag` and `ParseETagList` verifying no panics and round-trip integrity on arbitrary input.
 
-[Unreleased]: https://github.com/Larsartmann/go-etag/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/larsartmann/go-etag/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/larsartmann/go-etag/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/Larsartmann/go-etag/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/Larsartmann/go-etag/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/Larsartmann/go-etag/compare/v0.3.0...v0.3.1
