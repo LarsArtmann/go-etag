@@ -19,7 +19,10 @@ export GOTOOLCHAIN=auto
 
 step() { printf '\n==> %s\n' "$*"; }
 
-fail() { printf 'FAIL: %s\n' "$*" >&2; exit 1; }
+fail() {
+	printf 'FAIL: %s\n' "$*" >&2
+	exit 1
+}
 
 step "build"
 go build ./... || fail "go build"
