@@ -154,7 +154,7 @@ done <<<"$train_versions"
 while read -r modpath version; do
 	for gomod in "${GOMODS[@]}"; do
 		if grep -qE "^[[:space:]]*${modpath//./\\.} v" "$gomod"; then
-			grep -qE "^[[:space:]]*${modpath//./\\.} ${version//./\\.}$" "$gomod" ||
+			grep -qE "^[[:space:]]*${modpath//./\\.} ${version//./\\.}([[:space:]]+//.*)?$" "$gomod" ||
 				fail "$gomod requires $modpath at a version other than $version - the train must move together"
 		fi
 	done
