@@ -13,6 +13,12 @@ on:
 permissions:
   contents: read
 
+# The five-module pattern set every workspace-spanning command needs ("./..."
+# spans only the root module). Single source of truth: the pre-release gate
+# asserts this env value matches scripts/pre-release-check.sh's PACKAGES.
+env:
+  PACKAGES: ./... ./client/... ./entitytag/... ./metrics/... ./server/...
+
 # Pin the exact toolchain go.mod names on the Go build/test/lint jobs: the
 # setup-go manifest can lag go.dev, and GOTOOLCHAIN forces the go command to
 # fetch the precise version. Keep in sync with the `go` directive in go.mod.
@@ -36,22 +42,20 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      # Multi-module workspace: "./..." spans only the root module, so every
-      # command carries the full pattern set (kept in sync with
-      # scripts/pre-release-check.sh). The committed go.work joins all five
-      # modules into one workspace build.
+      # Multi-module workspace: the committed go.work joins all five modules
+      # into one workspace build; $PACKAGES spans all of them.
       - name: Build
-        run: go build ./... ./client/... ./entitytag/... ./metrics/... ./server/...
+        run: go build $PACKAGES
 
       - name: Vet
-        run: go vet ./... ./client/... ./entitytag/... ./metrics/... ./server/...
+        run: go vet $PACKAGES
 
       - name: Test with race detector
-        run: go test -race -count=1 ./... ./client/... ./entitytag/... ./metrics/... ./server/...
+        run: go test -race -count=1 $PACKAGES
 
       - name: Coverage
         run: |
-          go test -cover -coverprofile=coverage.out ./... ./client/... ./entitytag/... ./metrics/... ./server/...
+          go test -cover -coverprofile=coverage.out $PACKAGES
           go tool cover -func=coverage.out | tail -1
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
@@ -127,4 +131,4 @@ jobs:
         run: go install golang.org/x/vuln/cmd/govulncheck@latest
 
       - name: Vulnerabilities
-        run: govulncheck ./... ./client/... ./entitytag/... ./metrics/... ./server/...
+        run: govulncheck $PACKAGES

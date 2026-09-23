@@ -178,6 +178,12 @@ rm -rf "$sync_backup"
 [ -z "$sync_drift" ] ||
 	fail "go work sync rewrote:$sync_drift - run 'go work sync' and commit, then re-run this gate (originals restored)"
 
+step "workflow/script pattern agreement (ci.yml PACKAGES == script PACKAGES)"
+workflow_packages="$(awk '/^  PACKAGES:/ { sub(/^  PACKAGES:[[:space:]]*/, ""); print; exit }' .github/workflows/ci.yml)"
+[ -n "$workflow_packages" ] || fail "ci.yml does not define a workflow-level PACKAGES env"
+[ "$workflow_packages" = "$PACKAGES" ] ||
+	fail "ci.yml PACKAGES ('$workflow_packages') != pre-release-check.sh PACKAGES ('$PACKAGES') - the two pattern sets must stay identical"
+
 printf '\nALL LOCAL GATES GREEN.\n'
 printf 'Remaining runbook steps (manual): CI green on this exact commit, the bottom-up tag\n'
 printf 'staircase (entitytag -> server -> client -> metrics -> root) + push, proxy .info hash\n'
