@@ -3,7 +3,11 @@ name: CI
 on:
   push:
     branches: [master, main]
-    tags: ["v*"]
+    # Root tag plus every nested-module tag of the shared version train:
+    # a bare "v*" pattern does NOT match "entitytag/v0.6.0" etc., and each
+    # staircase tag must get its own frozen CI run (AGENTS.md, Release
+    # Conventions).
+    tags: ["v*", "client/v*", "entitytag/v*", "metrics/v*", "server/v*"]
   pull_request:
 
 permissions:
