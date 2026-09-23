@@ -69,35 +69,35 @@ and CI; every go.mod stays replace-free for proxy purity. Full design record:
 
 ## b) PARTIALLY DONE
 
-1. **Standalone (GOWORK=off) verification of server/client/metrics/root** — deferred
-   BY DESIGN: their requires point at v0.6.0 which exists only after the staircase
-   tags it. Documented as release-time steps in the runbook; not yet executed.
-2. **`go mod tidy` per module** — same deferral; go.sum files for nested modules are
-   absent until the staircase; root go.sum carries a now-stale go-error-family entry
-   (harmless; pruned at root tidy).
-3. **`go work sync` idempotency check** (skill's CI checklist item) — NOT added as an
-   automated check: `go work sync` mid-cycle tries to resolve the unreleased train
-   version and fails. The train-sync check covers go.work↔go.mod agreement; a
-   post-tag `go work sync && git diff --exit-code` check is still to add.
-4. **Proposal commit discipline** — the skill prescribes dedicated commits with
-   structured messages per phase; the auto-daemon swept everything into
-   `chore: auto-commit` batches instead. Tree content is correct; history granularity
-   is coarser than the skill wants.
-5. **CI pattern duplication** — the package-pattern set is repeated in 5 places in
-   ci.yml (plus the script). A workflow env var would dedupe; not done.
-
+~~1. **Standalone (GOWORK=off) verification of server/client/metrics/root** — deferred~~
+   ~~BY DESIGN: their requires point at v0.6.0 which exists only after the staircase~~
+   ~~tags it. Documented as release-time steps in the runbook; not yet executed.~~ done — the staircase executed it per module (report 16:40 a1)
+~~2. **`go mod tidy` per module** — same deferral; go.sum files for nested modules are~~
+   ~~absent until the staircase; root go.sum carries a now-stale go-error-family entry~~
+   ~~(harmless; pruned at root tidy).~~ done — staircase stairs (report 16:40 a1)
+~~3. **`go work sync` idempotency check** (skill's CI checklist item) — NOT added as an~~
+   ~~automated check: `go work sync` mid-cycle tries to resolve the unreleased train~~
+   ~~version and fails. The train-sync check covers go.work↔go.mod agreement; a~~
+   ~~post-tag `go work sync && git diff --exit-code` check is still to add.~~ done — F19 gate step, verified live as a no-op (report 16:40 a3)
+~~4. **Proposal commit discipline** — the skill prescribes dedicated commits with~~
+   ~~structured messages per phase; the auto-daemon swept everything into~~
+   ~~`chore: auto-commit` batches instead. Tree content is correct; history granularity~~
+   ~~is coarser than the skill wants.~~ accepted — daemon coarseness is house reality; tree content correct
+~~5. **CI pattern duplication** — the package-pattern set is repeated in 5 places in~~
+   ~~ci.yml (plus the script). A workflow env var would dedupe; not done.~~
+~~~~ done — `1bf30c9` workflow PACKAGES env (report 16:40 a6)
 ## c) NOT STARTED
 
-1. **The v0.6.0 release itself** — staircase tags, pushes, proxy/sum verification,
-   clean-room `go get` ×5, GitHub Release. (TODO_LIST #1; requires owner go-ahead:
-   pushes and tags are never automated.)
-2. **Consumer sweep at v0.6.0** — httputil (imports server+metrics: gains nested
-   module requirements), DiscordSync, library-policy, cqrs-htmx, ~35 fleet repos at
-   v0.3.1 with dead requires.
-3. **Post-release observations** — pkg.go.dev rendering per module, dependabot
-   behavior on nested manifests (see e), first live nested-tag CI runs.
-4. **ROADMAP `go-etag/otel` sub-module** — parked, demand-gated; now trivially
-   possible given real modules, but untouched by design.
+~~1. **The v0.6.0 release itself** — staircase tags, pushes, proxy/sum verification,~~
+   ~~clean-room `go get` ×5, GitHub Release. (TODO_LIST #1; requires owner go-ahead:~~
+   ~~pushes and tags are never automated.)~~ done — v0.6.0 released (report 16:40 a1–a2)
+~~2. **Consumer sweep at v0.6.0** — httputil (imports server+metrics: gains nested~~
+   ~~module requirements), DiscordSync, library-policy, cqrs-htmx, ~35 fleet repos at~~
+   ~~v0.3.1 with dead requires.~~ done — report 16:40 a4
+~~3. **Post-release observations** — pkg.go.dev rendering per module, dependabot~~
+   ~~behavior on nested manifests (see e), first live nested-tag CI runs.~~ done — report 16:40 a3
+~~4. **ROADMAP `go-etag/otel` sub-module** — parked, demand-gated; now trivially~~
+   ~~possible given real modules, but untouched by design.~~ still parked by design — ROADMAP Parked (architecture unblock note added 2026-09-23)
 
 ## d) TOTALLY FUCKED UP (caught in-session; all fixed)
 
@@ -134,89 +134,89 @@ and CI; every go.mod stays replace-free for proxy purity. Full design record:
 3. **Verify every CI line you touch with its local equivalent at edit time** (fuzz
    smoke, coverage, govulncheck, yaml parse, trigger patterns) — cheap commands, and
    this session proves the class of miss is real.
-4. **Dedupe the package-pattern set** — one workflow env var in ci.yml, referenced by
-   all steps; plus a tiny check that ci.yml and pre-release-check.sh agree.
-5. **Add post-tag `go work sync` idempotency to the gate** (staircase step or script
-   flag), closing the last uncovered skill CI-checklist item.
-6. **Dependabot noise window:** until v0.6.0 tags exist, dependabot cannot resolve
-   `entitytag v0.6.0` etc. in the nested manifests and may log errors/skip them.
-   Options: accept the window (tags land soon), or temporarily comment the nested
-   blocks until the release. Decision needed (see g).
-7. **Daemon go-directive relaxation is a recurring external attack on the repo** —
-   twice now it reverted `go 1.27.1`→`1.27`. The anchored parity check now catches
-   it at release time, but the source (which daemon operation rewrites go.mod?) is
-   unidentified; root-causing it is upstream work (pma/buildflow), not this repo.
-8. **AGENTS art-dupl claim drift:** AGENTS says "exactly 1 accepted group"; current
-   tool output shows 4 shown groups (192 detected, 143 non-actionable, 45 filtered
-   suppressed) including in-etag.go and client pairs. Pre-existing, unchanged by this
-   session; the doc or the baseline needs a re-baseline pass (next session).
-9. **erraudit `--explain` flag** was dropped from the AGENTS command examples during
-   the rewrite (the release script never had it). Harmless; restore for parity or
-   drop deliberately.
-
+~~4. **Dedupe the package-pattern set** — one workflow env var in ci.yml, referenced by~~
+   ~~all steps; plus a tiny check that ci.yml and pre-release-check.sh agree.~~ done — `1bf30c9` (report 16:40 a6)
+~~5. **Add post-tag `go work sync` idempotency to the gate** (staircase step or script~~
+   ~~flag), closing the last uncovered skill CI-checklist item.~~ done — F19 (report 16:40 a3)
+~~6. **Dependabot noise window:** until v0.6.0 tags exist, dependabot cannot resolve~~
+   ~~`entitytag v0.6.0` etc. in the nested manifests and may log errors/skip them.~~
+   ~~Options: accept the window (tags land soon), or temporarily comment the nested~~
+   ~~blocks until the release. Decision needed (see g).~~ answered — non-issue: dependabot ran green mid-window (report 15:06 a6) and recovered on tagged versions (report 16:40 a3)
+~~7. **Daemon go-directive relaxation is a recurring external attack on the repo** —~~
+   ~~twice now it reverted `go 1.27.1`→`1.27`. The anchored parity check now catches~~
+   ~~it at release time, but the source (which daemon operation rewrites go.mod?) is~~
+   ~~unidentified; root-causing it is upstream work (pma/buildflow), not this repo.~~ carried — `TODO_LIST.md` #4 (M26 upstream root-cause; now also covers the go-get directive-rewrite variant)
+~~8. **AGENTS art-dupl claim drift:** AGENTS says "exactly 1 accepted group"; current~~
+   ~~tool output shows 4 shown groups (192 detected, 143 non-actionable, 45 filtered~~
+   ~~suppressed) including in-etag.go and client pairs. Pre-existing, unchanged by this~~
+   ~~session; the doc or the baseline needs a re-baseline pass (next session).~~ done — M9 re-baseline (report 16:40 a7; `AGENTS.md` Non-Obvious Behaviors)
+~~9. **erraudit `--explain` flag** was dropped from the AGENTS command examples during~~
+   ~~the rewrite (the release script never had it). Harmless; restore for parity or~~
+   ~~drop deliberately.~~
+~~~~ done 2026-09-23 docs-health pass — deliberate drop recorded in `AGENTS.md` ("Known tool noise" note)
 ## f) NEXT UP TO 50 (rough Pareto order)
 
 **Ship v0.6.0 (blocks everything consumer-side):**
-1. Owner go-ahead for the staircase (pushes + tags).
-2. `scripts/pre-release-check.sh` final run on the release-prep commit.
-3. CHANGELOG cut: `chore(release): cut CHANGELOG v0.6.0`.
-4. Staircase: entitytag — tidy, verify, GOWORK=off build+race, CI green, annotated
-   `entitytag/v0.6.0`.
-5. Staircase: server — tidy (resolves entitytag@v0.6.0), verify, GOWORK=off, CI green,
-   `server/v0.6.0`.
-6. Staircase: client — same → `client/v0.6.0`.
-7. Staircase: metrics — same → `metrics/v0.6.0`.
-8. Staircase: root — final commit, CI green, annotated `v0.6.0`.
-9. Proxy `.info` hash == tagged commit, ×5 tags.
-10. sum.golang.org entries ×5.
-11. Clean-room `go get …/{entitytag,server,client,metrics}@v0.6.0` + root, each in a
-    fresh module, with a smoke build (`metrics.Attach`/`HitRatio`, `NewTransport`,
-    `New`, `ParseETag`).
-12. GitHub Release v0.6.0 as Latest, non-prerelease (house precedent).
-13. pkg.go.dev rendering per module (eventual check, not a gate).
-14. First live nested-tag CI runs observed green (trigger fix proof).
+~~1. Owner go-ahead for the staircase (pushes + tags).~~ answered — GO given (report 16:40 a1)
+~~2. `scripts/pre-release-check.sh` final run on the release-prep commit.~~ done — gate exit 0 on the prep commit (report 16:40 a1)
+~~3. CHANGELOG cut: `chore(release): cut CHANGELOG v0.6.0`.~~ done — `80bc256` (report 16:40 a1)
+~~4. Staircase: entitytag — tidy, verify, GOWORK=off build+race, CI green, annotated~~
+   ~~`entitytag/v0.6.0`.~~ done — `entitytag/v0.6.0` → `80bc256` (report 16:40 a1)
+~~5. Staircase: server — tidy (resolves entitytag@v0.6.0), verify, GOWORK=off, CI green,~~
+   ~~`server/v0.6.0`.~~ done — `server/v0.6.0` → `609bf83` (report 16:40 a1)
+~~6. Staircase: client — same → `client/v0.6.0`.~~ done — `client/v0.6.0` → `a54285d` (report 16:40 a1)
+~~7. Staircase: metrics — same → `metrics/v0.6.0`.~~ done — `metrics/v0.6.0` → `86ca301` (report 16:40 a1)
+~~8. Staircase: root — final commit, CI green, annotated `v0.6.0`.~~ done — root `v0.6.0` → `45dc457` (report 16:40 a1)
+~~9. Proxy `.info` hash == tagged commit, ×5 tags.~~ done — report 16:40 a2
+~~10. sum.golang.org entries ×5.~~ done — report 16:40 a2
+~~11. Clean-room `go get …/{entitytag,server,client,metrics}@v0.6.0` + root, each in a~~
+    ~~fresh module, with a smoke build (`metrics.Attach`/`HitRatio`, `NewTransport`,~~
+    ~~`New`, `ParseETag`).~~ done — report 16:40 a2
+~~12. GitHub Release v0.6.0 as Latest, non-prerelease (house precedent).~~ done — report 16:40 a2 (notes now auto-extracted by `release.yml`)
+~~13. pkg.go.dev rendering per module (eventual check, not a gate).~~ done — report 16:40 a3
+~~14. First live nested-tag CI runs observed green (trigger fix proof).~~ done — report 16:40 a1 (F16)
 
 **Close remaining verification gaps:**
-15. Post-tag: `go work sync && git diff --exit-code` idempotency check; add to gate.
-16. Post-tag: per-module `GOWORK=off go vet` + benchmarks smoke in each module.
-17. Decide dependabot nested-manifest window (see e6) and act.
-18. actionlint (or equivalent) as a local pre-push habit for workflow edits.
+~~15. Post-tag: `go work sync && git diff --exit-code` idempotency check; add to gate.~~ done — F19 gate step (report 16:40 a3)
+~~16. Post-tag: per-module `GOWORK=off go vet` + benchmarks smoke in each module.~~ done for vet (staircase GOWORK=off gates); bench smoke carried — `TODO_LIST.md` #1 (M11)
+~~17. Decide dependabot nested-manifest window (see e6) and act.~~ answered — non-issue, withdrawn (report 15:06 a6); recovery verified (report 16:40 a3)
+~~18. actionlint (or equivalent) as a local pre-push habit for workflow edits.~~ done — actionlint clean (report 16:40 a6)
 
 **Consumer sweep (per go-ecosystem-upgrade):**
-19. httputil: bump to v0.6.0, `go mod tidy` adds nested requires, gates green.
-20. DiscordSync: same + its drift-guard test.
-21. library-policy, cqrs-htmx: bump + verify (cqrs-htmx toolchain pin is its own item).
-22. ~35 fleet repos with dead v0.3.1 requires: drop or bump (batch decision).
-23. Record the nested-`go get` migration note where consumers will see it (release
-    notes body).
-
+~~19. httputil: bump to v0.6.0, `go mod tidy` adds nested requires, gates green.~~ done — report 16:40 a4 (httputil)
+~~20. DiscordSync: same + its drift-guard test.~~ done — report 16:40 a4 (DiscordSync)
+~~21. library-policy, cqrs-htmx: bump + verify (cqrs-htmx toolchain pin is its own item).~~ done — report 16:40 a4 (library-policy, cqrs-htmx; the toolchain pin is its own item — M27)
+~~22. ~35 fleet repos with dead v0.3.1 requires: drop or bump (batch decision).~~ done — batch-bumped per owner decision, `ab1bcec`
+~~23. Record the nested-`go get` migration note where consumers will see it (release~~
+    ~~notes body).~~
+~~~~ done — GitHub Release v0.6.0 carries the migration note (report 16:40 a2); recipe in `AGENTS.md`
 **Repo polish:**
-24. Dedupe package-pattern set in ci.yml via workflow env.
-25. ci.yml ↔ pre-release-check.sh pattern-agreement check (tiny grep test).
-26. Root go.sum prune (falls out of staircase root tidy).
-27. Re-baseline the art-dupl accepted-groups doc vs current tool output.
-28. Restore or deliberately drop erraudit `--explain` in AGENTS examples.
-29. `docs/rfc9111-conformance.md`: add a line that the client module is independently
-    consumable (`go get …/client` pulls no server).
-30. ROADMAP: annotate OQ1 resolution history with the module split; otel sub-module
-    entry now unblocked-by-architecture note.
-31. AGENTS: after v1.0.0 root-shim deletion, the root module disappears entirely —
-    capture that in the v1.0.0 criteria discussion.
-32. Consider `internal/` enforcement inside server module for hexEncodeUint64 etc.
-    (currently unexported; fine — note only if the module grows).
-33. Features/README: "modules" section diagram (reuse proposal SVG) on pkg.go.dev-
-    friendly docs.
-34. Benchmarks: capture a five-module baseline post-release (bench output should be
-    identical; prove it).
-35. Fuzz: add corpus seeds from the entitytag move era to CI cache (nice-to-have).
-
+~~24. Dedupe package-pattern set in ci.yml via workflow env.~~ done — `1bf30c9`
+~~25. ci.yml ↔ pre-release-check.sh pattern-agreement check (tiny grep test).~~ done — `1bf30c9`
+~~26. Root go.sum prune (falls out of staircase root tidy).~~ done — staircase root tidy; F20 verified (report 16:40 a3)
+~~27. Re-baseline the art-dupl accepted-groups doc vs current tool output.~~ done — report 16:40 a7
+~~28. Restore or deliberately drop erraudit `--explain` in AGENTS examples.~~ done 2026-09-23 docs-health pass — deliberate drop recorded in `AGENTS.md`
+~~29. `docs/rfc9111-conformance.md`: add a line that the client module is independently~~
+    ~~consumable (`go get …/client` pulls no server).~~ carried — `TODO_LIST.md` #3 (M19)
+~~30. ROADMAP: annotate OQ1 resolution history with the module split; otel sub-module~~
+    ~~entry now unblocked-by-architecture note.~~ done 2026-09-23 docs-health pass — OQ1 history + otel notes added to `ROADMAP.md`
+~~31. AGENTS: after v1.0.0 root-shim deletion, the root module disappears entirely —~~
+    ~~capture that in the v1.0.0 criteria discussion.~~ done — v1.0.0 runbook seed in `AGENTS.md` (report 16:40 a10, F80)
+~~32. Consider `internal/` enforcement inside server module for hexEncodeUint64 etc.~~
+    ~~(currently unexported; fine — note only if the module grows).~~ Won't implement — unexported is sufficient; revisit only if the module grows
+~~33. Features/README: "modules" section diagram (reuse proposal SVG) on pkg.go.dev-~~
+    ~~friendly docs.~~ superseded — README package table + module-scoped pkg.go.dev pages cover the need; diagram dropped (YAGNI)
+~~34. Benchmarks: capture a five-module baseline post-release (bench output should be~~
+    ~~identical; prove it).~~ carried — `TODO_LIST.md` #1 (M11 five-module no-drift proof)
+~~35. Fuzz: add corpus seeds from the entitytag move era to CI cache (nice-to-have).~~
+~~~~ carried — `TODO_LIST.md` #1 (M16 corpus seeds)
 **Bigger backlog (pre-existing, carried):**
-36. Owner decision batch OQ2–OQ8 (TODO_LIST #2) — unchanged.
-37. Consumer-repo leftovers (TODO_LIST #3) — unchanged.
-38. Pareto plan M10–M27 items (TODO_LIST #4) — unchanged.
-39. Daemon go-directive relaxation root cause (upstream: pma/buildflow).
-40. v1.0.0 criteria drafting (root module deletion procedure now needs its own
-    runbook — mirror of the split staircase).
+~~36. Owner decision batch OQ2–OQ8 (TODO_LIST #2) — unchanged.~~ done — `ab1bcec`
+~~37. Consumer-repo leftovers (TODO_LIST #3) — unchanged.~~ carried — `TODO_LIST.md` #4 (M27)
+~~38. Pareto plan M10–M27 items (TODO_LIST #4) — unchanged.~~ carried — `TODO_LIST.md` #1–#4
+~~39. Daemon go-directive relaxation root cause (upstream: pma/buildflow).~~ carried — `TODO_LIST.md` #4 (M26)
+~~40. v1.0.0 criteria drafting (root module deletion procedure now needs its own~~
+    ~~runbook — mirror of the split staircase).~~ done — v1.0.0 runbook seeded in `AGENTS.md` (report 16:40 a10)
 
 ## g) QUESTIONS (cannot be answered from inside this repo)
 

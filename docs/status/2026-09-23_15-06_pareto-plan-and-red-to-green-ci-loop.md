@@ -121,57 +121,57 @@ commit + push (`9751388`), the fully red CI run it exposed, and the two fixes
 
 ## f) NEXT (top slice of the 97-task plan + this phase's additions — full list in `docs/planning/2026-09-23_14-07_v060-staircase-and-full-backlog.md`)
 
-1. **OWNER GO → staircase M1:** final gate, CHANGELOG cut v0.6.0, entitytag
-   stair (tidy/verify/GOWORK=off/CI/tag/proxy+sum).
-2. **Staircase M2:** server, client, metrics, root stairs; clean-room `go get` ×5;
-   GitHub Release; train re-sync.
-3. **M3 post-release proof:** nested-tag frozen CI runs ×4, pkg.go.dev ×5,
-   dependabot on tagged versions, `go work sync` idempotency check into gate.
-4. **NEW: fresh-clone pre-push script/habit** (e2 — one-liner, 15m).
-5. **NEW: setup-go GOTOOLCHAIN=local mechanism read** (e4 — 20m, closes an
-   unexplained behavior touching the drift class).
-6. **M4/M5 consumer sweep → v0.6.0** (httputil, DiscordSync, go-github-kit,
-   library-policy, nsfw-classifier, cqrs-htmx) + residual grep.
-7. **M6 fleet dead-requires drop-or-bump** (OWNER decision, ~35 repos).
-8. **M7 rest:** PACKAGES env dedupe, workflow↔script agreement check, actionlint.
-9. **M8 OWNER batch OQ2–OQ8** (gates the epic tier; also closes the Alex
-   fixtures/email lane).
-10. **M9 art-dupl re-baseline** (AGENTS doc currently lies about "exactly 1 group").
-11. M10 CHANGELOG casing/link-lint.
-12. M11 benchstat tables + five-module no-drift baseline proof.
-13. M12 erraudit-in-CI (OWNER posture).
-14. M13 coverage floor (OWNER).
-15. M14 dependency sanity (gosec note, error-family diff read).
-16. M15 httputil template parity + cross-links.
-17. M16 fuzz expansion (StoredValidator, MergeHeader, directive corpus).
-18. M17 spec pin-ups (§5.2.2.2 no-cache, HEAD × Uncompressed, dual-key edge).
-19. M18 process hardening + micro-policies.
-20. M19 README sections + rfc9111 module note + erraudit `--explain` parity.
-21. M20 CI polish (workflow_dispatch, LICENSE drift, dprint decision) + OWNER
-    branch protection/homepage.
-22. M21 ROADMAP annotations + v1.0.0 root-deletion runbook seed.
-23. M22 Theme 1 freshness design doc.
-24. M23 client hooks spike.
-25. M24 v1.0.0 criteria + deletion checklist.
-26. M25 public presence spike.
-27. M26 daemon go-directive root-cause upstream (pma/buildflow).
-28. M27 consumer-repo leftovers (library-policy formatter, cqrs-htmx pin,
-    DiscordSync tests).
+1. ~~**OWNER GO → staircase M1:** final gate, CHANGELOG cut v0.6.0, entitytag
+   stair (tidy/verify/GOWORK=off/CI/tag/proxy+sum).~~ done — report 16:40 a1
+2. ~~**Staircase M2:** server, client, metrics, root stairs; clean-room `go get` ×5;
+   GitHub Release; train re-sync.~~ done — report 16:40 a1–a2
+3. ~~**M3 post-release proof:** nested-tag frozen CI runs ×4, pkg.go.dev ×5,
+   dependabot on tagged versions, `go work sync` idempotency check into gate.~~ done — report 16:40 a3
+4. ~~**NEW: fresh-clone pre-push script/habit** (e2 — one-liner, 15m).~~ carried — `TODO_LIST.md` #3
+5. ~~**NEW: setup-go GOTOOLCHAIN=local mechanism read** (e4 — 20m, closes an
+   unexplained behavior touching the drift class).~~ carried — `TODO_LIST.md` #3
+6. ~~**M4/M5 consumer sweep → v0.6.0** (httputil, DiscordSync, go-github-kit,
+   library-policy, nsfw-classifier, cqrs-htmx) + residual grep.~~ done — report 16:40 a4–a5
+7. ~~**M6 fleet dead-requires drop-or-bump** (OWNER decision, ~35 repos).~~ done — batch-bumped per owner decision, `ab1bcec`
+8. ~~**M7 rest:** PACKAGES env dedupe, workflow↔script agreement check, actionlint.~~ done — `1bf30c9` (report 16:40 a6)
+9. ~~**M8 OWNER batch OQ2–OQ8** (gates the epic tier; also closes the Alex
+   fixtures/email lane).~~ done — `ab1bcec` (resolutions in `ROADMAP.md`)
+10. ~~**M9 art-dupl re-baseline** (AGENTS doc currently lies about "exactly 1 group").~~ done — report 16:40 a7
+11. ~~M10 CHANGELOG casing/link-lint.~~ done — report 16:40 a9
+12. ~~M11 benchstat tables + five-module no-drift baseline proof.~~ carried — `TODO_LIST.md` #1
+13. ~~M12 erraudit-in-CI (OWNER posture).~~ carried — `TODO_LIST.md` #2
+14. ~~M13 coverage floor (OWNER).~~ carried — `TODO_LIST.md` #2
+15. ~~M14 dependency sanity (gosec note, error-family diff read).~~ carried — `TODO_LIST.md` #2
+16. ~~M15 httputil template parity + cross-links.~~ carried — `TODO_LIST.md` #2 (verified unpinned 16:40 a12)
+17. ~~M16 fuzz expansion (StoredValidator, MergeHeader, directive corpus).~~ carried — `TODO_LIST.md` #1
+18. ~~M17 spec pin-ups (§5.2.2.2 no-cache, HEAD × Uncompressed, dual-key edge).~~ carried — `TODO_LIST.md` #1
+19. ~~M18 process hardening + micro-policies.~~ carried — `TODO_LIST.md` #4
+20. ~~M19 README sections + rfc9111 module note + erraudit `--explain` parity.~~ carried — `TODO_LIST.md` #3 (`--explain` resolved same-day: deliberate drop recorded in `AGENTS.md`)
+21. ~~M20 CI polish (workflow_dispatch, LICENSE drift, dprint decision) + OWNER
+    branch protection/homepage.~~ carried — `TODO_LIST.md` #3
+22. ~~M21 ROADMAP annotations + v1.0.0 root-deletion runbook seed.~~ done — runbook seed landed (report 16:40 a10, F80); OQ1 history + otel notes landed in `ROADMAP.md` this pass
+23. ~~M22 Theme 1 freshness design doc.~~ carried — `TODO_LIST.md` #4
+24. ~~M23 client hooks spike.~~ carried — `TODO_LIST.md` #4
+25. ~~M24 v1.0.0 criteria + deletion checklist.~~ carried — `TODO_LIST.md` #4
+26. ~~M25 public presence spike.~~ carried — `TODO_LIST.md` #4
+27. ~~M26 daemon go-directive root-cause upstream (pma/buildflow).~~ carried — `TODO_LIST.md` #4
+28. ~~M27 consumer-repo leftovers (library-policy formatter, cqrs-htmx pin,
+    DiscordSync tests).~~ carried — `TODO_LIST.md` #4
 
 ## g) QUESTIONS (cannot be answered from inside this repo)
 
-1. **v0.6.0 GO:** master is publicly green but carries the unreleased train —
+1. ~~**v0.6.0 GO:** master is publicly green but carries the unreleased train —
    `@master` stays unresolvable for nested-module consumers until the tags
    land. Do I execute staircase M1/M2 now (it pushes five immutable annotated
-   tags), or do you want to drive the tags yourself?
-2. **Daemon acceptance vs root-cause:** the daemon has now attacked this repo
+   tags), or do you want to drive the tags yourself?~~ answered — GO given; staircase executed (report 16:40 a1)
+2. ~~**Daemon acceptance vs root-cause:** the daemon has now attacked this repo
    three ways (directive relaxation ×2, gitignore regeneration ×1); all three
    have countermeasures, and the go.work one is machine-guarded. Is
    "contain-and-guard" the accepted end state, or do you want the M26 upstream
-   investigation in pma/buildflow prioritized above the polish tier?
-3. **OQ2–OQ8 batch now or post-release?** The structured decision prompt (plan
+   investigation in pma/buildflow prioritized above the polish tier?~~ carried — containment stands with its guards; M26 upstream root-cause in `TODO_LIST.md` #4
+3. ~~**OQ2–OQ8 batch now or post-release?** The structured decision prompt (plan
    M8/F34) is ready to draft on your word — want it before the staircase (some
-   answers, e.g. release workflow OQ3, could shape it) or after?
+   answers, e.g. release workflow OQ3, could shape it) or after?~~ answered — delivered post-release; resolutions recorded via `ab1bcec`
 
 ---
 

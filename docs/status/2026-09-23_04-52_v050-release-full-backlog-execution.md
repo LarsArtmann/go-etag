@@ -22,8 +22,8 @@ The entire TODO_LIST was executed end-to-end: the go-floor decision was made and
 | 6  | TODO#7 stored-validator before-state (F32)                     | **DONE** — full-suite bench (`-benchmem -count=6 ./...`) captured from a `07fe65c^` worktree, inventory-identical to the 09-18 after baseline (9 benches × 6 counts). Filed `reports/bench/2026-09-23_before-typed-code-stored-validator.txt`; report 2026-09-18_20-44 b1/f.7 annotated closed.                                                                                                                                                                                                                   |
 | 7  | Plan M8 pre-release-check.sh (F33–F35)                         | **DONE** — `scripts/pre-release-check.sh` (landed in daemon commit `af3c6e5`): build/vet/race/lint/fmt-diff/erraudit (with `[feature:logger]` filter)/nolint-audit/`go mod verify`/replace + pseudo-version bans/go-directive ↔ CI-pin parity. Dry-run exit 0 on master; parity and pseudo-version failure branches verified standalone. Wired into AGENTS.md Release Conventions + CONTRIBUTING.                                                                                                                 |
 | 8  | Plan M9 GoDoc examples (F36–F40)                               | **DONE** — commit `32c9793`: `ExampleParseETag` (round-trip incl. weak form + refused unquoted), `ExampleETag_weakVsStrong`, `ExampleParseETagList` (wildcard excluded), `ExampleFreshenPerRFC`, `ExampleFreshenNone`. All `// Output:`-tested; rendered on pkg.go.dev at the tag.                                                                                                                                                                                                                                |
-| 9  | TODO#1 Release v0.5.0 (M2/F4–F14)                              | **DONE** — CHANGELOG cut (`af2b6d1`) → master pushed → **CI green on the exact commit** (run 35803874554) → annotated tag `v0.5.0` on `af2b6d1` → pushed → frozen tag run green (35804030500) → proxy `.info` hash == `af2b6d1` → sum.golang.org recorded (`h1:WivCc…`) → clean-room `go get …/metrics@v0.5.0` + Attach/HitRatio smoke (go.mod floor 1.27.1 confirmed on the wire) → GitHub Release v0.5.0 Latest non-prerelease → pkg.go.dev renders metrics + examples within the hour.                         |
-| 10 | TODO#3 Consumer sweep (M3/F15–F21, go-ecosystem-upgrade skill) | **DONE for all six real consumers** — see §c. Enumerated with `--no-ignore-vcs --hidden`: ~100 direct requires across ~40 repos, but only httputil, go-github-kit, library-policy, nsfw-classifier, DiscordSync, cqrs-htmx (22 modules) actually import go-etag in source or tests; the rest are dead requires (documented, untouched — each repo's own hygiene). Baseline build+test recorded before every touch (F11).                                                                                          |
+| 9  | ~~TODO#1 Release v0.5.0 (M2/F4–F14)                              | **DONE** — CHANGELOG cut (`af2b6d1`) → master pushed → **CI green on the exact commit** (run 35803874554) → annotated tag `v0.5.0` on `af2b6d1` → pushed → frozen tag run green (35804030500) → proxy `.info` hash == `af2b6d1` → sum.golang.org recorded (`h1:WivCc…`) → clean-room `go get …/metrics@v0.5.0` + Attach/HitRatio smoke (go.mod floor 1.27.1 confirmed on the wire) → GitHub Release v0.5.0 Latest non-prerelease → pkg.go.dev renders metrics + examples within the hour.~~ done — v0.5.0 superseded by the v0.6.0 five-module staircase same-day (report 16:40 a1)                         |
+| 10 | ~~TODO#3 Consumer sweep (M3/F15–F21, go-ecosystem-upgrade skill) | **DONE for all six real consumers** — see §c. Enumerated with `--no-ignore-vcs --hidden`: ~100 direct requires across ~40 repos, but only httputil, go-github-kit, library-policy, nsfw-classifier, DiscordSync, cqrs-htmx (22 modules) actually import go-etag in source or tests; the rest are dead requires (documented, untouched — each repo's own hygiene). Baseline build+test recorded before every touch (F11).~~ done — re-swept to v0.6.0 same-day (report 16:40 a4); dead-requires fleet batch-bumped in `ab1bcec`                         |
 
 ## c. Consumer sweep detail (TODO#3)
 
@@ -48,10 +48,10 @@ The entire TODO_LIST was executed end-to-end: the go-floor decision was made and
 
 ## e. Bounded leftovers
 
-1. Six consumer repos hold unpushed sweep commits (httputil +2, go-github-kit +1, nsfw-classifier +2, library-policy +4, DiscordSync +1, cqrs-htmx sweep+css commits) — push on owner go.
-2. ROADMAP OQ2–OQ8 decision batch — TODO_LIST #1, gates the roadmap epics.
-3. Plan M10–M27 (benchstat, erraudit-CI, coverage floor, fuzz expansion, README sections, Theme 1/3 docs, v1.0.0 criteria) — TODO_LIST #3.
-4. The pre-existing consumer findings in §c — handed to each repo.
+1. ~~Six consumer repos hold unpushed sweep commits (httputil +2, go-github-kit +1, nsfw-classifier +2, library-policy +4, DiscordSync +1, cqrs-htmx sweep+css commits) — push on owner go.~~ resolved — swept again to v0.6.0 and landed with the same-day staircase session (report 16:40 a4)
+2. ~~ROADMAP OQ2–OQ8 decision batch — TODO_LIST #1, gates the roadmap epics.~~ done — `ab1bcec` (resolutions in `ROADMAP.md` Open Questions)
+3. ~~Plan M10–M27 (benchstat, erraudit-CI, coverage floor, fuzz expansion, README sections, Theme 1/3 docs, v1.0.0 criteria) — TODO_LIST #3.~~ carried — `TODO_LIST.md` #1–#4 (2026-09-23 docs-health pass)
+4. ~~The pre-existing consumer findings in §c — handed to each repo.~~ carried — consumer-repo leftovers tracked in `TODO_LIST.md` #4 (M27)
 
 ## f. Gate evidence
 
@@ -63,6 +63,6 @@ The entire TODO_LIST was executed end-to-end: the go-floor decision was made and
 
 ## g. Questions for the owner
 
-1. **Push the six consumer repos?** All sweep commits are verified and local; one `git push` each (cqrs-htmx's pre-push release-train hook will run strict — its toolchain-check pre-existing red does not gate pushes).
-2. **Fleet hygiene for dead go-etag requires (~35 repos at v0.3.1, never imported):** a one-shot tidy sweep (removes the requires), or leave each repo to its own devices?
-3. **The v0.5-cycle's owner decisions (OQ2–OQ8)** still await the structured prompt (TODO_LIST #1) — say the word and it ships.
+1. ~~**Push the six consumer repos?** All sweep commits are verified and local; one `git push` each (cqrs-htmx's pre-push release-train hook will run strict — its toolchain-check pre-existing red does not gate pushes).~~ answered — pushes landed with the v0.6.0 re-sweep (report 16:40 a4)
+2. ~~**Fleet hygiene for dead go-etag requires (~35 repos at v0.3.1, never imported):** a one-shot tidy sweep (removes the requires), or leave each repo to its own devices?~~ answered — owner chose batch-BUMP; executed in `ab1bcec` (54 manifests, 38 repos, to v0.6.0)
+3. ~~**The v0.5-cycle's owner decisions (OQ2–OQ8)** still await the structured prompt (TODO_LIST #1) — say the word and it ships.~~ answered — delivered and resolved same-day via `ab1bcec`
