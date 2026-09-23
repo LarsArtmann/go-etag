@@ -220,16 +220,16 @@ and CI; every go.mod stays replace-free for proxy purity. Full design record:
 
 ## g) QUESTIONS (cannot be answered from inside this repo)
 
-1. **v0.6.0 timing:** do I have your go-ahead to execute the staircase now (it
-   pushes master + creates five annotated tags, none revertable once the proxy
-   caches them), or do you want a soak period on master CI first?
-2. **Dependabot window:** until the nested tags exist, dependabot cannot resolve the
-   v0.6.0 internal requires and will error on the four nested manifests. Accept the
-   noise (release imminent) or comment the nested blocks out until tagged?
-3. **Daemon go-directive relaxation:** the auto-daemon has now twice rewritten
-   `go 1.27.1` → `go 1.27` in go.mod. I cannot see the daemon's config from this
-   repo — do you know which of its operations rewrites go directives, or should the
-   root-cause investigation go to the pma/buildflow repo next?
+~~1. **v0.6.0 timing:** do I have your go-ahead to execute the staircase now (it~~
+   ~~pushes master + creates five annotated tags, none revertable once the proxy~~
+   ~~caches them), or do you want a soak period on master CI first?~~ answered — GO given; staircase executed (report 16:40 a1)
+~~2. **Dependabot window:** until the nested tags exist, dependabot cannot resolve the~~
+   ~~v0.6.0 internal requires and will error on the four nested manifests. Accept the~~
+   ~~noise (release imminent) or comment the nested blocks out until tagged?~~ answered — non-issue, withdrawn (report 15:06 a6); recovery verified (report 16:40 a3)
+~~3. **Daemon go-directive relaxation:** the auto-daemon has now twice rewritten~~
+   ~~`go 1.27.1` → `go 1.27` in go.mod. I cannot see the daemon's config from this~~
+   ~~repo — do you know which of its operations rewrites go directives, or should the~~
+   ~~root-cause investigation go to the pma/buildflow repo next?~~ carried — M26 upstream root-cause in `TODO_LIST.md` #4 (now also covers the go-get directive-rewrite variant)
 
 ---
 

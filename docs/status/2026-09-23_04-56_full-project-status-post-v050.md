@@ -17,22 +17,22 @@
 
 ## b. PARTIALLY DONE / NOT STARTED
 
-1. **Consumer pushes** — all six repos hold verified, unpushed sweep commits (permission question, §g/§e). Their CI has not yet validated the sweeps.
-2. **ROADMAP OQ2–OQ8 owner decisions** — never drafted into the structured prompt (M1 was only executed for its go-floor piece). Now TODO_LIST #1.
-3. **Plan tiers "rest" + roadmap epics (M10–M27)** — not started except M8/M9: benchstat tables, CHANGELOG link-lint, erraudit-in-CI, coverage-floor decision, dependency sanity notes, fuzz expansion (F54–F57), spec pin-ups (F58–F60), README sections (chaining/troubleshooting/CDN), CI polish, repo hygiene (stray `workflow-audit-log-*.html` at root, branch protection, homepage URL), Theme 1 (§4.2 freshness serving) design doc, Theme 3 client-hooks spike, v1.0.0 criteria, public presence. Now TODO_LIST #3.
-4. **metrics coverage 96.8%** — the missing 3.2% was never analyzed (no open item tracks it).
-5. **pkg.go.dev root/server/client/entitytag pages at v0.5.0** — metrics page verified explicitly; the other four not re-fetched individually (they render from the same tag; near-certain fine, unverified).
+~~1. **Consumer pushes** — all six repos hold verified, unpushed sweep commits (permission question, §g/§e). Their CI has not yet validated the sweeps.~~ resolved — re-swept to v0.6.0 and landed same-day (report 16:40 a4)
+~~2. **ROADMAP OQ2–OQ8 owner decisions** — never drafted into the structured prompt (M1 was only executed for its go-floor piece). Now TODO_LIST #1.~~ done — `ab1bcec` (resolutions in `ROADMAP.md`)
+~~3. **Plan tiers "rest" + roadmap epics (M10–M27)** — not started except M8/M9: benchstat tables, CHANGELOG link-lint, erraudit-in-CI, coverage-floor decision, dependency sanity notes, fuzz expansion (F54–F57), spec pin-ups (F58–F60), README sections (chaining/troubleshooting/CDN), CI polish, repo hygiene (stray `workflow-audit-log-*.html` at root, branch protection, homepage URL), Theme 1 (§4.2 freshness serving) design doc, Theme 3 client-hooks spike, v1.0.0 criteria, public presence. Now TODO_LIST #3.~~ carried — `TODO_LIST.md` #1–#4 (2026-09-23 docs-health pass)
+~~4. **metrics coverage 96.8%** — the missing 3.2% was never analyzed (no open item tracks it).~~ carried — folded into `TODO_LIST.md` #2 (M13 coverage-floor decision)
+~~5. **pkg.go.dev root/server/client/entitytag pages at v0.5.0** — metrics page verified explicitly; the other four not re-fetched individually (they render from the same tag; near-certain fine, unverified).~~ resolved — v0.6.0 pages verified (report 16:40 a3: root + entitytag fully rendered; nested pages listed on the root page)
 
 ## c. TOTALLY FUCKED UP
 
 Nothing in go-etag itself — build/vet/race/lint/erraudit/nolint-audit/mod-verify/parity all green at HEAD and at the tag; CI green. The honest damage list is all pre-existing, in consumer repos, surfaced by the sweep:
 
-1. **cqrs-htmx `scripts/check-go-toolchain.sh` is RED** — flake toolchain pins go 1.26.7 below the workspace's own 1.27.1 floor (predates the sweep; floor comes from its own deps, not go-etag). Their infra decision.
-2. **library-policy `nix flake check` has one remaining red** — `cmd/library-policy/internal/enhanced/structured_formatters.go` at 307/300 lines since 2026-09-13 (quality gate); domain-code split deliberately left out of the dep sweep (F10).
-3. **DiscordSync: 2 red tests** — QuickTime mime mapping (fails identically at the pre-bump commit) and the disk-space health check tripping on real machine state: **/tmp at 16.5% free (7.9/48 GiB)** — that one is THIS machine's actual disk pressure, not a test artifact.
-4. **go-github-kit: 23 pre-existing lint findings** (varnamelen/wrapcheck) in untouched files.
-5. **~35 fleet repos carry dead go-etag requires at v0.3.1** (never imported — template inheritance); `go mod tidy` would delete, not bump them. Policy call per repo, routed to the owner.
-6. **Root cause of daemon commit `969d077` (go.mod relaxation) is still unknown** — restored once; if the mechanism re-fires, only the new parity check catches it after the fact.
+~~1. **cqrs-htmx `scripts/check-go-toolchain.sh` is RED** — flake toolchain pins go 1.26.7 below the workspace's own 1.27.1 floor (predates the sweep; floor comes from its own deps, not go-etag). Their infra decision.~~ carried — consumer-repo leftover, `TODO_LIST.md` #4 (M27: cqrs-htmx toolchain pin)
+~~2. **library-policy `nix flake check` has one remaining red** — `cmd/library-policy/internal/enhanced/structured_formatters.go` at 307/300 lines since 2026-09-13 (quality gate); domain-code split deliberately left out of the dep sweep (F10).~~ carried — consumer-repo leftover, `TODO_LIST.md` #4 (M27: library-policy 307-line formatter gate)
+~~3. **DiscordSync: 2 red tests** — QuickTime mime mapping (fails identically at the pre-bump commit) and the disk-space health check tripping on real machine state: **/tmp at 16.5% free (7.9/48 GiB)** — that one is THIS machine's actual disk pressure, not a test artifact.~~ carried — consumer-repo leftovers, `TODO_LIST.md` #4 (M27: DiscordSync mime + disk-space tests)
+~~4. **go-github-kit: 23 pre-existing lint findings** (varnamelen/wrapcheck) in untouched files.~~ carried — go-github-kit's own backlog (pre-existing, untouched files)
+~~5. **~35 fleet repos carry dead go-etag requires at v0.3.1** (never imported — template inheritance); `go mod tidy` would delete, not bump them. Policy call per repo, routed to the owner.~~ done — owner chose batch-BUMP; executed in `ab1bcec` (54 manifests, 38 repos)
+~~6. **Root cause of daemon commit `969d077` (go.mod relaxation) is still unknown** — restored once; if the mechanism re-fires, only the new parity check catches it after the fact.~~ carried — `TODO_LIST.md` #4 (M26 upstream root-cause; parity check + gate guards contain it meanwhile)
 
 ## d. What was forgotten? What could have been done better? (honest list)
 
@@ -54,46 +54,46 @@ Nothing in go-etag itself — build/vet/race/lint/erraudit/nolint-audit/mod-veri
 
 ## e. What's next? Best bang for the buck?
 
-1. **Push the six consumer repos** (~5 min) — converts six verified-local sweeps into CI-validated ones; every hour unpushed is drift risk. Needs owner go.
-2. **Free disk space on the /tmp partition** — 16.5% free is actively breaking a DiscordSync health test and is one full cache away from breaking nix builds.
-3. **The OQ2–OQ8 decision prompt** (TODO_LIST #1) — one structured prompt unblocks seven lanes (roadmap epics M24–M27 all wait on it).
-4. **benchstat tables over the five baselines** (M11) — makes the whole perf corpus readable; cheap.
-5. **erraudit-in-CI + coverage floor** (M12/M13) — locks today's bar (0 erraudit findings; client 99.7%) against regressions.
-6. **Theme 1 design doc (§4.2 freshness serving)** — the largest user-visible feature still unpaved; M24 is pure design (no code), high leverage.
+~~1. **Push the six consumer repos** (~5 min) — converts six verified-local sweeps into CI-validated ones; every hour unpushed is drift risk. Needs owner go.~~ resolved — pushes landed with the v0.6.0 re-sweep (report 16:40 a4)
+~~2. **Free disk space on the /tmp partition** — 16.5% free is actively breaking a DiscordSync health test and is one full cache away from breaking nix builds.~~ carried — machine hygiene, outside the repo's backlog (DiscordSync health test trips on it; see its own repo)
+~~3. **The OQ2–OQ8 decision prompt** (TODO_LIST #1) — one structured prompt unblocks seven lanes (roadmap epics M24–M27 all wait on it).~~ done — `ab1bcec`
+~~4. **benchstat tables over the five baselines** (M11) — makes the whole perf corpus readable; cheap.~~ carried — `TODO_LIST.md` #1 (M11)
+~~5. **erraudit-in-CI + coverage floor** (M12/M13) — locks today's bar (0 erraudit findings; client 99.7%) against regressions.~~ carried — `TODO_LIST.md` #2 (M12/M13)
+~~6. **Theme 1 design doc (§4.2 freshness serving)** — the largest user-visible feature still unpaved; M24 is pure design (no code), high leverage.~~ carried — `TODO_LIST.md` #4 (M22)
 
 ## f. Recommendations (numbered, with paths)
 
-1. Push the six consumer repos: `~/projects/{httputil,go-github-kit,nsfw-classifier,library-policy,DiscordSync,cqrs-htmx}` (unpushed sweep commits; cqrs-htmx pre-push hook runs release-train strict — expected green, train verified 816 requires/0 unpublished).
-2. Investigate the /tmp disk pressure (8511107072/51539607552 bytes free) — `ncdu /tmp` or clear nix/go caches; re-run DiscordSync `cmd/discordsync` health tests after.
-3. Draft + deliver the OQ2–OQ8 decision prompt (`ROADMAP.md` Open Questions; plan F1/F2).
-4. Install benchstat via the sanctioned path and regenerate comparison tables for `reports/bench/2026-09-11_*`, `2026-09-18_*`, `2026-09-23_*` (plan F43/F44).
-5. Wire the blocking erraudit job + informational nolint-audit into `.github/workflows/ci.yml` (plan F45/F46).
-6. Decide the coverage floor (accept ~96.8 total minimum or drop the idea) and record it in `AGENTS.md` (plan F47/F48).
-7. Analyze `metrics/`'s 3.2% coverage gap (`go test -cover ./metrics/`) — document or close it.
-8. Fuzz expansion: `FuzzStoredValidatorWeaklyMatches`, `FuzzMergeHeader`, Cache-Control variants in `client/fuzz_test.go` (plan F54–F57).
-9. Spec pin-ups: request `no-cache` §5.2.2.2, HEAD × `Uncompressed`, `restoreMismatchedValidator` dual-key edge in `client/spec_test.go` (plan F58–F60).
-10. README sections: Middleware Chaining, Troubleshooting, CDN ETag-stripping note (`README.md`; plan F67–F69).
-11. Sweep the ~35 dead-require repos — owner decision first (tidy removes the requires; that is fleet hygiene, not propagation).
-12. Fix library-policy's 307-line file: split `cmd/library-policy/internal/enhanced/structured_formatters.go` (their quality gate, `scripts/check-quality.sh` BASELINE=60).
-13. Fix cqrs-htmx's flake toolchain pin to a Go ≥ 1.27.1 (`flake.nix`; `scripts/check-go-toolchain.sh` red).
-14. Fix DiscordSync's QuickTime mime test (`internal/content/mime_test.go:64`) — pre-existing, `.mov` → `video/mp4` mapping lost on this system.
-15. Record the `ci-siblings/cqrs-htmx` drift decision in that clone's AGENTS.md or sweep it too.
-16. Link-lint `CHANGELOG.md` compare links + casing audit (`Larsartmann` vs `larsartmann`, plan F41/F42).
-17. Cross-link AGENTS error sections go-etag ↔ httputil (`AGENTS.md`, `~/projects/httputil/AGENTS.md`; plan F53) — F51 (template parity) was verified green incidentally during the sweep.
-18. Read the go-error-family v0.10.0→v0.10.1 diff and record consumer-relevant notes (`AGENTS.md`; plan F50) — the bump rode the sweep unreviewed.
-19. Verify pkg.go.dev root/server/client/entitytag render at v0.5.0 (one fetch each).
-20. Add a README badge-render sanity check to `scripts/pre-release-check.sh` (grep already covers the source; rendering is cosmetic but cheap to eyeball).
-21. Explain or annotate the 6466 ns outlier in `reports/bench/2026-09-23_after-head-freshening.txt` (re-run one count if unexplained).
-22. Add the archive-gate numbered-item detector + annotate-rows.py trial + before→after scoring rule to AGENTS.md Repo Workflow Notes (plan F63–F65).
-23. Trash the stray `workflow-audit-log-20260911-*.html` at repo root (plan F73).
-24. Owner: branch protection on master + homepage URL → pkg.go.dev (plan F74).
-25. Add `workflow_dispatch` to `.github/workflows/ci.yml` (plan F70).
-26. v1.0.0 criteria + shim-removal checklist doc (plan F82/F83).
-27. Theme 3 spike: client hooks `OnHit`/`OnStore`/`OnFreshen`/`OnInvalidate` mirroring the server's (`client/options.go`; plan F80/F81).
-28. Public presence: comparison table vs other Go ETag libs + awesome-go draft (plan F84/F85).
-29. Theme 1 (§4.2 freshness serving) design doc sections (plan F75–F79).
-30. Consider a daemon-behavior postmortem: what rewrote `go.mod` at `969d077`, and whether the parity check should run as a daemon-blocking gate rather than a release-time one.
+~~1. Push the six consumer repos: `~/projects/{httputil,go-github-kit,nsfw-classifier,library-policy,DiscordSync,cqrs-htmx}` (unpushed sweep commits; cqrs-htmx pre-push hook runs release-train strict — expected green, train verified 816 requires/0 unpublished).~~ resolved — report 16:40 a4
+~~2. Investigate the /tmp disk pressure (8511107072/51539607552 bytes free) — `ncdu /tmp` or clear nix/go caches; re-run DiscordSync `cmd/discordsync` health tests after.~~ carried — machine hygiene (see e2)
+~~3. Draft + deliver the OQ2–OQ8 decision prompt (`ROADMAP.md` Open Questions; plan F1/F2).~~ done — `ab1bcec`
+~~4. Install benchstat via the sanctioned path and regenerate comparison tables for `reports/bench/2026-09-11_*`, `2026-09-18_*`, `2026-09-23_*` (plan F43/F44).~~ carried — `TODO_LIST.md` #1 (M11)
+~~5. Wire the blocking erraudit job + informational nolint-audit into `.github/workflows/ci.yml` (plan F45/F46).~~ carried — `TODO_LIST.md` #2 (M12)
+~~6. Decide the coverage floor (accept ~96.8 total minimum or drop the idea) and record it in `AGENTS.md` (plan F47/F48).~~ carried — `TODO_LIST.md` #2 (M13, incl. the metrics gap)
+~~7. Analyze `metrics/`'s 3.2% coverage gap (`go test -cover ./metrics/`) — document or close it.~~ carried — `TODO_LIST.md` #2 (M13 fold-in)
+~~8. Fuzz expansion: `FuzzStoredValidatorWeaklyMatches`, `FuzzMergeHeader`, Cache-Control variants in `client/fuzz_test.go` (plan F54–F57).~~ carried — `TODO_LIST.md` #1 (M16)
+~~9. Spec pin-ups: request `no-cache` §5.2.2.2, HEAD × `Uncompressed`, `restoreMismatchedValidator` dual-key edge in `client/spec_test.go` (plan F58–F60).~~ carried — `TODO_LIST.md` #1 (M17)
+~~10. README sections: Middleware Chaining, Troubleshooting, CDN ETag-stripping note (`README.md`; plan F67–F69).~~ carried — `TODO_LIST.md` #3 (M19)
+~~11. Sweep the ~35 dead-require repos — owner decision first (tidy removes the requires; that is fleet hygiene, not propagation).~~ done — batch-bumped per owner decision, `ab1bcec`
+~~12. Fix library-policy's 307-line file: split `cmd/library-policy/internal/enhanced/structured_formatters.go` (their quality gate, `scripts/check-quality.sh` BASELINE=60).~~
+~~13. Fix cqrs-htmx's flake toolchain pin to a Go ≥ 1.27.1 (`flake.nix`; `scripts/check-go-toolchain.sh` red).~~
+~~14. Fix DiscordSync's QuickTime mime test (`internal/content/mime_test.go:64`) — pre-existing, `.mov` → `video/mp4` mapping lost on this system.~~ carried — consumer-repo leftovers, `TODO_LIST.md` #4 (M27)
+~~15. Record the `ci-siblings/cqrs-htmx` drift decision in that clone's AGENTS.md or sweep it too.~~ Won't implement — artifact clone excluded by design (report 16:40 a5); not a consumer surface
+~~16. Link-lint `CHANGELOG.md` compare links + casing audit (`Larsartmann` vs `larsartmann`, plan F41/F42).~~ done — M10 (report 16:40 a9)
+~~17. Cross-link AGENTS error sections go-etag ↔ httputil (`AGENTS.md`, `~/projects/httputil/AGENTS.md`; plan F53) — F51 (template parity) was verified green incidentally during the sweep.~~ carried — `TODO_LIST.md` #2 (M15/F57 cross-links; F56 verified unpinned)
+~~18. Read the go-error-family v0.10.0→v0.10.1 diff and record consumer-relevant notes (`AGENTS.md`; plan F50) — the bump rode the sweep unreviewed.~~ carried — `TODO_LIST.md` #2 (M14)
+~~19. Verify pkg.go.dev root/server/client/entitytag render at v0.5.0 (one fetch each).~~ resolved — report 16:40 a3
+~~20. Add a README badge-render sanity check to `scripts/pre-release-check.sh` (grep already covers the source; rendering is cosmetic but cheap to eyeball).~~ carried — `TODO_LIST.md` #3 (M20 LICENSE/README drift check subsumes it)
+~~21. Explain or annotate the 6466 ns outlier in `reports/bench/2026-09-23_after-head-freshening.txt` (re-run one count if unexplained).~~ carried — `TODO_LIST.md` #1 (annotate while regenerating M11 comparisons)
+~~22. Add the archive-gate numbered-item detector + annotate-rows.py trial + before→after scoring rule to AGENTS.md Repo Workflow Notes (plan F63–F65).~~ carried — `TODO_LIST.md` #4 (M18)
+~~23. Trash the stray `workflow-audit-log-20260911-*.html` at repo root (plan F73).~~ done — trashed at `bca4525` (plan M20 note)
+~~24. Owner: branch protection on master + homepage URL → pkg.go.dev (plan F74).~~ carried — `TODO_LIST.md` #3 (M20 OWNER items)
+~~25. Add `workflow_dispatch` to `.github/workflows/ci.yml` (plan F70).~~ carried — `TODO_LIST.md` #3 (M20)
+~~26. v1.0.0 criteria + shim-removal checklist doc (plan F82/F83).~~ carried — `TODO_LIST.md` #4 (M24)
+~~27. Theme 3 spike: client hooks `OnHit`/`OnStore`/`OnFreshen`/`OnInvalidate` mirroring the server's (`client/options.go`; plan F80/F81).~~ carried — `TODO_LIST.md` #4 (M23)
+~~28. Public presence: comparison table vs other Go ETag libs + awesome-go draft (plan F84/F85).~~ carried — `TODO_LIST.md` #4 (M25)
+~~29. Theme 1 (§4.2 freshness serving) design doc sections (plan F75–F79).~~ carried — `TODO_LIST.md` #4 (M22)
+~~30. Consider a daemon-behavior postmortem: what rewrote `go.mod` at `969d077`, and whether the parity check should run as a daemon-blocking gate rather than a release-time one.~~ carried — `TODO_LIST.md` #4 (M26)
 
 ## g. Top #1 question I cannot figure out myself
 
-**What mechanism produced daemon commit `969d077` (the silent `go 1.27.1` → `go 1.27` relaxation)?** I restored the directive and the new parity check in `scripts/pre-release-check.sh` catches a recurrence at release time — but between releases, whatever wrote that line can write it again, and I cannot see the daemon's internals from this repo. If the root cause is a `go mod tidy`-style step running under the persisted `GOTOOLCHAIN=local` (go 1.26.7 cannot parse a `1.27.1` floor and some tools "fix" it by relaxing), the durable fix belongs in the daemon's config, not in my after-the-fact gate. One sentence from you ("it was X, fixed" or "unknown, keep the parity gate") closes this.
+~~**What mechanism produced daemon commit `969d077` (the silent `go 1.27.1` → `go 1.27` relaxation)?** I restored the directive and the new parity check in `scripts/pre-release-check.sh` catches a recurrence at release time — but between releases, whatever wrote that line can write it again, and I cannot see the daemon's internals from this repo. If the root cause is a `go mod tidy`-style step running under the persisted `GOTOOLCHAIN=local` (go 1.26.7 cannot parse a `1.27.1` floor and some tools "fix" it by relaxing), the durable fix belongs in the daemon's config, not in my after-the-fact gate. One sentence from you ("it was X, fixed" or "unknown, keep the parity gate") closes this.~~ carried — `TODO_LIST.md` #4 (M26); the containment guards stand meanwhile
