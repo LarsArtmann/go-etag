@@ -75,6 +75,30 @@ func TestETag_IsValid(t *testing.T) {
 	}
 }
 
+func TestStrength_IsValid(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		s    Strength
+		want bool
+	}{
+		{name: "Strong is valid", s: Strong, want: true},
+		{name: "Weak is valid", s: Weak, want: true},
+		{name: "out-of-range strength is invalid", s: Strength(42), want: false},
+		{name: "negative strength is invalid", s: Strength(-1), want: false},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got := tc.s.IsValid(); got != tc.want {
+				t.Errorf("Strength(%d).IsValid() = %v, want %v", tc.s, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestETag_Comparison(t *testing.T) {
 	t.Parallel()
 
