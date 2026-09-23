@@ -90,39 +90,57 @@ validator prevents is closed; no further work planned here.
    surface via aliases + wrappers, and the client compares validators through
    `entitytag.ParseETag`/`WeakEqual` (no `client → server` edge). Theme 2's
    remaining piece is the `cacheEntry` → `storedResponse` evolution.
-2. **Alex's field-report offer:** draft a reply email (Age answer +
+2. ~~**Alex's field-report offer:** draft a reply email (Age answer +
    no-store/freshening changes are in), and accept his raw header captures
-   as permanent fixtures in `client/testdata/`?
-3. **Release workflow for go-etag:** the repo has no tag-triggered Release
-   workflow; all five tags DO have manual Release pages (verified 2026-09-18
-   via `gh release list`, v0.3.1 is Latest), so the gap is automation, not
-   pages. Decide
-   whether to add one or keep manual releases.
-4. **FNV-64a strength honesty (standing decision, revisitable):** the
-   default `Strong` is pragmatic (birthday bound ~4.3B bodies) but not
-   spec-purist. Documented; changing the default would be breaking.
-5. **Residual open-low backlog:** the ~25 annotated-open "low" items in the
-   August reports (isolated parser benchmarks, single-pass `ParseETagList`,
-   `Strength.String()`, obs-text validation, assorted boundary tests) are
-   deliberately noise-gated — open in historical reports, tracked in no
-   living doc. Promote them into TODO_LIST/ROADMAP cold storage, or let
-   them die with the archives? (Asked 2026-09-10 and 2026-09-11; owner
-   decision pending.)
-6. **Deprecated shim scope:** should the root shim receive the new typed
-   surface (`Code`/`Domain`/`DomainOf`/`InDomain`) in a v0.3.x, or stay
-   frozen at the pinned v0.1.x surface until its v1.0.0 deletion? (Frozen
-   for now; that's a product/compat call, not a technical one. Origin:
-   report `2026-09-11_09-28_error-system-parity-typed-code.md` g#1.)
-7. **YAGNI vs house parity:** keep all six error-family constructors
-   (exact httputil mirror, two families unused by go-etag) or trim to the
-   four actually used? Same call pending for an exported `Domain("http")`
-   constant vs leaving it literal. (Origin: report
-   `2026-09-11_09-28_error-system-parity-typed-code.md` f#6, f#7, g#3.)
-8. **art-dupl enforcement policy:** the single accepted clone group
-   (test-double `Write` vs `etagWriter.Write`) is documented in AGENTS.md and
-   on the code, but nothing fails if a second group appears tomorrow — the
-   prose claim silently rots. Machine-enforce it (committed `art-dupl`
-   baseline, or a CI step asserting "exactly 1 known group"), or declare
-   prose-only acceptance the standing policy? Deferred since 2026-08-07.
-   (Origin: report `2026-09-22_21-36_art-dupl-acceptance-documentation-session.md`
-   g#1, f#1, f#10, f#11.)
+   as permanent fixtures in `client/testdata/`?~~ Resolved 2026-09-23: the
+   owner sent the reply; fixture acceptance waits until the captures actually
+   arrive (reopen as a TODO_LIST item then).
+3. ~~**Release workflow for go-etag:** decide whether to add one or keep
+   manual releases.~~ Resolved 2026-09-23 (owner: automate): `.github/workflows/release.yml`
+   triggers on the ROOT `v*` tag, extracts the matching CHANGELOG section as
+   the notes (fails loudly if the section was not cut), and creates the
+   Release as Latest; idempotent on re-runs. Nested module tags deliberately
+   do not get Release pages — the proxy is their consumer interface.
+4. ~~**FNV-64a strength honesty (standing decision, revisitable).**~~
+   Closed 2026-09-23 (owner defers to the documented position): the default
+   `Strong` stays; the README and `entitytag` docs keep the honesty note
+   (birthday bound ~4.3B bodies); changing the default would be breaking.
+5. ~~**Residual open-low backlog:** promote the ~25 annotated-open "low"
+   items, or let them die with the archives?~~ Resolved 2026-09-23 (owner
+   delegated): they die with the archives. Rationale: open since August with
+   zero demand; the RFC conformance table and coverage are strong; promoting
+   25 low items would bury the high-signal backlog. Revivable — any item can
+   re-enter via TODO_LIST on demand.
+6. ~~**Deprecated shim scope:** typed surface, or frozen at the pinned v0.1.x
+   surface until deletion?~~ Resolved 2026-09-23 (owner delegated; informed
+   call): FROZEN. The shim is deleted at v1.0.0; typed-surface parity in a
+   tombstone adds a re-export + parity-guard tax on every new export for
+   consumers who should migrate to `…/server` anyway. The deprecation markers
+   provide the migration path.
+7. ~~**YAGNI vs house parity:** keep all six error-family constructors or
+   trim to the four actually used?~~ Resolved 2026-09-23 (owner: consider
+   go-error-family; otherwise 1 possible failure = 1 distinct error): KEEP
+   all six — they are the shared vocabulary of the httputil mirror contract
+   (errorTemplates pinned verbatim across repos), not per-error types; the
+   1-failure-1-distinct-error principle already holds via the five `http.etag_*`/
+   `http.hijack_*` codes. The exported `Domain("http")` constant stays
+   literal (same parity reasoning).
+8. ~~**art-dupl enforcement policy:** machine-enforce the accepted clone
+   baseline, or prose-only?~~ Resolved 2026-09-23 (owner: enforce): the
+   release gate now runs `art-dupl -t 1 --type-aware` and FAILS unless
+   exactly the 4 accepted groups are shown (`scripts/pre-release-check.sh`,
+   baseline `reports/dupl/2026-09-23_art-dupl-baseline.txt`; AGENTS documents
+   each group's accept rationale). Extraction or deliberate re-baseline
+   required on drift.
+9. ~~**Validate() vs New() semantics** (from the 15:35 self-review's split
+   brain #1): Validate rejects `MaxBufferSize <= 0` and out-of-range
+   `Strength`; New clamps/accepts.~~ Resolved 2026-09-23 (owner: "most
+   correct" delegated): keep the divergence — validation and defensive
+   defaults are different jobs (reject at startup when the config comes from
+   humans; never crash a server for a zero-value config). The divergence and
+   when to call Validate are documented on `ETagConfig.Validate` (shipped
+   2026-09-23); the server↔entitytag surface is parity-guarded.
+10. ~~**Shim parity scope** (self-review split brain #2 follow-up): who
+    guards the re-export chain?~~ Closed 2026-09-23: the chain is fully
+    guarded — root↔server by `deprecated_test.go`, server↔entitytag by
+    `server/entity_parity_test.go` (go/ast, stdlib-only). No further scope.
