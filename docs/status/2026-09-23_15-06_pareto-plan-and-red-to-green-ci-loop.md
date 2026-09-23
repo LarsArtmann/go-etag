@@ -50,27 +50,27 @@ commit + push (`9751388`), the fully red CI run it exposed, and the two fixes
 
 ## b) PARTIALLY DONE
 
-1. **Plan M7 (verification-gap closure)** — advanced by the fixes
+1. ~~**Plan M7 (verification-gap closure)** — advanced by the fixes
    (actionlint-equivalent YAML validation done ad-hoc; govulncheck wiring
    closed) but the remaining M7 items are open: ci.yml PACKAGES env dedupe
    (pattern set still duplicated in ~6 places), workflow↔script pattern-agreement
    check, actionlint as a standing habit/tool, post-tag `go work sync`
-   idempotency check.
-2. **Plan M3 (post-release proof)** — the CI portion is now pre-proven (green
+   idempotency check.~~ done — `1bf30c9` (PACKAGES env + agreement check) plus the sync idempotency step (report 16:40 a3/a6)
+2. ~~**Plan M3 (post-release proof)** — the CI portion is now pre-proven (green
    runners); the tag-dependent portions (nested-tag frozen runs ×4, pkg.go.dev
-   ×5, dependabot on tagged versions) still wait on the staircase.
-3. **Fresh-clone verification as a habit** — done once for diagnosis, not yet
-   scripted/institutionalized (see e).
+   ×5, dependabot on tagged versions) still wait on the staircase.~~ done — report 16:40 a3
+3. ~~**Fresh-clone verification as a habit** — done once for diagnosis, not yet
+   scripted/institutionalized (see e).~~ carried — `TODO_LIST.md` #3 (script)
 
 ## c) NOT STARTED
 
-1. **Everything tag-gated:** the v0.6.0 staircase itself (plan M1/M2), the
-   consumer sweep to v0.6.0 (M4–M6), pkg.go.dev/dependabot-on-tags (M3 rest).
-2. **Owner decision batch OQ2–OQ8 (M8)** and everything it gates (M22–M25 epics).
-3. **Polish cluster M9–M21** (art-dupl re-baseline, CHANGELOG link-lint,
+1. ~~**Everything tag-gated:** the v0.6.0 staircase itself (plan M1/M2), the
+   consumer sweep to v0.6.0 (M4–M6), pkg.go.dev/dependabot-on-tags (M3 rest).~~ done — reports 16:40 a1–a5; fleet decision in `ab1bcec`
+2. ~~**Owner decision batch OQ2–OQ8 (M8)** and everything it gates (M22–M25 epics).~~ done — `ab1bcec`; epics carried in `TODO_LIST.md` #4
+3. ~~**Polish cluster M9–M21** (art-dupl re-baseline, CHANGELOG link-lint,
    benchstat + no-drift proof, erraudit-in-CI, coverage floor, httputil parity,
-   fuzz expansion, spec pin-ups, README sections, ROADMAP annotations).
-4. **Upstream daemon root-cause (M26)** and consumer-repo leftovers (M27).
+   fuzz expansion, spec pin-ups, README sections, ROADMAP annotations).~~ done/carried — M9/M10/M21 done (16:40 a7/a9; ROADMAP annotations landed same-day); M11–M20 carried in `TODO_LIST.md` #1–#3
+4. ~~**Upstream daemon root-cause (M26)** and consumer-repo leftovers (M27).~~ carried — `TODO_LIST.md` #4
 
 ## d) TOTALLY FUCKED UP (all caught and fixed this session)
 
@@ -96,28 +96,28 @@ commit + push (`9751388`), the fully red CI run it exposed, and the two fixes
 
 ## e) WHAT WE SHOULD IMPROVE
 
-1. **Never trust "the daemon committed" — verify the commit's file list**
+1. ~~**Never trust "the daemon committed" — verify the commit's file list**
    (`git ls-files <file>`) for every file a change depends on, before push.
-   This is now also machine-enforced (gate guard), but the habit should be manual too.
-2. **Fresh-clone smoke before pushing structural changes:** `git clone . /tmp/x
+   This is now also machine-enforced (gate guard), but the habit should be manual too.~~ done — gate guard landed this session (a7); habit echoed in the `AGENTS.md` shared-tree protocol
+2. ~~**Fresh-clone smoke before pushing structural changes:** `git clone . /tmp/x
    && cd /tmp/x && go build ./... ./client/... …` — the cheapest true CI-parity
    check; would have caught the go.work miss pre-push. Candidate for a
-   `scripts/` one-liner or a pre-push habit.
+   `scripts/` one-liner or a pre-push habit.~~ carried — `TODO_LIST.md` #3
 3. **Read action sources before feeding them non-trivial input** (govulncheck
    quoting). Same class as "verify the CLI flag exists" — the composite action
    is 3 lines of shell.
-4. **Unexplained-but-benign: `GOTOOLCHAIN: local` in step env** — the failed
+4. ~~**Unexplained-but-benign: `GOTOOLCHAIN: local` in step env** — the failed
    run's step env printed `local` on jobs whose YAML pins `go1.27.1`; the likely
    mechanism is setup-go@v7 writing `GOTOOLCHAIN=local` via GITHUB_ENV and it
    beating the YAML env in the printed resolution. Harmless today (installed
    version == directive version) and jobs are green — but my model of "the YAML
    pins govern" was wrong or incomplete. Worth one focused read of setup-go
    behavior; if GITHUB_ENV really overrides YAML env here, the go-directive
-   relaxation daemon + a future directive bump could interact badly.
-5. **Plan doc is a snapshot — the two CI fixes are not in it.** Fine by doctrine
+   relaxation daemon + a future directive bump could interact badly.~~ carried — setup-go mechanism read in `TODO_LIST.md` #3
+5. ~~**Plan doc is a snapshot — the two CI fixes are not in it.** Fine by doctrine
    (living state = TODO_LIST/CHANGELOG), but the next HARVEST should fold
    "CI-green precondition" into M1's F-steps explicitly (it now exists as a
-   fact, not a step).
+   fact, not a step).~~ moot — M1 executed same-day (report 16:40 a1); the fact lives in CHANGELOG [0.6.0]
 
 ## f) NEXT (top slice of the 97-task plan + this phase's additions — full list in `docs/planning/2026-09-23_14-07_v060-staircase-and-full-backlog.md`)
 
