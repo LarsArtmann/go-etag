@@ -3,7 +3,8 @@
 > **FULLY EXECUTED — archived 2026-09-23.** Every task (M1–M10, F1–F25) shipped
 > same-day and verified (gates green in both repos; see the Outcome section).
 > The single follow-up — tag go-etag `v0.5.0` so consumers can `go get
-> …/metrics@v0.5.0` — is harvested into `TODO_LIST.md` #1, not lost here.
+> …/metrics@v0.5.0` — ~~is harvested into `TODO_LIST.md` #1, not lost here.~~
+> shipped — v0.5.0 tagged `af2b6d1` 2026-09-23 (proxy/sum/clean-room verified; report 04-52 §b.9).
 
 **Date:** 2026-09-22 23:25 · **Status:** executed & verified (same day, ~23:45) · **Scope:** cross-repo (go-etag receives, httputil removes) · **Origin:** owner decision in httputil session 2026-09-22 ("A: subpackage `go-etag/metrics`, zero new release machinery")
 

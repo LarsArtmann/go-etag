@@ -8,7 +8,7 @@ _Date: 2026-08-16 08:21 · Scope: core hooks only, `go-etag/otel` sub-module par
 
 ## 1. Context & Problem
 
-go-etag has zero telemetry surface. The only observability hook is
+~~go-etag has zero telemetry surface.~~ Shipped 2026-09-10 (`5f7a97b`, v0.2.0): the three hooks below are live. The only observability hook is
 `ETagConfig.OnError func(*errorfamily.Error)` (fired on post-commit write
 failures). Users running OpenTelemetry, Prometheus, or structured logging
 cannot see the events that actually matter for an ETag middleware:

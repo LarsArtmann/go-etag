@@ -236,7 +236,7 @@ pre-existing backlog carried forward for completeness.
 |~~19~~ carried — `TODO_LIST.md` #4 (M27 cqrs-htmx toolchain pin)|~~go directive floor policy: cqrs-htmx modules sit at `go 1.26.7` (patch floor) vs the skill's major.minor rule — decide once~~|~~Low~~|~~S~~|~~Policy~~|
 |~~20~~ Won't implement here — foreign repos' CI (go-etag fixed its own)|~~Consider `GOTOOLCHAIN` job-scoping audit for httputil/cqrs-htmx CI (same hazard go-etag just fixed)~~|~~Low~~|~~S~~|~~Bug~~|
 |~~21~~ Won't implement here — foreign repo (cqrs-htmx's own hygiene)|~~cqrs-htmx: verify `go.work.sum` cleanliness post-churn (currently pass-by-build; never explicitly inspected)~~|~~Low~~|~~XS~~|~~Maintenance~~|
-|~~22~~|~~go-etag `transport_test.go:819` gopls SA1008 (`x-b` non-canonical key) — pre-existing warning, confirmed still present, never touched~~|~~Low~~|~~XS~~|~~Quality~~| dies per OQ5 — pre-existing tool noise, deliberately untouched; revive on demand
+|~~22~~ dies per OQ5 — pre-existing tool noise, deliberately untouched; revive on demand|~~go-etag `transport_test.go:819` gopls SA1008 (`x-b` non-canonical key) — pre-existing warning, confirmed still present, never touched~~|~~Low~~|~~XS~~|~~Quality~~|
 
 ## g) Questions I cannot answer myself
 

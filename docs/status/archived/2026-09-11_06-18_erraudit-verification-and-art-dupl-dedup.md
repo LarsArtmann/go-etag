@@ -121,7 +121,7 @@ they were sloppy, not because they survived:
 |~~14~~ Won't implement — no further sites; standing rule lives in the AGENTS gotchas|~~Add `cloneHeader`-style stdlib-footgun notes to AGENTS.md gotchas if more Clone-guard sites ever appear~~|~~Low~~|~~S~~|
 | ~~15~~ | ~~Skim `docs/status/` backlog (2 modified files at session start) for unharvested items~~ done 2026-09-23 — every 2026-0* snapshot read end-to-end and annotated (docs-health full audit) | ~~Medium~~                    | ~~S~~      |
 |~~16~~ dies per OQ5 — discard-safety rationale documented in `AGENTS.md` client gotchas|~~Consider whether `drainAndClose` suppressions should gain a dedicated spec test asserting the discard is safe under a failing body~~|~~Low~~|~~M~~|
-|~~17~~|~~Double-check the deprecated root shim still compiles green after any future transport refactor (habit, not a current issue)~~|~~Low~~|~~S~~| covered — `deprecated_test.go` parity suite runs in every gate
+|~~17~~ covered — `deprecated_test.go` parity suite runs in every gate|~~Double-check the deprecated root shim still compiles green after any future transport refactor (habit, not a current issue)~~|~~Low~~|~~S~~|
 
 ## g) Questions I cannot figure out myself
 

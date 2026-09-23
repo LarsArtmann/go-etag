@@ -5,7 +5,7 @@
 > spec pin-ups, `FuzzHasNoStoreDirective` + CI fuzz job, §4.4 real-server
 > integration, server real-wire integration (`server/integration_test.go`), the
 > Age-aware GoDoc example, and the living-docs sync. Coverage landed at root
-> 100.0% / server 99.0% / client 97.7% (targets met). Evidence: CHANGELOG
+> 100.0% / server 99.0% / client ~~97.7%~~ 99.7% as of the 2026-09-23 freshening hardening (report 04-52 a4; FEATURES stamp). Evidence: CHANGELOG
 > `[0.3.0]`, commit `a5de386` and successors.
 
 _Created: 2026-09-11 00:25 · Session goal: "I WANT US TO HAVE SUPERB TESTS!"_

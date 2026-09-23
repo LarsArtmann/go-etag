@@ -2,10 +2,10 @@
 
 Honest inventory of what exists, by status. Evidence cites code; every
 FULLY_FUNCTIONAL row is exercised by the test suite (verified 2026-09-23 at
-the v0.5.0 release tree: `go test -race -count=1 -cover ./...` green — root
-100.0% / server 98.6% / client 99.7% / entitytag 98.9% / metrics 96.8%
-coverage; client rose with the freshening-hardening spec pins of the 09-23
-backlog execution).
+the post-v0.6.0 tree, docs-health gate run — `go test -race -count=1 -cover`
+green across all five modules: root 100.0% / server 99.1% / client 99.7% /
+entitytag 100.0% / metrics 96.8%; entitytag and server rose with the
+strength-specs and parity-test additions of the 2026-09-23 split-brain fixes).
 
 Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 
