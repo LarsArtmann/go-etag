@@ -207,11 +207,11 @@ pending owner instruction (per "THEN WAIT", nothing was auto-harvested into TODO
 
 | #  | Task                                                                                                                                                               | Impact   | Effort | Category      |
 | -- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------ | ------------- |
-| 1  | ~~Owner GO/no-GO on v0.3.0 release (tag, push, proxy + pkg.go.dev + `go get` round trip)~~ done at `fe5dede`                                                       | Critical | S      | Release       |
-| 2  | ~~Migrate the six in-house consumers off removed `PreserveOn304` onto `FreshenOn304`~~ done (09a2b1f; premise corrected per report 2026-09-11_02-51)               | Critical | M      | Feature       |
-| 3  | ~~Probe the new CI workflow with a real run; fix whatever turns red~~ done — green on the release commit and frozen tag run; Dependabot actions PR #1 merged green | Critical | S      | Bug           |
+| ~~1~~  | ~~Owner GO/no-GO on v0.3.0 release (tag, push, proxy + pkg.go.dev + `go get` round trip)~~ done at `fe5dede`                                                       | ~~Critical~~ | ~~S~~      | ~~Release~~       |
+| ~~2~~  | ~~Migrate the six in-house consumers off removed `PreserveOn304` onto `FreshenOn304`~~ done (09a2b1f; premise corrected per report 2026-09-11_02-51)               | ~~Critical~~ | ~~M~~      | ~~Feature~~       |
+| ~~3~~  | ~~Probe the new CI workflow with a real run; fix whatever turns red~~ done — green on the release commit and frozen tag run; Dependabot actions PR #1 merged green | ~~Critical~~ | ~~S~~      | ~~Bug~~           |
 | 4  | Scope GOTOOLCHAIN pin to test/fuzz jobs (or pin govulncheck version) so `@latest` installs can't break                                                             | High     | S      | Bug           |
-| 5  | ~~Fix FEATURES.md stale shim row (parity suite exists since a5de386) + dead TODO_LIST #14 reference~~ done 2026-09-11 docs-health pass                             | High     | XS     | Documentation |
+| ~~5~~  | ~~Fix FEATURES.md stale shim row (parity suite exists since a5de386) + dead TODO_LIST #14 reference~~ done 2026-09-11 docs-health pass                             | ~~High~~     | ~~XS~~     | ~~Documentation~~ |
 | 6  | Add GoDoc example for `FreshenPolicy` (Example with Output, per testableexamples)                                                                                  | High     | S      | Documentation |
 | 7  | Decide + record the accepted coverage floor (98.3%) in the plan-doc annotation                                                                                     | Medium   | XS     | Quality       |
 | 8  | Install benchstat via a sanctioned path; regenerate the three baselines as a comparison table                                                                      | Medium   | S      | Quality       |
@@ -226,7 +226,7 @@ pending owner instruction (per "THEN WAIT", nothing was auto-harvested into TODO
 | 17 | Add "Interpretation decisions" column/section to docs/rfc9111-conformance.md                                                                                       | Medium   | S      | Documentation |
 | 18 | Run govulncheck locally as a pre-release gate (currently only a CI job)                                                                                            | High     | XS     | Quality       |
 | 19 | Check go-error-family for a newer minor and bump within go.mod policy (last verified v0.10.0)                                                                      | Low      | S      | Cleanup       |
-| 20 | ~~Grep all docs for remaining "TODO_LIST #N" numeric references; convert to slugs~~ done 2026-09-11 docs-health pass (all stale numeric refs annotated)            | Medium   | S      | Documentation |
+| ~~20~~ | ~~Grep all docs for remaining "TODO_LIST #N" numeric references; convert to slugs~~ done 2026-09-11 docs-health pass (all stale numeric refs annotated)            | ~~Medium~~   | ~~S~~      | ~~Documentation~~ |
 | 21 | Verify dprint passes on the Markdown/YAML edited this session; wire dprint check into CI or devshell                                                               | Low      | S      | Cleanup       |
 | 22 | Add flake.nix (build/test/lint devShell) per LarsArtmann convention, or record why this repo opts out                                                              | Low      | M      | Cleanup       |
 | 23 | Add SECURITY.md, issue templates, PR template                                                                                                                      | Low      | S      | Documentation |
@@ -239,9 +239,9 @@ pending owner instruction (per "THEN WAIT", nothing was auto-harvested into TODO
 | 30 | ROADMAP Theme 1: opt-in freshness-based serving (§4.2) design doc                                                                                                  | Low      | M      | Feature       |
 | 31 | ROADMAP Theme 3: client observability hooks design (mirroring server hooks)                                                                                        | Low      | M      | Feature       |
 | 32 | Parked: `go-etag/otel` sub-module (demand-gated; revisit after v0.3.0 adoption signal)                                                                             | Low      | L      | Feature       |
-| 33 | ~~Post-release: verify proxy/pkg.go.dev shows v0.3.0 and `go get` round-trips (part of go-release flow)~~ done at `fe5dede` (02-38 verification chain)             | Critical | S      | Release       |
-| 34 | ~~Prepare GitHub Release body from CHANGELOG `[Unreleased]` (part of go-release flow)~~ done at `fe5dede` (curated notes live)                                     | Medium   | S      | Release       |
-| 35 | ~~Post-release: update library-policy / consumers to v0.3.0 pins~~ done (report `2026-09-11_02-51` — all six repos)                                                | Medium   | M      | Cleanup       |
+| ~~33~~ | ~~Post-release: verify proxy/pkg.go.dev shows v0.3.0 and `go get` round-trips (part of go-release flow)~~ done at `fe5dede` (02-38 verification chain)             | ~~Critical~~ | ~~S~~      | ~~Release~~       |
+| ~~34~~ | ~~Prepare GitHub Release body from CHANGELOG `[Unreleased]` (part of go-release flow)~~ done at `fe5dede` (curated notes live)                                     | ~~Medium~~   | ~~S~~      | ~~Release~~       |
+| ~~35~~ | ~~Post-release: update library-policy / consumers to v0.3.0 pins~~ done (report `2026-09-11_02-51` — all six repos)                                                | ~~Medium~~   | ~~M~~      | ~~Cleanup~~       |
 | 36 | Consider `funcorder` linter (new in this golangci era) — evaluate fit vs churn                                                                                     | Low      | S      | Quality       |
 | 37 | Evaluate `Stats` snapshot semantics under concurrent HEAD freshening (mutex scope review)                                                                          | Low      | S      | Quality       |
 | 38 | HEAD freshening vs `PreserveOn304`-style escape hatch: decide whether one is ever wanted; document why not                                                         | Low      | XS     | Documentation |

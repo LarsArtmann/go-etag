@@ -119,9 +119,9 @@ Nothing is partially done. All items are either complete or not started.
 
 | # | Task                                                                                                                                                                                                                                                                                  | Effort |
 | - | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 1 | ~~Write integration test using `httptest.NewServer` to verify real HTTP behavior (client landed at `9204885`; server still open — TODO_LIST #15)~~ (Content-Length, chunked, HEAD body suppression through actual TCP) — server side done at `a5de386` (`server/integration_test.go`) | M      |
-| 2 | ~~Generate coverage HTML report (superseded — coverage now 99.0%/94.3%)~~ (`go test -coverprofile=cover.out -covermode=atomic ./... && go tool cover -html=cover.out`) and identify the uncovered 7.9%                                                                                | S      |
-| 3 | ~~Add tests for every uncovered branch identified by the coverage report~~ done at `a5de386`, `5eb226b` (branch-coverage suites; client 97.7%, gaps documented-intentional)                                                                                                           | S-M    |
+| ~~1~~ | ~~Write integration test using `httptest.NewServer` to verify real HTTP behavior (client landed at `9204885`; server still open — TODO_LIST #15)~~ (Content-Length, chunked, HEAD body suppression through actual TCP) — server side done at `a5de386` (`server/integration_test.go`) | ~~M~~      |
+| ~~2~~ | ~~Generate coverage HTML report (superseded — coverage now 99.0%/94.3%)~~ (`go test -coverprofile=cover.out -covermode=atomic ./... && go tool cover -html=cover.out`) and identify the uncovered 7.9%                                                                                | ~~S~~      |
+| ~~3~~ | ~~Add tests for every uncovered branch identified by the coverage report~~ done at `a5de386`, `5eb226b` (branch-coverage suites; client 97.7%, gaps documented-intentional)                                                                                                           | ~~S-M~~    |
 
 ### P1 — Performance
 
@@ -131,81 +131,81 @@ Nothing is partially done. All items are either complete or not started.
 | 5 | Single-pass `ParseETagList` — open (two-pass remains)                                                                                                                        | S      |
 | 6 | Add isolated benchmarks — open                                                                                                                                               | XS     |
 | 7 | Benchmark with larger bodies — open                                                                                                                                          | XS     |
-| 8 | ~~Investigate inline FNV — **Won't implement — interface-call overhead is negligible vs network I/O; benchmarks are sub-microsecond**~~ to avoid the interface call overhead | S      |
+| ~~8~~ | ~~Investigate inline FNV — **Won't implement — interface-call overhead is negligible vs network I/O; benchmarks are sub-microsecond**~~ to avoid the interface call overhead | ~~S~~      |
 
 ### P2 — API & Types
 
 | #  | Task                                                                                                                                                                                                              | Effort |
 | -- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
 | 9  | Add `ETag.IsStrong()` — open (low)                                                                                                                                                                                | XS     |
-| 10 | ~~Consider `ETag.IsEmpty()` — done: `IsValid()` is the shipped zero-value check, documented~~                                                                                                                     | XS     |
+| ~~10~~ | ~~Consider `ETag.IsEmpty()` — done: `IsValid()` is the shipped zero-value check, documented~~                                                                                                                     | ~~XS~~     |
 | 11 | Add `Strength.String()` — open (low)                                                                                                                                                                              | XS     |
-| 12 | ~~Consider whether `MatchesIfMatch` should return `(bool, error)` instead of `bool` to handle parse failures distinctly~~ **Won't implement — parse failures are defined as no-match (RFC behavior), not errors** | S      |
-| 13 | ~~Evaluate `SkipIfPresent` default — done (decision: `false`, documented)~~                                                                                                                                       | S      |
+| ~~12~~ | ~~Consider whether `MatchesIfMatch` should return `(bool, error)` instead of `bool` to handle parse failures distinctly~~ **Won't implement — parse failures are defined as no-match (RFC behavior), not errors** | ~~S~~      |
+| ~~13~~ | ~~Evaluate `SkipIfPresent` default — done (decision: `false`, documented)~~                                                                                                                                       | ~~S~~      |
 
 ### P3 — Documentation
 
 | #  | Task                                                                                                                   | Effort |
 | -- | ---------------------------------------------------------------------------------------------------------------------- | ------ |
 | 14 | Add function-level examples — open                                                                                     | S      |
-| 15 | ~~Add "Performance" section to README — done at `b9eb32e` (Benchmarks section)~~                                       | XS     |
-| 16 | ~~Add RFC 7232 Compliance Matrix — done at `b9eb32e`~~                                                                 | S      |
-| 17 | ~~Document FNV-64a collision tradeoff — done (entity_tag.go + README Strong-vs-Weak section)~~                         | XS     |
+| ~~15~~ | ~~Add "Performance" section to README — done at `b9eb32e` (Benchmarks section)~~                                       | ~~XS~~     |
+| ~~16~~ | ~~Add RFC 7232 Compliance Matrix — done at `b9eb32e`~~                                                                 | ~~S~~      |
+| ~~17~~ | ~~Document FNV-64a collision tradeoff — done (entity_tag.go + README Strong-vs-Weak section)~~                         | ~~XS~~     |
 | 18 | Add a `docs/` index or CHANGELOG link in README — open (low)                                                           | XS     |
-| 19 | ~~Consider an ADR for Strength enum — **Won't implement — decision is documented in AGENTS.md + review-and-roadmap**~~ | S      |
+| ~~19~~ | ~~Consider an ADR for Strength enum — **Won't implement — decision is documented in AGENTS.md + review-and-roadmap**~~ | ~~S~~      |
 
 ### P4 — Testing
 
 | #  | Task                                                                                                                                              | Effort |
 | -- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 20 | ~~Add property-based tests — done at `e0fe51f` (fuzz round-trip invariants)~~                                                                     | M      |
-| 21 | ~~Concurrent `ServeHTTP` tests — done (per-request writer + full suite under -race; client has explicit `TestRoundTripConcurrent` at `bc5a551`)~~ | S      |
-| 22 | ~~`OnError` invocation-path tests — done at `c759373`~~                                                                                           | S      |
+| ~~20~~ | ~~Add property-based tests — done at `e0fe51f` (fuzz round-trip invariants)~~                                                                     | ~~M~~      |
+| ~~21~~ | ~~Concurrent `ServeHTTP` tests — done (per-request writer + full suite under -race; client has explicit `TestRoundTripConcurrent` at `bc5a551`)~~ | ~~S~~      |
+| ~~22~~ | ~~`OnError` invocation-path tests — done at `c759373`~~                                                                                           | ~~S~~      |
 | 23 | Flush → Write → Flush sequence test — open                                                                                                        | S      |
-| 24 | ~~Edge-case status-code tests — done at `c759373` (7 non-cacheable statuses + 299/300 boundary)~~                                                 | S      |
+| ~~24~~ | ~~Edge-case status-code tests — done at `c759373` (7 non-cacheable statuses + 299/300 boundary)~~                                                 | ~~S~~      |
 | 25 | `MaxBufferSize` boundary test — open                                                                                                              | XS     |
-| 26 | ~~`Skip` predicate tests — done at `15114b3` (true/false paths)~~                                                                                 | XS     |
+| ~~26~~ | ~~`Skip` predicate tests — done at `15114b3` (true/false paths)~~                                                                                 | ~~XS~~     |
 | 27 | Fuzz with `Skip`/`SkipIfPresent` enabled — open (low)                                                                                             | S      |
 
 ### P5 — Scope & Features
 
 | #  | Task                                                                                                                               | Effort |
 | -- | ---------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 28 | ~~`If-Modified-Since` / `If-Unmodified-Since` — **Won't implement server-side; client second-validator idea in ROADMAP Theme 1**~~ | M      |
-| 29 | ~~Full §6 precedence — **Won't implement — scope boundary**~~                                                                      | L      |
-| 30 | ~~`WeakETag` ctor — **Won't implement — `NewETag(opaque, Weak)` is explicit**~~                                                    | XS     |
-| 31 | ~~`StrongETag` ctor — **Won't implement — same**~~                                                                                 | XS     |
-| 32 | ~~Export `splitRawETags` — **Won't implement — internal detail**~~                                                                 | XS     |
+| ~~28~~ | ~~`If-Modified-Since` / `If-Unmodified-Since` — **Won't implement server-side; client second-validator idea in ROADMAP Theme 1**~~ | ~~M~~      |
+| ~~29~~ | ~~Full §6 precedence — **Won't implement — scope boundary**~~                                                                      | ~~L~~      |
+| ~~30~~ | ~~`WeakETag` ctor — **Won't implement — `NewETag(opaque, Weak)` is explicit**~~                                                    | ~~XS~~     |
+| ~~31~~ | ~~`StrongETag` ctor — **Won't implement — same**~~                                                                                 | ~~XS~~     |
+| ~~32~~ | ~~Export `splitRawETags` — **Won't implement — internal detail**~~                                                                 | ~~XS~~     |
 
 ### P6 — Operational / Release
 
 | #  | Task                                                                                                | Effort |
 | -- | --------------------------------------------------------------------------------------------------- | ------ |
-| 33 | ~~Cut `v0.2.0` — done at `be19640`~~                                                                | XS     |
-| 34 | ~~Set up CI pipeline — done at `37b68b3`~~                                                          | M      |
-| 35 | ~~Add `toolchain` directive — done at `0e8ac6d` (go 1.26.7)~~                                       | XS     |
-| 36 | ~~golangci-lint version pinning — done at `cf98ab5` (CI installs v2.12.2 from the v2 module path)~~ | XS     |
+| ~~33~~ | ~~Cut `v0.2.0` — done at `be19640`~~                                                                | ~~XS~~     |
+| ~~34~~ | ~~Set up CI pipeline — done at `37b68b3`~~                                                          | ~~M~~      |
+| ~~35~~ | ~~Add `toolchain` directive — done at `0e8ac6d` (go 1.26.7)~~                                       | ~~XS~~     |
+| ~~36~~ | ~~golangci-lint version pinning — done at `cf98ab5` (CI installs v2.12.2 from the v2 module path)~~ | ~~XS~~     |
 | 37 | Add `codecov.yml` or coverage gating — open (low)                                                   | S      |
-| 38 | ~~goreleaser — **Won't implement — library, not binary; go-release flow suffices**~~                | M      |
+| ~~38~~ | ~~goreleaser — **Won't implement — library, not binary; go-release flow suffices**~~                | ~~M~~      |
 
 ### P7 — Code Quality
 
 | #  | Task                                                                                               | Effort |
 | -- | -------------------------------------------------------------------------------------------------- | ------ |
-| 39 | ~~Split `etag.go` — **Won't implement — file size is manageable; current split is deliberate**~~   | S      |
-| 40 | ~~Wrapper composition refactor — **Won't implement — current structure is idiomatic**~~            | S      |
-| 41 | ~~`writeDefaultOK` placement review — done (placement settled; behavior pinned by wrapper tests)~~ | S      |
-| 42 | ~~Flush/flush naming review — **Won't implement — conventional Go naming**~~                       | XS     |
+| ~~39~~ | ~~Split `etag.go` — **Won't implement — file size is manageable; current split is deliberate**~~   | ~~S~~      |
+| ~~40~~ | ~~Wrapper composition refactor — **Won't implement — current structure is idiomatic**~~            | ~~S~~      |
+| ~~41~~ | ~~`writeDefaultOK` placement review — done (placement settled; behavior pinned by wrapper tests)~~ | ~~S~~      |
+| ~~42~~ | ~~Flush/flush naming review — **Won't implement — conventional Go naming**~~                       | ~~XS~~     |
 | 43 | Error message consistency — open (low)                                                             | XS     |
 
 ### P8 — Alignment with `go-error-family`
 
 | #  | Task                                                                                                            | Effort |
 | -- | --------------------------------------------------------------------------------------------------------------- | ------ |
-| 44 | ~~Verify `OnError` classification — done at `c759373`~~                                                         | S      |
-| 45 | ~~`ErrInvalidConfig` structured context — done (`WithContextf("max_buffer_size"…/"strength"…) since`15114b3`)~~ | XS     |
-| 46 | ~~Document error families in the table — done (AGENTS.md Family column)~~                                       | XS     |
-| 47 | ~~Panic-message body length — **Won't implement — contract-violation path; minimal message is right**~~         | XS     |
+| ~~44~~ | ~~Verify `OnError` classification — done at `c759373`~~                                                         | ~~S~~      |
+| ~~45~~ | ~~`ErrInvalidConfig` structured context — done (`WithContextf("max_buffer_size"…/"strength"…) since`15114b3`)~~ | ~~XS~~     |
+| ~~46~~ | ~~Document error families in the table — done (AGENTS.md Family column)~~                                       | ~~XS~~     |
+| ~~47~~ | ~~Panic-message body length — **Won't implement — contract-violation path; minimal message is right**~~         | ~~XS~~     |
 
 ### P9 — Ecosystem
 
@@ -213,7 +213,7 @@ Nothing is partially done. All items are either complete or not started.
 | -- | ----------------------------------------------------------------------------------------------- | ------ |
 | 48 | Comparison table — open (ROADMAP Theme 4)                                                       | S      |
 | 49 | awesome-go listing — open (ROADMAP Theme 4)                                                     | XS     |
-| 50 | ~~Blog post for v0.2 — **Won't implement — no blog channel; GitHub releases carry the notes**~~ | M      |
+| ~~50~~ | ~~Blog post for v0.2 — **Won't implement — no blog channel; GitHub releases carry the notes**~~ | ~~M~~      |
 
 ---
 
