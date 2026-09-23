@@ -60,7 +60,7 @@ Any function taking `*testing.T` that calls `t.Fatal`/`t.Error` must start with 
 
 ## Commands
 
-Local go is 1.26.7 with `GOTOOLCHAIN=local` persisted, so prefix every go command — and every golangci-lint invocation (it shells out to go) — with `GOTOOLCHAIN=auto` (downloads the go.mod toolchain once into the module cache). Do not change the persisted go env. Go directive history: v0.4.0 tagged `go 1.27.1`; daemon commit `969d077` (2026-09-22, unreviewed) relaxed it to `go 1.27` — still builds green, but the README badge and all three CI `GOTOOLCHAIN` pins say 1.27.1; the floor decision for v0.5.0 is TODO_LIST #2. The LSP's gopls/golangci-lint-ls still load with the persisted env and error on every file ("go.mod requires go >= 1.27"); their diagnostics are unusable — verify via the CLI instead.
+Local go is 1.26.7 with `GOTOOLCHAIN=local` persisted, so prefix every go command — and every golangci-lint invocation (it shells out to go) — with `GOTOOLCHAIN=auto` (downloads the go.mod toolchain once into the module cache). Do not change the persisted go env. Go directive history: v0.4.0 tagged `go 1.27.1`; daemon commit `969d077` (2026-09-22, unreviewed) relaxed it to `go 1.27`; restored to `1.27.1` on 2026-09-23 (commit `45e68c8`) so the directive matches the README badge and the three CI `GOTOOLCHAIN` pins. The LSP is healthy again: the deployed `~/.config/crush/crushrc` launches gopls and golangci_lint_ls with `--env GOTOOLCHAIN auto` (fix in the LarsArtmann/crush-config repo, deployed 2026-09-22), so in-editor diagnostics load; the `GOTOOLCHAIN=auto` CLI prefix is still required — only the LSP env was fixed, not the persisted global go env.
 
 ```bash
 GOTOOLCHAIN=auto go test ./...              # Run tests
