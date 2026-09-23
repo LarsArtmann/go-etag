@@ -54,3 +54,11 @@ go.work
 go.work.sum
 /go-etag
 # <<< buildflow-managed (.gitignore) <<<
+
+# Multi-module workspace (2026-09-23 split): go.work MUST stay tracked - CI,
+# erraudit module-scoping, and the release gate all resolve sibling modules
+# through it. The buildflow block above re-adds go.work/go.work.sum ignores on
+# every regeneration (observed 2026-09-23, cost a red CI run), so the negation
+# lives OUTSIDE the markers where regeneration cannot remove it.
+!go.work
+!go.work.sum
