@@ -913,3 +913,28 @@ func TestIsUnsafeMethodTable(t *testing.T) {
 		})
 	}
 }
+
+// TestCloneHeaderNilReturnsEmpty pins cloneHeader's nil contract: a nil
+// stored header must yield a usable empty header, not the nil map that
+// http.Header.Clone returns — the first freshening write would panic. The
+// branch is unreachable through current production paths (see cloneHeader's
+// doc comment for the proof); this test keeps the defense-in-depth honest.
+func TestCloneHeaderNilReturnsEmpty(t *testing.T) {
+	t.Parallel()
+
+	header := cloneHeader(nil)
+
+	if header == nil {
+		t.Fatalf("cloneHeader(nil) = nil, want an empty usable header")
+	}
+
+	if got := len(header); got != 0 {
+		t.Errorf("cloneHeader(nil) has %d fields, want 0", got)
+	}
+
+	header.Set("X-Probe", "writable")
+
+	if got := header.Get("X-Probe"); got != "writable" {
+		t.Errorf("cloneHeader(nil) result is not writable: Get = %q", got)
+	}
+}

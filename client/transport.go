@@ -395,7 +395,12 @@ func (c *chainedBody) Close() error {
 
 // cloneHeader returns a mutable copy of stored, substituting an empty
 // header when stored is nil: http.Header.Clone returns nil for a nil map,
-// which would panic on the first freshening write.
+// which would panic on the first freshening write. The nil branch is
+// unreachable through current production paths — every storedResponse.header
+// is non-nil by construction (store nil-guards its Clone explicitly;
+// persistFreshened clones a header that already passed through cloneHeader
+// or freshenedHeader) — so the guard is defense-in-depth against a future
+// store variant, pinned by TestCloneHeaderNilReturnsEmpty.
 func cloneHeader(stored http.Header) http.Header {
 	header := stored.Clone()
 	if header == nil {
