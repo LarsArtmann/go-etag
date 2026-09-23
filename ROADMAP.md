@@ -157,3 +157,15 @@ validator prevents is closed; no further work planned here.
     guards the re-export chain?~~ Closed 2026-09-23: the chain is fully
     guarded — root↔server by `deprecated_test.go`, server↔entitytag by
     `server/entity_parity_test.go` (go/ast, stdlib-only). No further scope.
+11. **Release cadence for proofing `release.yml`** (from report 22:07 g3,
+    open): cut a trivial v0.6.1 soon to exercise the release workflow's
+    first live run, or wait for real content (M16/M17/M19) and leave the
+    workflow unproven until then? The workflow is locally verified only.
+12. **go-github-kit's nix lane pattern** (from report 22:07 g2, open): their
+    flake is plain `pkgs.buildGoModule` and the floor bump broke the hermetic
+    build (FOD wants go >= 1.27.1). House pattern preference: pkgs-level go
+    override, or migrating kit onto the go-standard flake module like
+    library-policy (`goPkgAttr`)?
+13. **cqrs-htmx's red lint** (from report 22:07 g1, open): their master is
+    red on pre-existing dashboardui lint debt (golines/mnd/prealloc) across
+    six-plus commits. Owner's lane or ours to drive green in their repo?
