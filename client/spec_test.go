@@ -1252,6 +1252,84 @@ func TestSpecHeadFresheningPersistsToTheStore(t *testing.T) {
 	}
 }
 
+// TestSpecHeadFresheningDoesNotPersistFromCacheMarker pins that the from-cache
+// marker is diagnostic output, never cache state: HEAD freshening (RFC 9111
+// §4.3.5 committing through the shared persistFreshened path) must strip the
+// marker from the stored entry even when the stored header carried one. The
+// entry is deliberately primed with a marker (a legacy or drifted store) so
+// the test proves active stripping, not merely that the HEAD path never sets
+// it; the rebuilt GET response still wears the marker, proving the strip did
+// not disable the response-side feature.
+func TestSpecHeadFresheningDoesNotPersistFromCacheMarker(t *testing.T) {
+	t.Parallel()
+
+	const fromCache = "X-From-Cache"
+
+	stub := &recordedStub{steps: []stubStep{
+		{
+			status: http.StatusOK,
+			header: stubHeader(headerPair{"ETag", `"v1"`}, headerPair{"Date", "date-one"}),
+			body:   "payload",
+		},
+		{
+			status: http.StatusOK,
+			header: stubHeader(
+				headerPair{"ETag", `"v1"`},
+				headerPair{"Content-Length", "7"},
+				headerPair{"Date", "date-two"},
+			),
+			body: "",
+		},
+		{status: http.StatusNotModified, header: stubHeader(), body: ""},
+	}}
+
+	transport := NewTransport(stub, Options{FromCacheHeader: fromCache})
+	url := "https://api.dev.test/articles"
+
+	fetch(t, transport, newGetRequest(t, url))
+
+	entry, ok := transport.cache.get(url)
+	if !ok {
+		t.Fatalf("priming GET stored no entry")
+	}
+
+	marked := entry
+	marked.header = entry.header.Clone()
+	marked.header.Set(fromCache, markerValue)
+	transport.cache.set(url, marked)
+
+	headStatus, headHeader, _ := fetch(t, transport, newSpecRequest(t, http.MethodHead, url))
+	if headStatus != http.StatusOK {
+		t.Fatalf("HEAD status = %d, want passthrough 200", headStatus)
+	}
+
+	if got := headHeader.Get(fromCache); got != "" {
+		t.Errorf("HEAD response carries the from-cache marker; HEAD is passthrough and never rebuilt")
+	}
+
+	freshened, ok := transport.cache.get(url)
+	if !ok {
+		t.Fatalf("confirming HEAD dropped the stored entry")
+	}
+
+	if got := freshened.header.Get(fromCache); got != "" {
+		t.Errorf(
+			"stored entry carries from-cache marker %q after HEAD freshening; the marker is diagnostic output, never cache state",
+			got,
+		)
+	}
+
+	if got := freshened.header.Get("Date"); got != "date-two" {
+		t.Errorf("stored Date = %q, want the HEAD's date-two (the freshening ran; the strip is not vacuous)", got)
+	}
+
+	_, header, _ := fetch(t, transport, newGetRequest(t, url))
+
+	if got := header.Get(fromCache); got != markerValue {
+		t.Errorf("rebuilt GET from-cache marker = %q, want %q (response-side marking still works)", got, markerValue)
+	}
+}
+
 // TestSpecHeadNoStoreLeavesTheEntryAlone pins that a no-store HEAD 200
 // neither updates nor invalidates the stored entry (RFC 9111 §3 forbids
 // storing parts of the response; §4.3.5 gives no staleness signal either).
