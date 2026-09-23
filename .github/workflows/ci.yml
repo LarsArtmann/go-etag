@@ -108,8 +108,23 @@ jobs:
   govulncheck:
     name: Vulnerabilities
     runs-on: ubuntu-latest
+    # Deliberately unpinned toolchain (GOTOOLCHAIN auto, govulncheck@latest):
+    # a future release declaring a newer Go must be able to fetch that
+    # toolchain instead of failing the install. The golang/govulncheck-action
+    # was replaced by an explicit step because it passes go-package as ONE
+    # quoted argument - the multi-module pattern set became a single bogus
+    # pattern ("no packages matched", 2026-09-23).
+    env:
+      GOTOOLCHAIN: auto
     steps:
-      - uses: golang/govulncheck-action@032d45514ae346b1db93c04b0c90b841c370344f # v1.1.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: go.mod
-          go-package: ./... ./client/... ./entitytag/... ./metrics/... ./server/...
+
+      - name: Install govulncheck
+        run: go install golang.org/x/vuln/cmd/govulncheck@latest
+
+      - name: Vulnerabilities
+        run: govulncheck ./... ./client/... ./entitytag/... ./metrics/... ./server/...
