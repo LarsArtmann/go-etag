@@ -1,0 +1,18 @@
+    📖 Parsing files and building analysis tree...
+    42 files discovered
+🔍 Type-aware mode: loading type information for 42 Go files...
+ ✅
+found 2 clones:
+  server/etag.go:236-244  | n, err := w.ResponseWriter.Write(b)
+  server/etag.go:254-262  | n, err := w.ResponseWriter.Write(b)
+found 2 clones:
+  client/transport.go:192-195  | return false
+  client/transport.go:202-205  | return false
+found 2 clones:
+  client/transport.go:332-334  | resp.Body = newChainedBody(buffered, resp.Body)
+  client/transport.go:337-339  | resp.Body = newChainedBody(buffered, resp.Body)
+found 2 clones:
+  client/transport.go:450-451  | default:
+  client/transport.go:462-463  | default:
+
+Detected 189 clone groups, 4 shown (141 non-actionable, 44 filtered suppressed).

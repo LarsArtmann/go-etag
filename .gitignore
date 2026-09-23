@@ -62,3 +62,7 @@ go.work.sum
 # lives OUTSIDE the markers where regeneration cannot remove it.
 !go.work
 !go.work.sum
+
+## Duplication baselines (gate-enforced evidence; kept outside the buildflow block)
+!reports/dupl/
+!reports/dupl/**
