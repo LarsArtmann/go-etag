@@ -50,7 +50,7 @@ Statuses: FULLY_FUNCTIONAL, PARTIALLY_FUNCTIONAL, BROKEN, PLANNED.
 
 ## Metrics companion (`metrics/`, package `metrics`)
 
-Moved in from `httputil/etagmetrics` (2026-09-22); details: `docs/planning/2026-09-22_23-25_move-etagmetrics-into-go-etag-metrics.md`.
+Moved in from `httputil/etagmetrics` (2026-09-22); details: `docs/planning/archived/2026-09-22_23-25_move-etagmetrics-into-go-etag-metrics.md`.
 
 | Feature                                                                               | Status           | Evidence / Notes                                                                                                              |
 | ------------------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------- |

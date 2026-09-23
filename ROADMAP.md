@@ -54,7 +54,9 @@ validator prevents is closed; no further work planned here.
   hooks (`OnETagGenerated`, `On304`, `OnBufferOverflow`) shipped in v0.2.0;
   manual wiring is ~10 lines, so the sub-module is convenience, not
   capability. Unpark when hooks are battle-tested AND a real consumer asks.
-  Full shape and prereqs: `docs/review-and-roadmap.md` §Parked.
+  The 2026-09-23 module split removed the last architectural blocker — a
+  sub-module no longer pollutes core consumers — so the gate is purely
+  demand. Full shape and prereqs: `docs/review-and-roadmap.md` §Parked.
 - **Root shim deletion** — scheduled for the v1.0.0 tag (not before).
 - **Per-component domain constants across larsartmann libraries** — every
   library that classifies errors declares its own `Domain("…")` strings;
@@ -68,6 +70,11 @@ validator prevents is closed; no further work planned here.
   slice. Upstream feature request candidate; blocks on go-error-family
   wanting the API. Origin: report
   `2026-09-11_09-28_error-system-parity-typed-code.md` f#28, f#38.
+- **Data-model accepted-as-is items** — the 2026-09-23 data-model review
+  left three shapes deliberately unchanged, revisit only at the v1.0.0
+  design pass: `Stats`' int64/int mix, `Counters`' exported atomic fields,
+  and the responseWrapper 2-bool+int state encoding. Full verdicts:
+  `docs/reviews/2026-09-23_15-22_brutal-self-review.html`.
 
 ## Non-goals
 
@@ -89,7 +96,10 @@ validator prevents is closed; no further work planned here.
    to the shared `entitytag/` subpackage; `server/` re-exports the full
    surface via aliases + wrappers, and the client compares validators through
    `entitytag.ParseETag`/`WeakEqual` (no `client → server` edge). Theme 2's
-   remaining piece is the `cacheEntry` → `storedResponse` evolution.
+   remaining piece is the `cacheEntry` → `storedResponse` evolution. The
+   story continued: since the 2026-09-23 module split, `entitytag/` is its
+   own module (zero deps) — both server and client now depend on it as an
+   external, version-pinned module (v0.6.0).
 2. ~~**Alex's field-report offer:** draft a reply email (Age answer +
    no-store/freshening changes are in), and accept his raw header captures
    as permanent fixtures in `client/testdata/`?~~ Resolved 2026-09-23: the

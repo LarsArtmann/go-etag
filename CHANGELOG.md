@@ -9,11 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Nothing yet.
+- Automated GitHub Releases (OQ3, owner: automate): pushing the root `v*` tag triggers `.github/workflows/release.yml`, which extracts the matching CHANGELOG section as the release notes (failing loudly when the section was not cut) and publishes the Release as Latest, idempotently; nested module tags deliberately get no Release pages — the Go module proxy is their consumer interface.
+- `server/entity_parity_test.go`: a stdlib go/ast parity guard asserting every `entitytag` export exists on the server package's re-export surface (closing the unguarded `server ↔ entitytag` shim), plus a behavioral spec for the previously 0%-covered `ParseETagList` wrapper.
+- `entitytag`: own-module `TestStrength_IsValid` specs (both valid values, out-of-range and negative arms).
+- art-dupl baseline tracking + enforcement (OQ8, owner: enforce): the release gate runs `art-dupl -t 1 --type-aware` and fails unless exactly the 4 accepted clone groups are shown (`reports/dupl/2026-09-23_art-dupl-baseline.txt`; each group's accept rationale is documented in `AGENTS.md` Non-Obvious Behaviors).
+- `Validate()` documents its divergence from `New()` (reject-on-invalid vs clamp-to-default) and when to call it (OQ9: validation and defensive defaults are different jobs).
 
 ### Changed
 
-- Nothing yet.
+- CI single-sources the five-module package pattern set as a workflow-level `PACKAGES` env (was duplicated across run steps), and the release gate gained a workflow↔script agreement check that fails loudly if the two pattern sets ever diverge.
 
 ### Fixed
 
@@ -29,6 +33,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - CI fuzz job silently no-op'd on the parser targets: `FuzzParseETag` and `FuzzParseETagList` moved to `entitytag/` on 2026-09-18 but the workflow still fuzzed `./server/...`, which exits 0 with "no fuzz tests to fuzz" — both targets had not run since the move. They now run under `./entitytag/...`.
 - `go` directive drift (second daemon relaxation, `6f15f81`): all five go.mod files now pin `go 1.27.1`, and `scripts/pre-release-check.sh` parity checking is exact-match (anchored) across every go.mod instead of substring-based.
+- The first multi-module CI push shipped with `go.work` untracked (`1dd026b`): the daemon's `.gitignore` regeneration had re-added the ignore, so the daemon's own commit silently skipped the file and all four jobs ran red. Durable fix: `!go.work`/`!go.work.sum` negation lines outside the buildflow-managed marker block, plus a release-gate assertion that `git ls-files go.work` is non-empty.
+- The govulncheck workflow step passed the five-module pattern set as one quoted argument through the action's input, matching no packages (`e8ee5f4`): replaced with an explicit `govulncheck` step over the full pattern set, keeping the job's unpinned-toolchain doctrine.
 
 ## [0.5.0] - 2026-09-23
 
