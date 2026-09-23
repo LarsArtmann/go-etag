@@ -38,22 +38,22 @@ func exportedPackageNames(t *testing.T, dir string) map[string]bool {
 		}
 
 		for _, decl := range file.Decls {
-			switch d := decl.(type) {
+			switch typedDecl := decl.(type) {
 			case *ast.FuncDecl:
-				if d.Recv == nil && d.Name.IsExported() {
-					names[d.Name.Name] = true
+				if typedDecl.Recv == nil && typedDecl.Name.IsExported() {
+					names[typedDecl.Name.Name] = true
 				}
 
 			case *ast.GenDecl:
-				for _, spec := range d.Specs {
-					switch s := spec.(type) {
+				for _, spec := range typedDecl.Specs {
+					switch typedSpec := spec.(type) {
 					case *ast.TypeSpec:
-						if s.Name.IsExported() {
-							names[s.Name.Name] = true
+						if typedSpec.Name.IsExported() {
+							names[typedSpec.Name.Name] = true
 						}
 
 					case *ast.ValueSpec:
-						for _, id := range s.Names {
+						for _, id := range typedSpec.Names {
 							if id.IsExported() {
 								names[id.Name] = true
 							}

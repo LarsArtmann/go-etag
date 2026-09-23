@@ -127,6 +127,15 @@ func defaultHashFunc(data []byte) string {
 
 // Validate checks the ETagConfig for invalid values.
 // Returns a *errorfamily.Error classified as Rejection on failure.
+//
+// Validate is deliberately stricter than the middleware: New clamps a
+// non-positive MaxBufferSize to the 1 MiB default, and an out-of-range
+// Strength (anything but Strong or Weak) silently emits strong-form tags
+// because only Weak triggers the W/ prefix — while Validate rejects both
+// outright. A zero-value ETagConfig{} therefore fails Validate but runs
+// fine through New. Call Validate when you want start-up hard failures for
+// a config built from user input or a declarative source; never use it as
+// a gate for configs you also hand to New.
 func (c ETagConfig) Validate() error {
 	if c.MaxBufferSize <= 0 {
 		return newInvalidConfig().WithContextf("max_buffer_size", "%d", c.MaxBufferSize)
