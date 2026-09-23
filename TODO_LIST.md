@@ -6,9 +6,11 @@ items live in `CHANGELOG.md`. Every item cites evidence (code) and origin (repor
 The former items #1–#7 (v0.5.0 release train, go-floor decision, consumer sweep,
 LSP fix, HEAD-freshening hardening ×2, stored-validator before-state) were all
 executed and closed on 2026-09-23 — see `CHANGELOG.md` [0.5.0] and
-`docs/status/2026-09-23_04-52_v050-release-full-backlog-execution.md`. The next
-open work lives in `docs/planning/2026-09-23_01-40_pareto-v05-cycle-full-backlog.md`
-(M1 owner decision batch OQ2–OQ8, then M10–M27; M8/M9 already landed pre-tag).
+`docs/status/2026-09-23_04-52_v050-release-full-backlog-execution.md`. The current
+execution plan is `docs/planning/2026-09-23_14-07_v060-staircase-and-full-backlog.md`
+(supersedes the 01:40 plan: staircase → sweep → gaps → owner batch OQ2–OQ8 →
+polish M9–M21 → epics M22–M27; the 01:40 plan's M1/M10–M27 items are absorbed there
+by number).
 The 2026-09-23 module split (five modules, shared version train) is landed but
 unreleased — item #1 ships it as v0.6.0.
 
