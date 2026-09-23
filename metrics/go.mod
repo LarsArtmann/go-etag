@@ -1,4 +1,4 @@
-module github.com/larsartmann/go-etag
+module github.com/larsartmann/go-etag/metrics
 
 go 1.27.1
 
