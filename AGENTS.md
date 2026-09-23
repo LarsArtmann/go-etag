@@ -4,7 +4,7 @@
 
 ### Allowed Dependencies
 
-`depguard` allows `$gostd`, `$module` root and subpackages, and `github.com/larsartmann/go-error-family` (same author, zero transitive deps). No other third-party libraries.
+The standard library, sibling modules in this repo, and `github.com/larsartmann/go-error-family` (same author, zero transitive deps; used by the server module only). No other third-party libraries — the go.mod files are the allowlist, and adding one anywhere is a policy change, not an edit.
 
 ### `exhaustruct_v5` — Every Struct Field Must Be Set
 
@@ -60,24 +60,32 @@ Any function taking `*testing.T` that calls `t.Fatal`/`t.Error` must start with 
 
 ## Commands
 
-Local go is 1.26.7 with `GOTOOLCHAIN=local` persisted, so prefix every go command — and every golangci-lint invocation (it shells out to go) — with `GOTOOLCHAIN=auto` (downloads the go.mod toolchain once into the module cache). Do not change the persisted go env. Go directive history: v0.4.0 tagged `go 1.27.1`; daemon commit `969d077` (2026-09-22, unreviewed) relaxed it to `go 1.27`; restored to `1.27.1` on 2026-09-23 (commit `45e68c8`) so the directive matches the README badge and the three CI `GOTOOLCHAIN` pins. The LSP is healthy again: the deployed `~/.config/crush/crushrc` launches gopls and golangci_lint_ls with `--env GOTOOLCHAIN auto` (fix in the LarsArtmann/crush-config repo, deployed 2026-09-22), so in-editor diagnostics load; the `GOTOOLCHAIN=auto` CLI prefix is still required — only the LSP env was fixed, not the persisted global go env.
+Local go is 1.26.7 with `GOTOOLCHAIN=local` persisted, so prefix every go command — and every golangci-lint invocation (it shells out to go) — with `GOTOOLCHAIN=auto` (downloads the go.mod toolchain once into the module cache). Do not change the persisted go env. Go directive history: v0.4.0 tagged `go 1.27.1`; daemon commit `969d077` (2026-09-22, unreviewed) relaxed it to `go 1.27`; restored to `1.27.1` on 2026-09-23 (commit `45e68c8`); the daemon relaxed it AGAIN at `6f15f81`; the 2026-09-23 module split re-pinned `go 1.27.1` in all five go.mod files and made the pre-release-check parity check exact-match (anchored) so the relaxation class fails loudly next time. The LSP is healthy: the deployed `~/.config/crush/crushrc` launches gopls and golangci_lint_ls with `--env GOTOOLCHAIN auto` (fix in the LarsArtmann/crush-config repo, deployed 2026-09-22), so in-editor diagnostics load; the `GOTOOLCHAIN=auto` CLI prefix is still required — only the LSP env was fixed, not the persisted global go env.
+
+**Multi-module repo (since the 2026-09-23 split):** five modules — root tombstone, `entitytag/`, `server/`, `client/`, `metrics/` — joined by the committed `go.work`. From the repo root, `./...` spans ONLY the root module; carry the full pattern set, or cd into a module and run plain `./...`:
 
 ```bash
-GOTOOLCHAIN=auto go test ./...              # Run tests
-GOTOOLCHAIN=auto go test -race ./...        # Race detection (REQUIRED for tests with t.Parallel() or shared state)
-GOTOOLCHAIN=auto go vet ./...               # Vet
-GOTOOLCHAIN=auto go test -bench=. ./...     # Benchmarks
-GOTOOLCHAIN=auto golangci-lint run          # Lint
-GOTOOLCHAIN=auto golangci-lint run --fix    # Auto-fix what's possible
-GOTOOLCHAIN=auto golangci-lint fmt          # Format (gofumpt + golines@120 + gci)
-GOTOOLCHAIN=auto GOEXPERIMENT=jsonv2 erraudit ./... --type-aware --enforce-go-error-family --enforce-samber-oops --enforce-generic-return --explain  # Error audit (default mode reports 0; --no-suppress surfaces suppressed findings by design; filter [feature:logger] debug lines from stdout)
+PACKAGES="./... ./client/... ./entitytag/... ./metrics/... ./server/..."
+GOTOOLCHAIN=auto go test $PACKAGES              # Run tests (all five modules)
+GOTOOLCHAIN=auto go test -race $PACKAGES        # Race detection (REQUIRED for tests with t.Parallel() or shared state)
+GOTOOLCHAIN=auto go vet $PACKAGES               # Vet
+GOTOOLCHAIN=auto go test -bench=. $PACKAGES     # Benchmarks
+GOTOOLCHAIN=auto golangci-lint run              # Lint (root module only!)
+for m in client entitytag metrics server; do (cd $m && GOTOOLCHAIN=auto golangci-lint run --config ../.golangci.yml); done  # Lint nested modules (golangci-lint has no workspace mode)
+GOTOOLCHAIN=auto golangci-lint fmt              # Format (gofumpt + golines@120 + gci; root module — run per module too)
+# Error audit is module-scoped (erraudit refuses to cross nested go.mod boundaries; run per module):
+for m in . client entitytag metrics server; do (cd $m && GOTOOLCHAIN=auto GOEXPERIMENT=jsonv2 erraudit ./... --type-aware --enforce-go-error-family --enforce-samber-oops --enforce-generic-return); done
+# nolint audit: per module, from the module root (a repo-root scan misjudges nested-module directives as stale; the root module has no nolint directives):
+for m in client entitytag metrics server; do (cd $m && GOTOOLCHAIN=auto GOEXPERIMENT=jsonv2 erraudit nolint-audit .); done
 ```
 
-**Verification gate (first pass, not last):** `golangci-lint fmt` → repo-wide `golangci-lint run` (0 issues) → `go vet ./...` → `go test -race -count=1 ./...` — even for comment-only edits (godot/wsl bite comments too; all commands take the `GOTOOLCHAIN=auto` prefix). Supplement when touching clones or error paths: `art-dupl -t 1 --type-aware` (expect exactly the 1 accepted group) and `GOEXPERIMENT=jsonv2 erraudit nolint-audit .` (takes a path, NOT `./...`).
+**Verification gate (first pass, not last):** `golangci-lint fmt` (root + per module) → `golangci-lint run` root + per nested module (0 issues) → `go vet` over `$PACKAGES` → `go test -race -count=1` over `$PACKAGES` — even for comment-only edits (godot/wsl bite comments too; all commands take the `GOTOOLCHAIN=auto` prefix). `scripts/pre-release-check.sh` encodes the whole loop. Supplement when touching clones or error paths: `art-dupl -t 1 --type-aware` (expect exactly the 1 accepted group).
 
 ## Architecture
 
-One module (`github.com/larsartmann/go-etag`), five packages: the shared domain type lives in `entitytag/` (package `entitytag`), the real code in `server/` (package name `etag`) and `client/` (package `etagclient`), the observability companion in `metrics/` (package `metrics`, moved in from `httputil/etagmetrics` 2026-09-22); the root is a deprecated alias shim over the server package (deleted at v1.0.0). Dependency direction: `server → entitytag ← client` — the client must never import `server`; `metrics → server` is a leaf — the server must never import `metrics`. One external dependency: `github.com/larsartmann/go-error-family`. Go 1.27+.
+Five Go modules in one repo, released on a shared version train (all modules tag the same vX.Y.Z per release; a module's tag points at the commit where its go.mod/go.sum finalized — see Release Conventions). The shared domain type lives in `entitytag/` (module `…/entitytag`, package `entitytag`, zero deps), the real code in `server/` (module `…/server`, package name `etag`, deps: entitytag + go-error-family) and `client/` (module `…/client`, package `etagclient`, dep: entitytag only), the observability companion in `metrics/` (module `…/metrics`, package `metrics`, dep: server; moved in from `httputil/etagmetrics` 2026-09-22); the root module (`github.com/larsartmann/go-etag`) is the deprecated alias shim over the server package (deleted at v1.0.0). Dependency direction: `server → entitytag ← client` — the client must never import `server`; `metrics → server` is a leaf — the server must never import `metrics`. One external dependency in the whole repo: `github.com/larsartmann/go-error-family` (server module only). Go 1.27.1 in every go.mod.
+
+**Workspace mechanics (the non-obvious part):** the committed `go.work` `use`s all five modules AND carries version-qualified `replace` directives for each (`…/entitytag v0.6.0 => ./entitytag`, …). The replaces are REQUIRED, not optional: with sibling requires pointing at an unreleased train version (v0.6.0 does not exist on the proxy until the staircase tags it), `use` alone cannot divert the merged module graph once any external dependency (go-error-family) forces graph resolution — builds fail with `unknown revision entitytag/v0.6.0`. Unqualified replaces conflict with `use` ("replaced at all versions"), hence version-qualified. The replaces live only in go.work, which consumers and the proxy never see, so every go.mod stays replace-free. When the train moves to v0.7.0: bump the sibling requires in go.mod files AND the replace versions in go.work together — `scripts/pre-release-check.sh` (version-train sync check) fails on any drift. `go mod tidy` is a release-time step only: mid-cycle it would try to resolve the unreleased train version and fail; workspace builds/tests/lint never need it.
 
 | File                      | Exports                                                                                                                                                                             | Purpose                                                                                                                                                              |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -147,7 +155,7 @@ The `ETag` struct holds an opaque string and a `Strength` (Strong/Weak). It prov
 - **Oversized bodies keep streaming** — the buffered prefix is chained to the unread remainder; Close still reaches the original body.
 - **Go 1.26 canonical header form of `ETag` is `Etag`** — map literals with `"ETag"` keys are invisible to `Header.Get/Set` (Get canonicalizes on read). Build stub headers via `Header.Set` in tests; real transports canonicalize on both sides.
 - **Runtime canonicalization vs the `canonicalheader` linter are different authorities** — the linter demands the literal `ETag` spelling in source (our `headerETag = "ETag"` constant); the runtime canonicalizes whatever you pass into `Etag` on the wire. Do not "fix" one to match the other.
-- **`drainAndClose` deliberately ignores drain/Close errors** — the 304 is discarded either way, and net/http closes an undrained connection, so the worst case is lost connection reuse. Suppressed with documented `//nolint:erraudit` directives (validate with `erraudit nolint-audit .` — it takes a path, NOT `./...`); `--no-suppress` audit mode surfaces them by design.
+- **`drainAndClose` deliberately ignores drain/Close errors** — the 304 is discarded either way, and net/http closes an undrained connection, so the worst case is lost connection reuse. Suppressed with documented `//nolint:erraudit` directives (validate with `erraudit nolint-audit .` from INSIDE `client/` — it takes a path, not `./...`, and a repo-root scan misjudges nested-module directives as stale); `--no-suppress` audit mode surfaces them by design.
 
 ## Error Classification
 
@@ -208,6 +216,7 @@ Internal construction goes through the typed `Code` constants in `server/errors.
 - **An auto-git daemon commits and re-formats continuously** — status reports and tables get re-touched within minutes of your edit. Always re-read a shared file immediately before re-editing it; never assume remembered file geometry.
 - **`docs/status/` and `docs/planning/` are point-in-time snapshots** — never rewrite their narrative; annotate resolved items inline (`~~item~~ done at`hash``) per the docs-health skill. The living backlog is `TODO_LIST.md`, never the reports.
 - **Consumer-migration recipe (per go-ecosystem-upgrade sweeps):** before bumping go-etag in a consumer repo, check its version surface first (`flake.nix` inputs, `vendorHash`, CI pins — DiscordSync's drift-guard test exists for exactly this); commit immediately after the gate so the auto-daemon doesn't capture the diff; run `nix build` whenever that repo's `go.sum` changed; verify workspace repos in BOTH modes (hermetic `GOWORK=off` + workspace MVS).
+- **Version-train discipline (multi-module):** all internal requires and the go.work replaces move to the new vX.Y.Z TOGETHER, in the same commit. `scripts/pre-release-check.sh` verifies the train is in sync (single internal version everywhere; every require has its matching go.work replace). A consumer importing `…/client` after v0.6.0 pulls client+entitytag only — the composability win the split bought; the root module no longer bundles the other packages, so consumers importing nested paths via `go get github.com/larsartmann/go-etag@vX` need one extra `go mod tidy`/`go get` of the nested module (import paths themselves never changed).
 
 ## Release Conventions (validated at v0.4.0 and v0.5.0)
 
@@ -219,3 +228,15 @@ Internal construction goes through the typed `Code` constants in `server/errors.
 - **Tag only after CI is green on the exact commit** (workflow triggers on both master pushes and `v*` tags, so the tag gets its own frozen run).
 - **The go-release skill lives at** `~/.config/crush/skills/go-release/` — load it for any release; it repays its reading cost in immutable-tag discipline.
 - **v0.5.0 (2026-09-23, commit `af2b6d1`) validated the full loop with zero skipped steps**: pre-release-check.sh exit 0 on the exact commit, master pushed so CI ran green on it, annotated tag, frozen tag-run green, proxy `.info` hash == commit, sum.golang.org recorded, clean-room `go get …/metrics@v0.5.0` + Attach/HitRatio smoke, GitHub Release Latest, pkg.go.dev rendering verified within the hour. The floor decision (TODO_LIST #2) was resolved by restoring `go 1.27.1` (commit `45e68c8`) to match the README badge and all three CI pins.
+
+## Release Conventions, multi-module era (from v0.6.0, after the 2026-09-23 split)
+
+The single-commit discipline becomes a **bottom-up tag staircase** — the price of five independently consumable modules. Each module's tag points at the commit where its own go.mod/go.sum finalized; subtree content is identical across the staircase, which is all consumers ever see.
+
+1. **Prepare:** land all code changes; run `scripts/pre-release-check.sh` (workspace mode — it never needs the sibling tags). Cut the CHANGELOG as usual (`chore(release): cut CHANGELOG vX.Y.Z`).
+2. **Staircase, dependency-first — entitytag → server → client → metrics → root.** For each module in order, from its directory: `GOTOOLCHAIN=auto go mod tidy && GOTOOLCHAIN=auto go mod verify && GOWORK=off go build ./... && GOWORK=off go test -race -count=1 ./...` (tidy resolves the already-tagged dependencies below it; the first module, entitytag, has none), commit the tidy result if it changed go.mod/go.sum, wait for CI green on that commit, then create the ANNOTATED tag: `entitytag/vX.Y.Z`, `server/vX.Y.Z`, `client/vX.Y.Z`, `metrics/vX.Y.Z`, and finally the root `vX.Y.Z`. Root goes last — it is the "release commit" whose CHANGELOG cut the release.
+3. **Bump the train for the next cycle:** after tagging, set the sibling requires in go.mod files and the replace versions in go.work to the NEXT dev version (or leave them at the just-released version and bump at the next release — either way the pre-release-check sync gate enforces they agree).
+4. **Consumer gates per module tag:** proxy `.info` hash == the tagged commit, sum.golang.org entry, and a clean-room `go get github.com/larsartmann/go-etag/<module>@vX.Y.Z` for each of the four nested modules plus the root. Proxy fetches of a fresh tag can lag a minute or two; `GOPROXY` direct fallback covers it.
+5. **Pre-tag bootstrap (v0.6.0 only):** the nested requires point at v0.6.0 before any such tag exists. That is expected: workspace mode (go.work) keeps every gate green; ONLY the staircase's tidy/GOWORK=off steps need the tags to exist, in order. Do not "fix" the unresolvable requires with go.mod replace directives — the release gate bans replace in every go.mod, and proxy consumers would break.
+
+Everything else carries over: tag only after CI green on the exact commit, GitHub Release as Latest, load the go-release skill, pkg.go.dev is not a gate. The proposal doc `docs/modularization/2026-09-23_modularization-proposal.html` records why metrics got a module (tombstone purity, not composability) and why go.mod replace directives stay banned (proxy-published repo).

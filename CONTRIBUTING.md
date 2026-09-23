@@ -18,18 +18,25 @@ go.mod directive, prefix every command — golangci-lint included, it shells
 out to go — with `GOTOOLCHAIN=auto`:
 
 ```bash
-go build ./...          # compile everything
-go vet ./...            # vet
-go test -race -count=1 ./...   # tests with race detection (required: tests use t.Parallel)
-golangci-lint run       # lint (grep out 'level=warning' lines; must end at 0 issues)
-golangci-lint fmt       # format (gofumpt + golines@120 + gci)
+# Multi-module repo: "./..." spans only the root module, so carry the full
+# pattern set (or cd into a module and run plain ./...). The committed go.work
+# joins all five modules into one workspace build.
+PACKAGES="./... ./client/... ./entitytag/... ./metrics/... ./server/..."
+
+go build $PACKAGES                   # compile everything
+go vet $PACKAGES                     # vet
+go test -race -count=1 $PACKAGES     # tests with race detection (required: tests use t.Parallel)
+golangci-lint run                   # lint the root module
+for m in client entitytag metrics server; do (cd $m && golangci-lint run --config ../.golangci.yml); done
+golangci-lint fmt                   # format (gofumpt + golines@120 + gci)
 golangci-lint config verify    # sanity-check .golangci.yml
 ```
 
 Releases additionally run `scripts/pre-release-check.sh`, which encodes the
-full local gate in one command (everything above plus erraudit, the nolint
-audit, `go mod verify`, replace/pseudo-version bans, and go-directive ↔
-CI-pin parity).
+full local gate in one command (everything above, per module, plus erraudit,
+the nolint audit, `go mod verify`, replace/pseudo-version bans across every
+go.mod, go-directive ↔ CI-pin parity, and a version-train sync check between
+go.mod requires and go.work replacements).
 
 Benchmarks (baseline snapshots live in `reports/bench/`; compare with
 `-count=6` runs before and after perf-relevant changes):
@@ -40,19 +47,22 @@ go test -run '^$' -bench . -benchmem -count=6 ./...
 
 ## Project Layout
 
-| Path            | Package       | Purpose                                                                    |
-| --------------- | ------------- | -------------------------------------------------------------------------- |
-| `server/`       | `etag`        | RFC 7232 ETag response middleware                                          |
-| `client/`       | `etagclient`  | RFC 9111 conditional-GET cache transport                                   |
-| `entitytag/`    | `entitytag`   | Shared RFC 7232 §2.3 entity-tag domain type                                |
-| `metrics/`      | `metrics`     | Atomic counters for the server's observability hooks                       |
-| `deprecated.go` | `etag` (root) | Deprecated alias shim; removed at v1.0.0                                   |
-| `docs/`         | —             | `rfc9111-conformance.md` (MUST-by-MUST table), planning and status reports |
+Five Go modules in one repo, released on a shared version train; a committed
+`go.work` joins them for local development and CI.
+
+| Path            | Package       | Module? | Purpose                                                                    |
+| --------------- | ------------- | ------- | -------------------------------------------------------------------------- |
+| `entitytag/`    | `entitytag`   | yes     | Shared RFC 7232 §2.3 entity-tag domain type (zero dependencies)             |
+| `server/`       | `etag`        | yes     | RFC 7232 ETag response middleware (deps: entitytag, go-error-family)        |
+| `client/`       | `etagclient`  | yes     | RFC 9111 conditional-GET cache transport (dep: entitytag)                   |
+| `metrics/`      | `metrics`     | yes     | Atomic counters for the server's observability hooks (dep: server)          |
+| `deprecated.go` | `etag` (root) | root    | Deprecated alias shim; removed at v1.0.0 (dep: server)                      |
+| `docs/`         | —             | —       | `rfc9111-conformance.md` (MUST-by-MUST table), planning and status reports  |
 
 ## Constraints Worth Knowing Before Your First Edit
 
-- **Dependencies are locked down.** `depguard` allows the standard library,
-  this module, and `go-error-family` only. Do not add third-party imports.
+- **Dependencies are locked down.** The standard library, sibling modules in
+  this repo, and `go-error-family` only. Do not add third-party imports.
 - **Every struct field must be set** (`exhaustruct_v5`). Use
   `//nolint:exhaustruct_v5` with a justification for intentional zero values.
 - **No dynamic `errors.New`/`fmt.Errorf` where a sentinel fits** (`err113`).
@@ -79,13 +89,16 @@ go test -run '^$' -bench . -benchmem -count=6 ./...
 
 `.github/workflows/ci.yml` runs four jobs on every push and PR:
 
-1. **Test** — build, vet, `go test -race`, coverage artifact.
-2. **Lint** — golangci-lint (pinned version; must match `.golangci.yml`'s needs).
-3. **Fuzz** — 30s per fuzz target.
-4. **Vulnerabilities** — govulncheck.
+1. **Test** — build, vet, `go test -race`, coverage artifact (full pattern
+   set across all five modules via the committed go.work).
+2. **Lint** — golangci-lint at the root plus one run per nested module
+   (pinned version; must match `.golangci.yml`'s needs).
+3. **Fuzz** — 30s per fuzz target (parser targets run under `./entitytag/...`).
+4. **Vulnerabilities** — govulncheck over the full pattern set.
 
 The toolchain is pinned via `GOTOOLCHAIN` in the workflow env; keep it in
-sync with the `go` directive in `go.mod`.
+exact sync with the `go` directive in every go.mod (all five must agree —
+`scripts/pre-release-check.sh` enforces this).
 
 ## Reporting Issues
 

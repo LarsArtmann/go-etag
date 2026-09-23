@@ -1067,19 +1067,30 @@
             <code>go mod graph</code> after execution.
           </p>
 
-          <h3>Workspace: go.work yes, replace never</h3>
+          <h3>Workspace: go.work yes; replace only inside go.work, never go.mod</h3>
           <p>
-            Deviation from the skill's default dual strategy (go.work +
-            replace), with rationale: this is a public proxy-published library.
-            Committed <code>replace</code> + <code>v0.0.0</code> requires are
-            ignored by proxy consumers, whose resolution then fails on the
-            nonexistent v0.0.0. The repo's release doctrine already bans replace
-            directives (scripts/pre-release-check.sh:69). Instead: a committed
-            go.work with all five <code>use</code> entries (workspace builds and
-            CI never consult the proxy for in-repo modules), and sibling
-            requires pinned at real released versions. GOWORK=off per-module
-            builds are the published-state check and are run during the release
-            staircase, not mid-cycle.
+            Deviation from the skill's default dual strategy (go.mod replace +
+            go.work), with rationale: this is a public proxy-published library.
+            go.mod <code>replace</code> + <code>v0.0.0</code> requires are
+            ignored by proxy consumers, whose resolution then fails &mdash;
+            and the repo's release doctrine already bans replace in every
+            go.mod (scripts/pre-release-check.sh). Execution surfaced a Go
+            workspace subtlety the plan had to absorb: <code>use</code> alone
+            cannot divert the merged module graph when a sibling require names
+            an <em>unreleased</em> version and any external dependency (here
+            go-error-family) forces graph resolution &mdash; builds failed
+            with <code>unknown revision entitytag/v0.6.0</code>. Unqualified
+            go.work replaces conflict with <code>use</code> ("replaced at all
+            versions"). The working shape, verified: <code>use</code> for all
+            five modules <em>plus</em> version-qualified replaces
+            (<code>&hellip;/entitytag v0.6.0 =&gt; ./entitytag</code>, &hellip;)
+            that move with the release train. They live only in go.work &mdash;
+            consumers and the proxy never see it &mdash; so every go.mod stays
+            replace-free with sibling requires at real released versions
+            (golang.org/x model). The release gate's new version-train sync
+            check fails if go.mod requires and go.work replaces drift apart.
+            GOWORK=off per-module builds remain the published-state check,
+            run during the release staircase, not mid-cycle.
           </p>
 
           <h3>Versioning: shared version, bottom-up tag staircase</h3>

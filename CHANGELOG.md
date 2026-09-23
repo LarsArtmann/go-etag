@@ -11,9 +11,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Nothing yet.
 
+### Changed
+
+- **Module split: one module becomes five.** Each package is now its own Go module released on a shared version train: `github.com/larsartmann/go-etag/entitytag` (zero dependencies), `…/server` (deps: entitytag, go-error-family), `…/client` (dep: entitytag — client consumers no longer pull the server middleware), `…/metrics` (dep: server), and the root module reduced to the deprecated v0.1.x alias shim (deleted at v1.0.0 as planned). All import paths are unchanged; a module's tag now delivers exactly what that module needs (`go get …/client` stops dragging in server code). A committed `go.work` (with version-qualified dev-only replaces) joins the five modules for local development and CI; every go.mod stays replace-free so proxy consumers always resolve tagged versions. Design record: `docs/modularization/2026-09-23_modularization-proposal.html`; release procedure (bottom-up tag staircase) in `AGENTS.md`.
+
 ### Fixed
 
-- Nothing yet.
+- CI fuzz job silently no-op'd on the parser targets: `FuzzParseETag` and `FuzzParseETagList` moved to `entitytag/` on 2026-09-18 but the workflow still fuzzed `./server/...`, which exits 0 with "no fuzz tests to fuzz" — both targets had not run since the move. They now run under `./entitytag/...`.
+- `go` directive drift (second daemon relaxation, `6f15f81`): all five go.mod files now pin `go 1.27.1`, and `scripts/pre-release-check.sh` parity checking is exact-match (anchored) across every go.mod instead of substring-based.
 
 ## [0.5.0] - 2026-09-23
 

@@ -402,12 +402,16 @@ The middleware adds sub-microsecond overhead per request. For a typical API retu
 
 ## Installation
 
+Each package is its own Go module (same repo, same release train) — you depend on exactly what you import:
+
 ```bash
-go get github.com/larsartmann/go-etag/server      # server middleware (package etag)
-go get github.com/larsartmann/go-etag/client      # client transport (package etagclient)
-go get github.com/larsartmann/go-etag/entitytag   # shared entity-tag domain type (package entitytag)
-go get github.com/larsartmann/go-etag/metrics     # hook counters companion (package metrics)
+go get github.com/larsartmann/go-etag/server      # server middleware (package etag) — pulls entitytag
+go get github.com/larsartmann/go-etag/client      # client transport (package etagclient) — pulls entitytag, not the server
+go get github.com/larsartmann/go-etag/entitytag   # entity-tag domain type (package entitytag) — zero dependencies
+go get github.com/larsartmann/go-etag/metrics     # hook counters companion (package metrics) — pulls the server module
 ```
+
+All modules release together under one version (e.g. `server@v0.6.0` and `client@v0.6.0` are the same commit); import paths are unchanged from the single-module era.
 
 ### Upgrading from v0.1.x
 
