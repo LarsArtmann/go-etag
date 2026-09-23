@@ -84,6 +84,9 @@ validator prevents is closed; no further work planned here.
   boundary since v0.1.0.
 - **Full RFC 7232 §6 precedence chain** on the server — same reasoning.
 - **If-Range / Range support (RFC 7233)** — different problem domain.
+- **Vary-aware secondary cache keys** — deliberate scope boundary (recorded
+  2026-09-23): `client/doc.go` §Vary documents the sharp edge and `KeyFunc`
+  is the mitigation; revisit only on a real consumer demand signal.
 - **A telemetry dependency in core** — hooks only; backends wire themselves.
 - **`reports/` directory** — status snapshots live in `docs/status/` only;
   no second location.

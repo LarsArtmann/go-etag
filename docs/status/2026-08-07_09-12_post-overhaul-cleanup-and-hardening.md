@@ -127,19 +127,19 @@ Nothing is partially done. All items are either complete or not started.
 
 | # | Task                                                                                                                                                                         | Effort |
 |---|---|---|
-|~~4~~|~~Pre-compute wire format in `NewETag` — open~~|~~S~~| Won't implement — OQ5; String() composes the wire format, no cache needed
-|~~5~~|~~Single-pass `ParseETagList` — open (two-pass remains)~~|~~S~~| done — parse made allocation-free (`reports/bench/2026-09-18_after-typed-validator.txt`)
-|~~6~~|~~Add isolated benchmarks — open~~|~~XS~~| dies per OQ5 — revive on demand (ROADMAP OQ5)
-|~~7~~|~~Benchmark with larger bodies — open~~|~~XS~~| dies per OQ5 — revive on demand (ROADMAP OQ5)
+|~~4~~ Won't implement — OQ5; String() composes the wire format, no cache needed|~~Pre-compute wire format in `NewETag` — open~~|~~S~~|
+|~~5~~ done — parse made allocation-free (`reports/bench/2026-09-18_after-typed-validator.txt`)|~~Single-pass `ParseETagList` — open (two-pass remains)~~|~~S~~|
+|~~6~~ dies per OQ5 — revive on demand (ROADMAP OQ5)|~~Add isolated benchmarks — open~~|~~XS~~|
+|~~7~~ dies per OQ5 — revive on demand (ROADMAP OQ5)|~~Benchmark with larger bodies — open~~|~~XS~~|
 | ~~8~~ | ~~Investigate inline FNV — **Won't implement — interface-call overhead is negligible vs network I/O; benchmarks are sub-microsecond**~~ to avoid the interface call overhead | ~~S~~      |
 
 ### P2 — API & Types
 
 | #  | Task                                                                                                                                                                                                              | Effort |
 |---|---|---|
-|~~9~~|~~Add `ETag.IsStrong()` — open (low)~~|~~XS~~| Won't implement — OQ5 (low); `IsWeak` exists, negation is trivial
+|~~9~~ Won't implement — OQ5 (low); `IsWeak` exists, negation is trivial|~~Add `ETag.IsStrong()` — open (low)~~|~~XS~~|
 | ~~10~~ | ~~Consider `ETag.IsEmpty()` — done: `IsValid()` is the shipped zero-value check, documented~~                                                                                                                     | ~~XS~~     |
-|~~11~~|~~Add `Strength.String()` — open (low)~~|~~XS~~| Won't implement — OQ5 (low)
+|~~11~~ Won't implement — OQ5 (low)|~~Add `Strength.String()` — open (low)~~|~~XS~~|
 | ~~12~~ | ~~Consider whether `MatchesIfMatch` should return `(bool, error)` instead of `bool` to handle parse failures distinctly~~ **Won't implement — parse failures are defined as no-match (RFC behavior), not errors** | ~~S~~      |
 | ~~13~~ | ~~Evaluate `SkipIfPresent` default — done (decision: `false`, documented)~~                                                                                                                                       | ~~S~~      |
 
@@ -147,11 +147,11 @@ Nothing is partially done. All items are either complete or not started.
 
 | #  | Task                                                                                                                   | Effort |
 |---|---|---|
-|~~14~~|~~Add function-level examples — open~~|~~S~~| done — GoDoc examples backfilled in v0.4.0/v0.5.0 (`ExampleParseETag` etc., CHANGELOG)
+|~~14~~ done — GoDoc examples backfilled in v0.4.0/v0.5.0 (`ExampleParseETag` etc., CHANGELOG)|~~Add function-level examples — open~~|~~S~~|
 | ~~15~~ | ~~Add "Performance" section to README — done at `b9eb32e` (Benchmarks section)~~                                       | ~~XS~~     |
 | ~~16~~ | ~~Add RFC 7232 Compliance Matrix — done at `b9eb32e`~~                                                                 | ~~S~~      |
 | ~~17~~ | ~~Document FNV-64a collision tradeoff — done (entity_tag.go + README Strong-vs-Weak section)~~                         | ~~XS~~     |
-|~~18~~|~~Add a `docs/` index or CHANGELOG link in README — open (low)~~|~~XS~~| Won't implement — OQ5 (low)
+|~~18~~ Won't implement — OQ5 (low)|~~Add a `docs/` index or CHANGELOG link in README — open (low)~~|~~XS~~|
 | ~~19~~ | ~~Consider an ADR for Strength enum — **Won't implement — decision is documented in AGENTS.md + review-and-roadmap**~~ | ~~S~~      |
 
 ### P4 — Testing
@@ -161,11 +161,11 @@ Nothing is partially done. All items are either complete or not started.
 | ~~20~~ | ~~Add property-based tests — done at `e0fe51f` (fuzz round-trip invariants)~~                                                                     | ~~M~~      |
 | ~~21~~ | ~~Concurrent `ServeHTTP` tests — done (per-request writer + full suite under -race; client has explicit `TestRoundTripConcurrent` at `bc5a551`)~~ | ~~S~~      |
 | ~~22~~ | ~~`OnError` invocation-path tests — done at `c759373`~~                                                                                           | ~~S~~      |
-|~~23~~|~~Flush → Write → Flush sequence test — open~~|~~S~~| covered — flush/streaming suites (`server/etag_test.go` double-flush + streaming tests)
+|~~23~~ covered — flush/streaming suites (`server/etag_test.go` double-flush + streaming tests)|~~Flush → Write → Flush sequence test — open~~|~~S~~|
 | ~~24~~ | ~~Edge-case status-code tests — done at `c759373` (7 non-cacheable statuses + 299/300 boundary)~~                                                 | ~~S~~      |
-|~~25~~|~~`MaxBufferSize` boundary test — open~~|~~XS~~| dies per OQ5 — revive on demand (ROADMAP OQ5)
+|~~25~~ dies per OQ5 — revive on demand (ROADMAP OQ5)|~~`MaxBufferSize` boundary test — open~~|~~XS~~|
 | ~~26~~ | ~~`Skip` predicate tests — done at `15114b3` (true/false paths)~~                                                                                 | ~~XS~~     |
-|~~27~~|~~Fuzz with `Skip`/`SkipIfPresent` enabled — open (low)~~|~~S~~| dies per OQ5 — revive on demand (ROADMAP OQ5)
+|~~27~~ dies per OQ5 — revive on demand (ROADMAP OQ5)|~~Fuzz with `Skip`/`SkipIfPresent` enabled — open (low)~~|~~S~~|
 
 ### P5 — Scope & Features
 
@@ -185,7 +185,7 @@ Nothing is partially done. All items are either complete or not started.
 | ~~34~~ | ~~Set up CI pipeline — done at `37b68b3`~~                                                          | ~~M~~      |
 | ~~35~~ | ~~Add `toolchain` directive — done at `0e8ac6d` (go 1.26.7)~~                                       | ~~XS~~     |
 | ~~36~~ | ~~golangci-lint version pinning — done at `cf98ab5` (CI installs v2.12.2 from the v2 module path)~~ | ~~XS~~     |
-|~~37~~|~~Add `codecov.yml` or coverage gating — open (low)~~|~~S~~| carried — `TODO_LIST.md` #2 (M13 coverage-floor decision)
+|~~37~~ carried — `TODO_LIST.md` #2 (M13 coverage-floor decision)|~~Add `codecov.yml` or coverage gating — open (low)~~|~~S~~|
 | ~~38~~ | ~~goreleaser — **Won't implement — library, not binary; go-release flow suffices**~~                | ~~M~~      |
 
 ### P7 — Code Quality
@@ -196,7 +196,7 @@ Nothing is partially done. All items are either complete or not started.
 | ~~40~~ | ~~Wrapper composition refactor — **Won't implement — current structure is idiomatic**~~            | ~~S~~      |
 | ~~41~~ | ~~`writeDefaultOK` placement review — done (placement settled; behavior pinned by wrapper tests)~~ | ~~S~~      |
 | ~~42~~ | ~~Flush/flush naming review — **Won't implement — conventional Go naming**~~                       | ~~XS~~     |
-|~~43~~|~~Error message consistency — open (low)~~|~~XS~~| done — message templates centralized in `errorTemplates`, pinned by `errors_test.go` (v0.4.0)
+|~~43~~ done — message templates centralized in `errorTemplates`, pinned by `errors_test.go` (v0.4.0)|~~Error message consistency — open (low)~~|~~XS~~|
 
 ### P8 — Alignment with `go-error-family`
 
@@ -211,8 +211,8 @@ Nothing is partially done. All items are either complete or not started.
 
 | #  | Task                                                                                            | Effort |
 |---|---|---|
-|~~48~~|~~Comparison table — open (ROADMAP Theme 4)~~|~~S~~| carried — `TODO_LIST.md` #4 (M25 comparison table)
-|~~49~~|~~awesome-go listing — open (ROADMAP Theme 4)~~|~~XS~~| carried — `TODO_LIST.md` #4 (M25 awesome-go draft)
+|~~48~~ carried — `TODO_LIST.md` #4 (M25 comparison table)|~~Comparison table — open (ROADMAP Theme 4)~~|~~S~~|
+|~~49~~ carried — `TODO_LIST.md` #4 (M25 awesome-go draft)|~~awesome-go listing — open (ROADMAP Theme 4)~~|~~XS~~|
 | ~~50~~ | ~~Blog post for v0.2 — **Won't implement — no blog channel; GitHub releases carry the notes**~~ | ~~M~~      |
 
 ---

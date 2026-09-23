@@ -26,9 +26,9 @@ that run and what was noticed along the way. No unrelated research was performed
    Documents why the guard exists: `http.Header.Clone` returns nil for a nil map,
    which would panic on the first freshening write. Used by `rebuiltHeader` and
    `freshenedHeader`.
-4. **Clone group 2 — ACCEPTED with rationale** — server/testutil_test.go:57:
-   the test double's two-line recorder Write is deliberately not shared with the
-   production body buffering it exists to test in isolation.
+~~4. **Clone group 2 — ACCEPTED with rationale** — server/testutil_test.go:57:~~
+   ~~the test double's two-line recorder Write is deliberately not shared with the~~
+   ~~production body buffering it exists to test in isolation.~~ superseded — M9 re-baseline (report 16:40 a7): the pair is now filter-suppressed (test files); cite drift is historical
 5. **Full verification gate re-run, all green**:
    - `go build ./...`, `go vet ./...`, `go test -race ./...` — ok (3 packages)
    - `golangci-lint fmt` + `golangci-lint run` — 0 issues
@@ -105,22 +105,22 @@ they were sloppy, not because they survived:
 
 | #  | Task                                                                                                                                                                                      | Impact                    | Effort |
 |---|---|---|---|
-|~~1~~|~~Spec test: HEAD-freshened entries never persist the FromCacheHeader marker~~|~~High (pins new invariant)~~|~~S~~| done — `TestSpecHeadFresheningDoesNotPersistFromCacheMarker` `2ac636b` (report 04-52 §b.3)
-|~~2~~|~~Prove-or-delete: can `entry.header` be nil? If never, drop `cloneHeader`'s guard; if maybe, unit-test the branch~~|~~Medium~~|~~S~~| done — nil branch proved unreachable; `TestCloneHeaderNilReturnsEmpty` `8c1c1a7` (report 04-52 §b.4)
-|~~3~~|~~Benchmark client freshening paths; diff vs git-reachable pre-dedup baseline (`reports/bench/2026-09-11_*.txt`)~~|~~Medium~~|~~M~~| done — `reports/bench/2026-09-23_{before,after}-head-freshening.txt` (report 04-52 §b.5)
-|~~4~~|~~Coverage check: confirm `persistFreshened`/`cloneHeader` lines are exercised (`go test -coverprofile`)~~|~~Medium~~|~~S~~| done — both at 100% (report 04-52 a4)
-|~~5~~|~~Canonicalize (or reject) non-canonical `FreshenFields` names in Options validation — kills the invisible-key footgun~~|~~High (UX)~~|~~M~~| dies per OQ5 — open-low, revive on demand (ROADMAP OQ5)
-|~~6~~|~~Restructure `TestMergeHeaderPrefersExactThenCanonical` to a non-literal key so gopls stops flagging SA1008~~|~~Low~~|~~S~~| dies per OQ5 — open-low, revive on demand (ROADMAP OQ5)
+|~~1~~ done — `TestSpecHeadFresheningDoesNotPersistFromCacheMarker` `2ac636b` (report 04-52 §b.3)|~~Spec test: HEAD-freshened entries never persist the FromCacheHeader marker~~|~~High (pins new invariant)~~|~~S~~|
+|~~2~~ done — nil branch proved unreachable; `TestCloneHeaderNilReturnsEmpty` `8c1c1a7` (report 04-52 §b.4)|~~Prove-or-delete: can `entry.header` be nil? If never, drop `cloneHeader`'s guard; if maybe, unit-test the branch~~|~~Medium~~|~~S~~|
+|~~3~~ done — `reports/bench/2026-09-23_{before,after}-head-freshening.txt` (report 04-52 §b.5)|~~Benchmark client freshening paths; diff vs git-reachable pre-dedup baseline (`reports/bench/2026-09-11_*.txt`)~~|~~Medium~~|~~M~~|
+|~~4~~ done — both at 100% (report 04-52 a4)|~~Coverage check: confirm `persistFreshened`/`cloneHeader` lines are exercised (`go test -coverprofile`)~~|~~Medium~~|~~S~~|
+|~~5~~ dies per OQ5 — open-low, revive on demand (ROADMAP OQ5)|~~Canonicalize (or reject) non-canonical `FreshenFields` names in Options validation — kills the invisible-key footgun~~|~~High (UX)~~|~~M~~|
+|~~6~~ dies per OQ5 — open-low, revive on demand (ROADMAP OQ5)|~~Restructure `TestMergeHeaderPrefersExactThenCanonical` to a non-literal key so gopls stops flagging SA1008~~|~~Low~~|~~S~~|
 | ~~7~~  | ~~Run `erraudit nolint-audit .` once post-change (completeness; expect no drift)~~ re-confirmed 2026-09-23: 2 directives needed, 0 stale (docs-health pass)                               | ~~Low~~                       | ~~S~~      |
 | ~~8~~  | ~~HARVEST section (f) into TODO_LIST.md (docs-health)~~ done 2026-09-23 (TODO_LIST #5–#7 carry the survivors)                                                                             | ~~Medium~~                    | ~~S~~      |
 | ~~9~~  | ~~Verify CI is green on the auto-daemon commit carrying the dedup (4ba1ed8)~~ superseded — CI green since (v0.3.0→v0.4.0 all shipped; tag runs verified)                                  | ~~Medium~~                    | ~~S~~      |
-|~~10~~|~~AGENTS.md note: HEAD freshening commits through `persistFreshened` (single funnel invariant)~~|~~Low~~|~~S~~| done — `AGENTS.md` Client gotchas (freshening persists via the single funnel)
-|~~11~~|~~Grep spec_test.go for existing HEAD × FromCacheHeader coverage — close the b/1 verification gap~~|~~Medium~~|~~S~~| done — led to `2ac636b` (report 04-52 §b.3)
-|~~12~~|~~Consider a coverage floor in CI if none exists (check workflow first)~~|~~Unknown until checked~~|~~M~~| carried — `TODO_LIST.md` #2 (M13)
-|~~13~~|~~Audit other `-t 1` findings at the default threshold 5 to confirm the report is empty there too (clone baseline)~~|~~Low~~|~~S~~| superseded — M9 re-baseline captured live truth + baseline file (report 16:40 a7)
-|~~14~~|~~Add `cloneHeader`-style stdlib-footgun notes to AGENTS.md gotchas if more Clone-guard sites ever appear~~|~~Low~~|~~S~~| Won't implement — no further sites; standing rule lives in the AGENTS gotchas
+|~~10~~ done — `AGENTS.md` Client gotchas (freshening persists via the single funnel)|~~AGENTS.md note: HEAD freshening commits through `persistFreshened` (single funnel invariant)~~|~~Low~~|~~S~~|
+|~~11~~ done — led to `2ac636b` (report 04-52 §b.3)|~~Grep spec_test.go for existing HEAD × FromCacheHeader coverage — close the b/1 verification gap~~|~~Medium~~|~~S~~|
+|~~12~~ carried — `TODO_LIST.md` #2 (M13)|~~Consider a coverage floor in CI if none exists (check workflow first)~~|~~Unknown until checked~~|~~M~~|
+|~~13~~ superseded — M9 re-baseline captured live truth + baseline file (report 16:40 a7)|~~Audit other `-t 1` findings at the default threshold 5 to confirm the report is empty there too (clone baseline)~~|~~Low~~|~~S~~|
+|~~14~~ Won't implement — no further sites; standing rule lives in the AGENTS gotchas|~~Add `cloneHeader`-style stdlib-footgun notes to AGENTS.md gotchas if more Clone-guard sites ever appear~~|~~Low~~|~~S~~|
 | ~~15~~ | ~~Skim `docs/status/` backlog (2 modified files at session start) for unharvested items~~ done 2026-09-23 — every 2026-0* snapshot read end-to-end and annotated (docs-health full audit) | ~~Medium~~                    | ~~S~~      |
-|~~16~~|~~Consider whether `drainAndClose` suppressions should gain a dedicated spec test asserting the discard is safe under a failing body~~|~~Low~~|~~M~~| dies per OQ5 — discard-safety rationale documented in `AGENTS.md` client gotchas
+|~~16~~ dies per OQ5 — discard-safety rationale documented in `AGENTS.md` client gotchas|~~Consider whether `drainAndClose` suppressions should gain a dedicated spec test asserting the discard is safe under a failing body~~|~~Low~~|~~M~~|
 | 17 | Double-check the deprecated root shim still compiles green after any future transport refactor (habit, not a current issue)                                                               | Low                       | S      |
 
 ## g) Questions I cannot figure out myself
