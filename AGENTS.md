@@ -212,6 +212,7 @@ Internal construction goes through the typed `Code` constants in `server/errors.
 ## Release Conventions (validated at v0.4.0)
 
 - **Release commit style:** `chore(release): cut CHANGELOG vX.Y.Z` (matches v0.2.0/v0.3.0), CHANGELOG cut BEFORE tagging; empty `[Unreleased]` placeholders + compare links stay behind.
+- **Run `scripts/pre-release-check.sh` on the exact release commit before the CHANGELOG cut** — one command for every locally checkable gate (build, vet, race, lint, fmt-diff, erraudit + nolint-audit, `go mod verify`, replace/pseudo-version ban, and go-directive ↔ CI-pin parity that catches the 969d077 daemon-relaxation class of drift). v0.4.0 shipped with skipped steps (`go mod verify`, nolint-audit); the script exists so that class cannot recur.
 - **The daemon can sweep the release-prep commit first** (v0.4.0: the CHANGELOG cut landed inside a `chore: auto-commit`). Harmless if the tree content is exactly the release content — verify the tag's `.info` hash on proxy.golang.org matches the intended commit, as done at v0.4.0 (16369cc).
 - **v0.x GitHub Releases are published as Latest, non-prerelease** — house precedent (v0.1.0 → v0.4.0), a deliberate deviation from the go-release skill's `--prerelease` suggestion.
 - **The consumer-facing gates are proxy.golang.org + sum.golang.org + a clean-room `go get`** — pkg.go.dev doc rendering lags by minutes and is NOT a release blocker; verify it eventually, not gate on it.

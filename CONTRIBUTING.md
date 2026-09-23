@@ -26,6 +26,11 @@ golangci-lint fmt       # format (gofumpt + golines@120 + gci)
 golangci-lint config verify    # sanity-check .golangci.yml
 ```
 
+Releases additionally run `scripts/pre-release-check.sh`, which encodes the
+full local gate in one command (everything above plus erraudit, the nolint
+audit, `go mod verify`, replace/pseudo-version bans, and go-directive ↔
+CI-pin parity).
+
 Benchmarks (baseline snapshots live in `reports/bench/`; compare with
 `-count=6` runs before and after perf-relevant changes):
 
