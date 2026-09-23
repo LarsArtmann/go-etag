@@ -160,6 +160,24 @@ while read -r modpath version; do
 	done
 done <<<"$train_versions"
 
+step "go work sync idempotency (workspace manifests must already match workspace truth)"
+sync_backup="$(mktemp -d)"
+for f in go.work go.mod client/go.mod entitytag/go.mod metrics/go.mod server/go.mod; do
+	cp "$f" "$sync_backup/$(echo "$f" | tr / _)"
+done
+go work sync || fail "go work sync failed - the workspace does not resolve"
+sync_drift=""
+for f in go.work go.mod client/go.mod entitytag/go.mod metrics/go.mod server/go.mod; do
+	if ! diff -u "$sync_backup/$(echo "$f" | tr / _)" "$f" >"$sync_backup/diff.out"; then
+		cat "$sync_backup/diff.out"
+		cp "$sync_backup/$(echo "$f" | tr / _)" "$f"
+		sync_drift="$sync_drift $f"
+	fi
+done
+rm -rf "$sync_backup"
+[ -z "$sync_drift" ] ||
+	fail "go work sync rewrote:$sync_drift - run 'go work sync' and commit, then re-run this gate (originals restored)"
+
 printf '\nALL LOCAL GATES GREEN.\n'
 printf 'Remaining runbook steps (manual): CI green on this exact commit, the bottom-up tag\n'
 printf 'staircase (entitytag -> server -> client -> metrics -> root) + push, proxy .info hash\n'
