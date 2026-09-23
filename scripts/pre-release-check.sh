@@ -199,4 +199,5 @@ fi
 printf '\nALL LOCAL GATES GREEN.\n'
 printf 'Remaining runbook steps (manual): CI green on this exact commit, the bottom-up tag\n'
 printf 'staircase (entitytag -> server -> client -> metrics -> root) + push, proxy .info hash\n'
-printf '+ sum.golang.org per module tag, clean-room go get per module, GitHub Release as Latest.\n'
+printf '+ sum.golang.org per module tag, clean-room go get per module. The root-tag push\n'
+printf 'automates the GitHub Release page (release.yml, OQ3).\n'
