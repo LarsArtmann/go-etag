@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.5.0] - 2026-09-23
+
+### Added
+
 - **`metrics` package** (`metrics/`): ready-made atomic counters for the server package's observability hooks, moved in from `httputil/etagmetrics` (httputil v1.3.0's separate Go module — co-located here so the companion lives next to the hooks it counts, ships on go-etag's release cadence, and needs no cross-repo version pinning; see `docs/planning/2026-09-22_23-25_move-etagmetrics-into-go-etag-metrics.md`). `metrics.Attach(cfg)` installs counting hooks on a copy of the consumer's `etag.ETagConfig` and returns the modified config plus a `*Counters`; hooks already present are preserved and run after the counting hooks, so consumer instrumentation (Prometheus exporter, slog logger) and these counters coexist on one config. `Snapshot()` copies the values. `HitRatio()` corrects the formula shipped in httputil v1.3.0: it is now `NotModified / Generated` — `On304` fires in addition to `OnETagGenerated` for computed tags, so `Generated` alone already counts every tag-computing response and the old `NotModified / (Generated + NotModified)` double-counted every 304 (fresh GET + conditional 304 reported 1/3 instead of 1/2). Documented caveat: 304s on handler-adopted tags (`SkipIfPresent`) fire `On304` without `OnETagGenerated` and can push the ratio above 1. Includes hook-overhead benchmarks (`BenchmarkETagMetricsHookOverhead` vs `BenchmarkETagPlainNoHooks`, ~9 ns/op measured) and an adopted-tag contract test.
 - GoDoc examples for the typed error surface (server): `ExampleCode` (family constructor + classification readout), `ExampleDomainOf`, and `ExampleInDomain`, each with `// Output:` directives.
 - GoDoc examples for the shared domain type (`entitytag`): `ExampleParseETag` (wire-format round-trip including the weak form and a refused unquoted value), `ExampleETag_weakVsStrong` (weak vs strong RFC 7232 §2.3.2 comparison contrasted on one tag pair), and `ExampleParseETagList` (ordered strong/weak list parse; the wildcard is not an entity-tag), each with `// Output:` directives.
@@ -18,11 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- The client cache stores its validator as a parsed `entitytag.ETag` computed once at store time (`storedResponse` carrying a `storedValidator` identity: the wire string replayed verbatim as `If-None-Match`, plus the parsed form), so §4.3.5 HEAD-confirmation and §4.3.4 304 mismatch-restore reuse the parsed form instead of re-parsing the stored string on every comparison. Behavior is unchanged, including the rule that an unparseable stored validator never matches. Baselines: `reports/bench/2026-09-18_baseline-typed-code-stored-validator.txt`.
-
-### Fixed
-
-- Nothing yet.
+- The client cache stores its validator as a parsed `entitytag.ETag` computed once at store time (`storedResponse` carrying a `storedValidator` identity: the wire string replayed verbatim as `If-None-Match`, plus the parsed form), so §4.3.5 HEAD-confirmation and §4.3.4 304 mismatch-restore reuse the parsed form instead of re-parsing the stored string on every comparison. Behavior is unchanged, including the rule that an unparseable stored validator never matches. Baselines: `reports/bench/2026-09-18_baseline-typed-code-stored-validator.txt` and `reports/bench/2026-09-23_before-typed-code-stored-validator.txt` (the recovered before-state).
 
 ## [0.4.0] - 2026-09-18
 
@@ -138,7 +144,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BDD-style spec suite (`etag_bdd_test.go`) mapping RFC 7232 sections to behavioral expectations.
 - Fuzz tests for `ParseETag` and `ParseETagList` verifying no panics and round-trip integrity on arbitrary input.
 
-[Unreleased]: https://github.com/Larsartmann/go-etag/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/Larsartmann/go-etag/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/Larsartmann/go-etag/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/Larsartmann/go-etag/compare/v0.3.1...v0.4.0
 [0.3.1]: https://github.com/Larsartmann/go-etag/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/Larsartmann/go-etag/compare/v0.2.0...v0.3.0
