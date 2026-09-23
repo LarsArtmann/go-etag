@@ -180,3 +180,101 @@ func ExampleFreshenPolicy() {
 	// 200 job status date=then retry-after=120 etag="v1"
 	// 200 job status date=then retry-after=30 etag="v1"
 }
+
+// fresheningStub answers a conditional-GET sequence: a first 200 carrying
+// Date=then / Retry-After=120, then a 304 providing Date=later /
+// Retry-After=30. The freshening examples differ only in policy.
+func fresheningStub() roundTripperFunc {
+	return roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+		if req.Header.Get("If-None-Match") == `"v1"` {
+			header := stubHeader(
+				headerPair{"ETag", `"v1"`},
+				headerPair{"Date", "later"},
+				headerPair{"Retry-After", "30"},
+			)
+
+			return stubResponse(http.StatusNotModified, header, ""), nil
+		}
+
+		header := stubHeader(
+			headerPair{"ETag", `"v1"`},
+			headerPair{"Date", "then"},
+			headerPair{"Retry-After", "120"},
+		)
+
+		return stubResponse(http.StatusOK, header, "job status"), nil
+	})
+}
+
+// ExampleFreshenPerRFC shows the default 304 freshening (RFC 9111 §4.3.4,
+// the zero value): every field the revalidation provides replaces the
+// stored value, so the rebuilt 200 wears the fresh Date and Retry-After
+// while body and validator flow through.
+func ExampleFreshenPerRFC() {
+	client := &http.Client{Transport: NewTransport(fresheningStub(), Options{FreshenOn304: FreshenPerRFC()})}
+
+	for range 2 {
+		resp, err := client.Get("https://api.test/jobs/42")
+		if err != nil {
+			fmt.Println("error:", err)
+
+			return
+		}
+
+		body, readErr := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+
+		if readErr != nil {
+			fmt.Println("error:", readErr)
+
+			return
+		}
+
+		fmt.Println(
+			resp.StatusCode,
+			string(body),
+			"date="+resp.Header.Get("Date"),
+			"retry-after="+resp.Header.Get("Retry-After"),
+		)
+	}
+
+	// Output:
+	// 200 job status date=then retry-after=120
+	// 200 job status date=later retry-after=30
+}
+
+// ExampleFreshenNone disables 304 freshening: the rebuilt 200 keeps every
+// stored field and only the body replay and the validator revalidation
+// remain — opting out of the RFC 9111 §4.3.4 update is the policy's job.
+func ExampleFreshenNone() {
+	client := &http.Client{Transport: NewTransport(fresheningStub(), Options{FreshenOn304: FreshenNone()})}
+
+	for range 2 {
+		resp, err := client.Get("https://api.test/jobs/42")
+		if err != nil {
+			fmt.Println("error:", err)
+
+			return
+		}
+
+		body, readErr := io.ReadAll(resp.Body)
+		_ = resp.Body.Close()
+
+		if readErr != nil {
+			fmt.Println("error:", readErr)
+
+			return
+		}
+
+		fmt.Println(
+			resp.StatusCode,
+			string(body),
+			"date="+resp.Header.Get("Date"),
+			"retry-after="+resp.Header.Get("Retry-After"),
+		)
+	}
+
+	// Output:
+	// 200 job status date=then retry-after=120
+	// 200 job status date=then retry-after=120
+}
