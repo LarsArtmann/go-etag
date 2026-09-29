@@ -189,8 +189,8 @@ this review watched).
 
 ---
 
-*Generated 2026-09-23 15:35 CEST. Every claim verified this session: gates
+_Generated 2026-09-23 15:35 CEST. Every claim verified this session: gates
 green at 15:2x (vet/race/lint/fmt ×5 modules), art-dupl run live, coverage
 scan live, git states checked at 15:18/15:30 (untracked go.sum observed, then
 `609bf83`). ~~The brutal-self-review HTML report itself is NOT yet written —
-see b1/d3. Waiting for instructions.~~ Written 16:4x as `docs/reviews/2026-09-23_15-22_brutal-self-review.html`; all open items resolved 2026-09-23 docs-health pass.*
+see b1/d3. Waiting for instructions.~~ Written 16:4x as `docs/reviews/2026-09-23_15-22_brutal-self-review.html`; all open items resolved 2026-09-23 docs-health pass._

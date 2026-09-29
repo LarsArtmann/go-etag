@@ -52,12 +52,12 @@ Five Go modules in one repo, released on a shared version train; a committed
 
 | Path            | Package       | Module? | Purpose                                                                    |
 | --------------- | ------------- | ------- | -------------------------------------------------------------------------- |
-| `entitytag/`    | `entitytag`   | yes     | Shared RFC 7232 §2.3 entity-tag domain type (zero dependencies)             |
-| `server/`       | `etag`        | yes     | RFC 7232 ETag response middleware (deps: entitytag, go-error-family)        |
-| `client/`       | `etagclient`  | yes     | RFC 9111 conditional-GET cache transport (dep: entitytag)                   |
-| `metrics/`      | `metrics`     | yes     | Atomic counters for the server's observability hooks (dep: server)          |
-| `deprecated.go` | `etag` (root) | root    | Deprecated alias shim; removed at v1.0.0 (dep: server)                      |
-| `docs/`         | —             | —       | `rfc9111-conformance.md` (MUST-by-MUST table), planning and status reports  |
+| `entitytag/`    | `entitytag`   | yes     | Shared RFC 7232 §2.3 entity-tag domain type (zero dependencies)            |
+| `server/`       | `etag`        | yes     | RFC 7232 ETag response middleware (deps: entitytag, go-error-family)       |
+| `client/`       | `etagclient`  | yes     | RFC 9111 conditional-GET cache transport (dep: entitytag)                  |
+| `metrics/`      | `metrics`     | yes     | Atomic counters for the server's observability hooks (dep: server)         |
+| `deprecated.go` | `etag` (root) | root    | Deprecated alias shim; removed at v1.0.0 (dep: server)                     |
+| `docs/`         | —             | —       | `rfc9111-conformance.md` (MUST-by-MUST table), planning and status reports |
 
 ## Constraints Worth Knowing Before Your First Edit
 

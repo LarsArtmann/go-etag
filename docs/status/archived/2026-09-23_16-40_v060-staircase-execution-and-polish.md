@@ -205,7 +205,8 @@ new entries from the 15:35 lane folded in.~~ answered — `ab1bcec` recorded the
 
 *Generated 2026-09-23 16:40. Every claim verified this session: five proxy
 hashes, five checksum-DB entries, five clean-room smokes, four frozen tag runs
-+ one root tag run green, six consumer repos gated in both GOWORK modes, gate
-exit 0 after each script change, CI green on `1bf30c9` and `bfae10e`. The
-staircase AGENTS.md describes is now the staircase this repo has actually
-walked.*
+
+- one root tag run green, six consumer repos gated in both GOWORK modes, gate
+  exit 0 after each script change, CI green on `1bf30c9` and `bfae10e`. The
+  staircase AGENTS.md describes is now the staircase this repo has actually
+  walked.*

@@ -204,6 +204,7 @@ pair, and 33 older snapshots back to 2026-08-07.
 ## f) NEXT — up to 50, sorted by impact (session-derived; the durable backlog is TODO_LIST #1–#7)
 
 **Close this pass's own loose ends:**
+
 1. Fix go-github-kit's nix lane (TODO_LIST #1 — the only live breakage).
 2. Remote-CI verification for the six consumers (30s `gh run list --commit`
    each) — TODO_LIST #1.
@@ -228,16 +229,16 @@ pair, and 33 older snapshots back to 2026-08-07.
 
 **The docs tier (now unambiguous after this pass):**
 11. M11: benchstat tables + five-module no-drift proof + the 6466 ns/outlier
-    annotation (TODO_LIST #2).
+annotation (TODO_LIST #2).
 12. M16: `FuzzStoredValidatorWeaklyMatches`, `FuzzMergeHeader`, directive
-    corpus, clean-room smoke seeds (TODO_LIST #2).
+corpus, clean-room smoke seeds (TODO_LIST #2).
 13. M17: spec pin-ups — request `no-cache` §5.2.2.2, HEAD × `Uncompressed`,
-    `restoreMismatchedValidator` restricted + dual-key, caller-conditional
-    HEAD 304 (TODO_LIST #2).
+`restoreMismatchedValidator` restricted + dual-key, caller-conditional
+HEAD 304 (TODO_LIST #2).
 14. M12: erraudit-in-CI, posture defaulted blocking + informational (TODO_LIST #3).
 15. M13: coverage floors per module or explicit drop — with the fresh numbers
-    this pass measured (root 100 / server 99.1 / client 99.7 / entitytag 100
-    / metrics 96.8) as the baseline (TODO_LIST #3).
+this pass measured (root 100 / server 99.1 / client 99.7 / entitytag 100
+/ metrics 96.8) as the baseline (TODO_LIST #3).
 16. M14: gosec note + go-error-family diff read + OQ7 mirror verification (TODO_LIST #3).
 17. M15/F56/F57: httputil mirror test + AGENTS error-section cross-links (TODO_LIST #3).
 18. M19: README Middleware Chaining / Troubleshooting / CDN note (TODO_LIST #5).
@@ -246,58 +247,58 @@ pair, and 33 older snapshots back to 2026-08-07.
 21. BDD one-behavior-per-It naming pass on `client/spec_test.go` (TODO_LIST #5).
 22. Finish pkg.go.dev ×5 page fetches (TODO_LIST #5).
 23. M20: `workflow_dispatch` on ci.yml + LICENSE/README drift check + dprint
-    decision (TODO_LIST #4).
+decision (TODO_LIST #4).
 24. Watch the next root tag fire release.yml end to end; or add a
-    dispatch/ref-input mode first (TODO_LIST #4, OQ11).
+dispatch/ref-input mode first (TODO_LIST #4, OQ11).
 25. Fresh-clone pre-push script incl. `go work sync` idempotency in the
-    clone (TODO_LIST #4).
+clone (TODO_LIST #4).
 26. Commit the M10 link-lint as a tiny script (TODO_LIST #4).
 27. Sweep-script skeleton from 22:07 e1 (TODO_LIST #4).
 28. M18: process micro-policies incl. docs-only⇒no-CHANGELOG rule and the
-    pre-archive actionable-prose grep from e4 above (TODO_LIST #6).
+pre-archive actionable-prose grep from e4 above (TODO_LIST #6).
 29. RELEASE-IN-FLIGHT marker convention (TODO_LIST #6).
 30. M22: Theme 1 freshness design doc (TODO_LIST #7).
 31. M23: client hooks spike (TODO_LIST #7).
 32. M24: v1.0.0 criteria fleshed from the AGENTS seed + the accepted-as-is
-    list (TODO_LIST #7).
+list (TODO_LIST #7).
 33. M25: public presence spike (TODO_LIST #7).
 34. M26: daemon/go-get go-directive root-cause upstream — one investigation,
-    three incidents (TODO_LIST #7).
+three incidents (TODO_LIST #7).
 35. M27: consumer-repo leftovers (library-policy formatter gate, cqrs-htmx
-    toolchain pin, DiscordSync mime/disk tests) (TODO_LIST #7).
+toolchain pin, DiscordSync mime/disk tests) (TODO_LIST #7).
 
 **Smaller items this pass surfaced:**
 36. cqrs-htmx: run `check-go-toolchain.sh` on the sweep tree + leave the
-    dated lint-debt note in their tree (TODO_LIST #1).
+dated lint-debt note in their tree (TODO_LIST #1).
 37. DiscordSync: report pre-existing flake-pin drifts upstream (TODO_LIST #1).
 38. Check the dependabot alerts page post-split; watch the four nested
-    manifests stay green over the coming days (TODO_LIST #1).
+manifests stay green over the coming days (TODO_LIST #1).
 39. FEATURES: fold the metrics 3.2% coverage question into M13's decision
-    rather than leaving the 96.8% unexplained (rides #15).
+rather than leaving the 96.8% unexplained (rides #15).
 40. AGENTS: consider a "docs-only session gate" line stating which gate
-    subset suffices for zero-Go-change sessions (resolves this report's b4).
+subset suffices for zero-Go-change sessions (resolves this report's b4).
 41. ROADMAP: when OQ5-revived items re-enter, cite the archived report path
-    so provenance survives the move.
+so provenance survives the move.
 42. Consider a `docs/status/archived/README.md` one-liner explaining the
-    archive convention for humans landing in the directory cold.
+archive convention for humans landing in the directory cold.
 43. The 01:40 plan's malformed M19 row (pipes inside code spans) was struck
-    cell-by-cell — a candidate for upstream dprint/lint md-table hygiene if
-    the fleet standardizes one.
+cell-by-cell — a candidate for upstream dprint/lint md-table hygiene if
+the fleet standardizes one.
 44. `check-rows.py` upstream suggestion: exempt/normalize short-dash
-    separator cells, or document the `-{3,}` requirement for authors.
+separator cells, or document the `-{3,}` requirement for authors.
 45. Consider recording this pass's "evidence before verdict" rule in the
-    docs-health checklist (AGENTS or the skill — skill is foreign, AGENTS is
-    the writable home).
+docs-health checklist (AGENTS or the skill — skill is foreign, AGENTS is
+the writable home).
 46. The in-context AGENTS snapshot staleness (d2): worth one line in the
-    crush-config README that `context_paths` snapshots are session-scoped.
+crush-config README that `context_paths` snapshots are session-scoped.
 47. When M11 runs, regenerate bench comparisons including the archived
-    reports' outlier annotation in one commit.
+reports' outlier annotation in one commit.
 48. TODO_LIST: consider a "verification receipts" column convention once M12
-    (erraudit-in-CI) lands, so CI enforces what rows claim.
+(erraudit-in-CI) lands, so CI enforces what rows claim.
 49. Re-run the presence + uniformity gates after the daemon's next
-    reformatting spree — daemon dprint may re-wrap struck tables.
+reformatting spree — daemon dprint may re-wrap struck tables.
 50. Nothing else known: the 46 dated files are all resolved, archived, and
-    gate-clean; the backlog above is the complete open surface.
+gate-clean; the backlog above is the complete open surface.
 
 ## g) QUESTIONS (cannot be answered from inside this repo)
 
@@ -320,9 +321,9 @@ pair, and 33 older snapshots back to 2026-08-07.
 
 ---
 
-*Generated 2026-09-24 00:06 CEST. Every claim verified this session: 46 dated
+_Generated 2026-09-24 00:06 CEST. Every claim verified this session: 46 dated
 files read and gate-swept (zero PARTIAL rows, presence gate silent), gates
 green (fmt/lint ×5, vet, race ×5, coverage re-measure), 39 archives moved via
 `git mv`, all 84 changed files captured by daemon commit `bba21df`, tree clean
 at HEAD. The pass's three self-caught mistakes (d1–d3) never reached a shipped
-artifact.*
+artifact._

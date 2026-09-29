@@ -175,7 +175,7 @@ commit + push (`9751388`), the fully red CI run it exposed, and the two fixes
 
 ---
 
-*Generated 2026-09-23 15:06. Every claim verified this session: gate green at
+_Generated 2026-09-23 15:06. Every claim verified this session: gate green at
 15:05 (including the new go.work-tracked guard), CI green on `e8ee5f4`, tree
 state checked. The three daemon incidents and both CI fixes are recorded in
-AGENTS.md so no future session pays for them again.*
+AGENTS.md so no future session pays for them again._
