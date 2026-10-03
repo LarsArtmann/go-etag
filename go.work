@@ -1,4 +1,4 @@
-go 1.27.1
+go 1.27
 
 use (
 	.
@@ -9,9 +9,9 @@ use (
 )
 
 replace (
-	github.com/larsartmann/go-etag v0.6.0 => ./
-	github.com/larsartmann/go-etag/client v0.6.0 => ./client
-	github.com/larsartmann/go-etag/entitytag v0.6.0 => ./entitytag
-	github.com/larsartmann/go-etag/metrics v0.6.0 => ./metrics
-	github.com/larsartmann/go-etag/server v0.6.0 => ./server
+	github.com/larsartmann/go-etag v0.6.1 => ./
+	github.com/larsartmann/go-etag/client v0.6.1 => ./client
+	github.com/larsartmann/go-etag/entitytag v0.6.1 => ./entitytag
+	github.com/larsartmann/go-etag/metrics v0.6.1 => ./metrics
+	github.com/larsartmann/go-etag/server v0.6.1 => ./server
 )

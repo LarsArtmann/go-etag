@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.6.1] - 2026-10-03
+
+### Changed
+
+- **All five module `go` directives back to minor form (`go 1.27`)** — root, client, entitytag, metrics, server re-tagged as the fleet supply-side de-poisoning (go-version-auto-configure campaign, 2026-10-03): a patch-form floor (`1.27.1`) re-poisons every consumer's `go` directive through MVS (`go mod tidy` raises the directive to the highest dependency floor). Internal pins moved to the v0.6.1 generation in the same motion; go.work replaces updated to the v0.6.1 keys and its directive dropped to `go 1.27`. Proxy `.mod` for all five tags verified post-push. Also carries the previously-Unreleased Added/Changed/Fixed items below.
+
+### Added
+
 - Automated GitHub Releases (OQ3, owner: automate): pushing the root `v*` tag triggers `.github/workflows/release.yml`, which extracts the matching CHANGELOG section as the release notes (failing loudly when the section was not cut) and publishes the Release as Latest, idempotently; nested module tags deliberately get no Release pages — the Go module proxy is their consumer interface.
 - `server/entity_parity_test.go`: a stdlib go/ast parity guard asserting every `entitytag` export exists on the server package's re-export surface (closing the unguarded `server ↔ entitytag` shim), plus a behavioral spec for the previously 0%-covered `ParseETagList` wrapper.
 - `entitytag`: own-module `TestStrength_IsValid` specs (both valid values, out-of-range and negative arms).
