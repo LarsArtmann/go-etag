@@ -1,4 +1,4 @@
 github.com/larsartmann/go-error-family v0.11.0 h1:xqXLKrTMznStmHUapxd/6Fj5/878sb4SIZiy4JvCItQ=
 github.com/larsartmann/go-error-family v0.11.0/go.mod h1:CAzjAVWjAFDUXEaaRqIgjW28i/NrQ07OsE9Dffhx29c=
-github.com/larsartmann/go-etag/entitytag v0.6.0 h1:YM7Jl93ibYjBClycH/+hcLgna+KaZicyD2lWIRsbiyg=
-github.com/larsartmann/go-etag/entitytag v0.6.0/go.mod h1:g9FENLhssbRTfvSJ2WfKKToNMYngm+W9k6C3NutO9Ok=
+github.com/larsartmann/go-etag/entitytag v0.6.1 h1:tBr+hR4dqks75SY+pqmUNHUajzOG6qUfT8gE9H+Pbws=
+github.com/larsartmann/go-etag/entitytag v0.6.1/go.mod h1:e09zrSYF6RS8c0IzxZnI1HZQw15gIgwlyp3zerGv+bI=
