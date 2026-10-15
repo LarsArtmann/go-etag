@@ -77,6 +77,8 @@ GOTOOLCHAIN=auto golangci-lint fmt              # Format (gofumpt + golines@120 
 for m in . client entitytag metrics server; do (cd $m && GOTOOLCHAIN=auto GOEXPERIMENT=jsonv2 erraudit ./... --type-aware --enforce-go-error-family --enforce-samber-oops --enforce-generic-return); done
 # nolint audit: per module, from the module root (a repo-root scan misjudges nested-module directives as stale; the root module has no nolint directives):
 for m in client entitytag metrics server; do (cd $m && GOTOOLCHAIN=auto GOEXPERIMENT=jsonv2 erraudit nolint-audit .); done
+# Doc snippet symbol check (ported from httputil 2026-10-15; wired into ci.yml):
+GOTOOLCHAIN=auto go run ./scripts/doc-snippet-refs README.md docs/*.md
 ```
 
 **Known tool noise (do not "fix"):** golangci-lint warns `unknown linters in //nolint directives: erraudit` — benign, because the directives serve the standalone erraudit CLI (module-scoped, run separately above), not golangci-lint; do not delete `//nolint:erraudit` directives over this warning (they are re-validated by the nolint audit). The standalone CLI's `--explain` flag is deliberately not used in these examples — the gate runs without it (recorded 2026-09-23, M19/F73).
@@ -208,6 +210,7 @@ Internal construction goes through the typed `Code` constants in `server/errors.
 - **Real-wire server integration** in `server/integration_test.go` — pins Content-Length framing on 200s, HEAD body suppression with advertised length, and a bodiless 304 without Content-Length over TCP (the rest of the server suite is recorder-only)
 - **Shim export-parity suite** in `deprecated_test.go` (root) — compile-time type-identity assertions plus wrapper smoke tests pin the deprecated alias surface until its v1.0.0 removal
 - **Client fuzz target** in `client/fuzz_test.go` — `FuzzHasNoStoreDirective` with a soundness property (a literal top-level no-store directive is always detected), wired into the CI fuzz job alongside the server targets
+- **No fuzz target for `metrics/` — deliberate, do not "fix" in an audit** — the package is pure atomic counters: no parsing, no input-dependent branching, no serialization, so a fuzz target has no oracle to violate and no crash surface to find (the counter invariants are pinned by `metrics/metrics_test.go` behavior tests instead (zero-before-events, adopted-tag 304 accounting)). Documented 2026-10-15 to preempt the next fuzz-coverage audit from re-flagging it.
 - **`t.Errorf`** for non-fatal, **`t.Fatalf`** for fatal assertions
 - **`httptest.NewRecorder()`** + `httptest.NewRequest()` for server doubles; `roundTripperFunc` stubs for client doubles
 - **Shared test helpers** in `server/testutil_test.go`; client helpers live in `client/transport_test.go`

@@ -2,6 +2,16 @@
 
 _Point-in-time audit of go-etag against RFC 7232, conducted 2026-08-07. All P0–P3 items below have been implemented. This document serves as the historical record of findings and decisions._
 
+> **Drift note (2026-10-15):** the sections below describe the pre-split flat
+> package. Since 2026-09-23 the repo is five modules (`entitytag/`, `server/`,
+> `client/`, `metrics/`, root tombstone — see `README.md`), which also answers
+> Open Question 3 (the subpackage split happened as part of that split). The
+> RFC findings, bug/design tables, and Open Question 2 remain an accurate
+> historical record; the "File layout" table, the "flat package" phrasing, and
+> Open Questions 1 and 3 are frozen as of their audit date (3 was answered by
+> the split; 1 evolved — the `client/` module took the repo into RFC 9111
+> stored-response caching).
+
 ---
 
 ## Baseline (post-overhaul, verified 2026-08-07)

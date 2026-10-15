@@ -9,11 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `scripts/doc-snippet-refs`: a README/docs symbol checker (ported from httputil) verifying that every Go code fence in markdown references only exported symbols that actually exist in the workspace packages — markdown snippets are never compiled, so renamed or removed APIs used to ship silently. Wired into CI as the `doc-snippets` job; all current README and `docs/*.md` fences verified resolving, and the checker's failure path mutation-tested.
+- DOMAIN_LANGUAGE glossary entries for the metrics vocabulary: "Hit ratio" (`NotModified / Generated`, exact denominator, 0 before any tag is computed) and "Adopted tag" (handler-provided ETag respected via `SkipIfPresent`; its 304s fire `On304` without `OnETagGenerated` and can push the ratio above 1).
+
+### Changed
+
 - Nothing yet.
 
 ### Fixed
 
 - Nothing yet.
+
+### Documented
+
+- The "no fuzz target for `metrics/`" decision in AGENTS.md testing conventions: the package is pure atomic counters with no parsing or input-dependent branching, so fuzzing has no oracle to violate; the counter invariants are pinned by behavior tests. Recorded to preempt future fuzz-coverage audits re-flagging it.
+- A dated drift banner on `docs/review-and-roadmap.md`: the 2026-08-07 audit predates the five-module split, its file-layout table and flat-package phrasing are frozen as of the audit date, Open Question 3 was answered by the split, and Open Question 1 evolved (the `client/` module took the repo into RFC 9111 stored-response caching).
+- `reports/bench/2026-10-15_metrics-hook-overhead-count6.txt`: the `-benchmem -count=6` metrics benchmark baseline the repo's benchmark discipline asks for (hook overhead vs plain no-hooks ETag generation).
 
 ## [0.6.1] - 2026-10-03
 
