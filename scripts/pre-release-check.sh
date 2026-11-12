@@ -84,7 +84,7 @@ for mod in "${MODULES[@]}"; do
 		GOEXPERIMENT=jsonv2 erraudit ./... --type-aware --enforce-go-error-family \
 			--enforce-samber-oops --enforce-generic-return
 	) >"$erraudit_out" 2>&1 || {
-		grep -v '\[feature:logger\]' "$erraudit_out" || true
+		awk 'index($0, "[feature:logger]") == 0' "$erraudit_out"
 		fail "erraudit in $mod"
 	}
 	rm -f "$erraudit_out"
@@ -132,6 +132,7 @@ done | sort -u)"
 	fail "go directives differ across go.mod files: $(echo "$go_directives" | tr '\n' ' ')"
 go_directive="${go_directives//$'\n'/}"
 pin_count="$(grep -cE "GOTOOLCHAIN: go${go_directive//./\\.}$" .github/workflows/ci.yml || true)"
+[ -n "$pin_count" ] || fail "GOTOOLCHAIN pin count unresolvable (CI workflow missing or unreadable) - this check cannot run against a broken tree"
 if [ "$pin_count" -lt 3 ]; then
 	found="$(grep -h 'GOTOOLCHAIN:' .github/workflows/ci.yml | sort -u | tr '\n' ' ')"
 	fail "CI GOTOOLCHAIN pins do not exactly match the go directive ${go_directive} (found: ${found}) - the daemon-relaxation class of drift"
