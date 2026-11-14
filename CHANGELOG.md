@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Nothing yet.
+- CI pins raised: the golangci-lint install moved v2.14.0 → v2.15.0 and the four pinned-job `GOTOOLCHAIN` values moved go1.27.1 → go1.27.4. The lint bump follows httputil's 2026-11-14 triage of v2.15's signature-based wrapcheck detection: the errorfamily clone call sites in this repo (`WithContext`/`WithCause`) are classified wrapped errors, and the four matching `ignore-sigs` entries in `.golangci.yml` cover them — verified green locally with the v2.15.0 binary across all five modules. The toolchain bump closes the GO-2026-6859 / CVE-2026-97054 exposure (HTTP/1 crash in `http.MaxBytesReader`, fixed in go1.27.4) the same way httputil's CI pins were raised.
 
 ### Fixed
 
