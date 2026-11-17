@@ -29,7 +29,7 @@
 | Item              | What's missing                                                                                                                                                                                                |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Doc hygiene       | `TODO_LIST.md` not harvested from section (f); dprint markdown formatting not run on the edited `.md` files                                                                                                   |
-| LSP hygiene       | Stale gopls/golangci-ls diagnostics (`indexByte`, err113, golines) kept firing all session; verified stale via real CLI runs each time (AGENTS rule followed), but never `lsp_restart`ed to silence the noise |
+| LSP hygiene       | Stale gopls/golangci-ls diagnostics (`indexByte`, err113, golines) kept firing all session; verified stale via real CLI runs each time (AGENTS rule followed), but never ran `lsp_restart` to silence the noise |
 | Performance claim | "No perf impact (compile-time constants, error paths only)" is reasoned but not benchmark-backed; no smoke `-bench=.` run, no `reports/bench/` baseline                                                       |
 
 ## c) NOT STARTED

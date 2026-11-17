@@ -29,7 +29,7 @@ pair, and 33 older snapshots back to 2026-08-07.
    #1, the highest-priority open item in the repo.
 2. **~200 open items inline-annotated with verdicts** across 20 files — the
    ANNOTATE mode's primary work, zero appendix-only: every numbered item got
-   `done at`hash`` / `carried — TODO_LIST #N` / `Won't implement — reason` /
+   `done at <hash>` / `carried — TODO_LIST #N` / `Won't implement — reason` /
    `superseded` / `answered`, citing evidence per the skill. Highlights:
    M1–M10 struck in the 14:07 plan with staircase hashes; the superseded 01:40
    plan's 27 M-rows struck (done-vs-carried); the four 09-23 reports' f-lists
@@ -108,7 +108,7 @@ pair, and 33 older snapshots back to 2026-08-07.
    (per 16:40 a11); this pass verified the file exists and renders a link
    target but did not diff its claims against the session's findings.
 3. **The archive reorganization is unreviewed by anyone but me.** 39 `git
-   mv`s in one pass, including same-day reports (22:07 archived ~2h after it
+   `mv` operations in one pass, including same-day reports (22:07 archived ~2h after it
    was written). The gates pass and the doctrine supports it (living state =
    TODO_LIST/CHANGELOG; snapshots die resolved), but no second set of eyes
    has looked at whether any archived file still owed annotations.

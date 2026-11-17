@@ -13,7 +13,7 @@ One module became five on a shared version train: `entitytag` (zero deps), `serv
 (entitytag + go-error-family), `client` (entitytag only), `metrics` (server), and the
 root reduced to the deprecated tombstone shim. Zero code moves, zero import-path
 changes, zero new dependencies — pure go.mod surgery plus tooling. A committed
-`go.work` (`use` ×5 **plus version-qualified `replace`s**) joins the modules for dev
+`go.work` (`use` ×5 **plus version-qualified `replace` directives**) joins the modules for dev
 and CI; every go.mod stays replace-free for proxy purity. Full design record:
 `docs/modularization/2026-09-23_modularization-proposal.html` (Phases 1–5 + self-review).
 
