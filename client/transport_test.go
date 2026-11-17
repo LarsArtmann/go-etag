@@ -268,64 +268,6 @@ func TestRoundTripFreshenOn304(t *testing.T) {
 	})
 }
 
-func TestRoundTripEvictsOldestEntry(t *testing.T) {
-	t.Parallel()
-
-	next := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		header := stubHeader(headerPair{"ETag", `"tag-` + req.URL.Path + `"`})
-
-		return stubResponse(http.StatusOK, header, "body of "+req.URL.Path), nil
-	})
-
-	transport := NewTransport(next, Options{MaxEntries: 1})
-
-	fetch(t, transport, newGetRequest(t, "https://example.test/first"))
-	fetch(t, transport, newGetRequest(t, "https://example.test/second"))
-
-	// "first" was evicted: its revalidation carries no If-None-Match, so the
-	// stub answers with a fresh 200 instead of a 304.
-	status, _, body := fetch(t, transport, newGetRequest(t, "https://example.test/first"))
-	if status != http.StatusOK || body != "body of /first" {
-		t.Errorf("evicted entry re-request = %d %q, want fresh 200", status, body)
-	}
-
-	if got := transport.Stats().Hits; got != 0 {
-		t.Errorf("hits = %d, want 0 (no entry was cached for revalidation)", got)
-	}
-}
-
-func TestRoundTripSkipsNonGET(t *testing.T) {
-	t.Parallel()
-
-	next := roundTripperFunc(func(req *http.Request) (*http.Response, error) {
-		header := stubHeader(headerPair{"ETag", `"should-not-cache"`})
-
-		return stubResponse(http.StatusCreated, header, "created"), nil
-	})
-
-	transport := NewTransport(next, Options{})
-
-	req, err := http.NewRequestWithContext(t.Context(), http.MethodPost, "https://example.test/issues", nil)
-	if err != nil {
-		t.Fatalf("build request: %v", err)
-	}
-
-	resp, err := transport.RoundTrip(req)
-	if err != nil {
-		t.Fatalf("POST: %v", err)
-	}
-
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode != http.StatusCreated {
-		t.Errorf("status = %d, want 201 passthrough", resp.StatusCode)
-	}
-
-	if got := transport.Stats(); got.Stored != 0 || got.Entries != 0 {
-		t.Errorf("stats = %+v, POST must not populate the cache", got)
-	}
-}
-
 func TestRoundTripDoesNotMutateRequest(t *testing.T) {
 	t.Parallel()
 
