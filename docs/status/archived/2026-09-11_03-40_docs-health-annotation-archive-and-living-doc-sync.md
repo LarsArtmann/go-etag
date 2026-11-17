@@ -175,10 +175,10 @@ Grouped, impact-ordered. 1–7 mirror TODO_LIST (kept in sync, not duplicated in
 27. Request-side `no-cache` (§5.2.2.2) pin test (02-08 f.13).
 28. Request `no-store` real-server integration mirror (02-08 f.14).
 29. benchstat via sanctioned install path; regenerate the four baselines as a comparison table (02-08 f.8; §e.7 above).
-30. `SECURITY.md`, issue/PR templates (02-08 f.23).
+30. `SECURITY.md`, issue/PR templates (02-08 f.23). **→ TODO_LIST.md #4 (issue/PR templates; SECURITY.md landed)**
 31. dprint check wired into CI or devshell for Markdown/YAML (02-08 f.21).
 32. `workflow_dispatch` trigger on ci.yml for CI probes (02-08 f.49; pairs with #4).
-33. Consider `funcorder` linter fit (02-08 f.36).
+33. Consider `funcorder` linter fit (02-08 f.36). **→ TODO_LIST.md #3 (funcorder linter fit)**
 34. Website/docs launch (ROADMAP Theme 4; unchanged).
 
 **ROADMAP-grade (owner-gated ideas, parked):**

@@ -79,7 +79,7 @@ _Testing (high impact):_
 13. ~~Cover `responseCache.freshen`'s skip-guard (freshen vs concurrent replace).~~ done at `a5de386` (branch-coverage spec)
 14. Race test: parallel rebuilds + stores on one key; assert `hits+stored` invariant and single `Entries`.
 15. ~~Fuzz `hasNoStoreDirective`/`cacheControlDirectives` (it is a parser; the server side already fuzzes parsers).~~ done at `a5de386` (`FuzzHasNoStoreDirective` + CI fuzz job)
-16. Fuzz `freshenedHeader` for map-aliasing surprises.
+16. Fuzz `freshenedHeader` for map-aliasing surprises. **→ TODO_LIST.md #2 (fuzz expansion: `FuzzFreshenedHeader` map-aliasing)**
 17. ~~Uncovered-branch audit; push client coverage 89.6% → 95%+.~~ done at `a5de386`, `5eb226b` (client 97.7%; residual gaps documented-intentional)
 18. ~~Test additive freshening: 304 provides fields the stored response never had (§3.2 "add each").~~ done at `a5de386`
 19. Test FromCacheHeader when the 304 itself echoes the marker name.

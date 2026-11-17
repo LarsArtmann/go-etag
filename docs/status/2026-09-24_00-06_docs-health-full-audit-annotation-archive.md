@@ -220,8 +220,8 @@ pair, and 33 older snapshots back to 2026-08-07.
    items) — cheap confidence the archive is readable, not just gate-clean.
 8. Second-opinion review of the 39-file archive move (b3) — one `git diff
    --find-renames` pass by another session or the owner.
-9. Move the golangci/GOTOOLCHAIN cross-project lesson (22:36 #50) into the
-   crush-config repo's `references/lessons.md` (foreign repo, owner go).
+9. ~~Move the golangci/GOTOOLCHAIN cross-project lesson (22:36 #50) into the~~ done — lesson landed in crush-config `references/lessons.md` at `8fe2ed2` ("Gates must run in the project's devShell; the caller's shell wins" — the env-over-command concept, committed 2026-09-22)
+   ~~crush-config repo's `references/lessons.md` (foreign repo, owner go).~~
 10. Decide the "dies per OQ5" borderline calls: ~12 verdicts this pass
     killed low items that could arguably have been TODO rows (boundary
     MaxBufferSize test, FreshenFields canonicalization, govulncheck-in-gate,

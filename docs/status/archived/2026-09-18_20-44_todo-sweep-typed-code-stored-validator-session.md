@@ -113,8 +113,8 @@ Ranked roughly by impact. Bounded + short-term → TODO_LIST candidates; the res
 
 **ROADMAP themes (large, demand-gated)**
 37. Design + implement opt-in freshness-based serving (§4.2 `max-age`/`Expires`), default stays accelerator — 19-11 f#19–f#21.
-38. `stale-while-revalidate` on top of §4.2 — 19-11 f#22.
-39. `stale-if-error` on top of §4.2 — 19-11 f#23.
+38. `stale-while-revalidate` on top of §4.2 — 19-11 f#22. **→ ROADMAP.md (stale-while-revalidate extension on §4.2)**
+39. `stale-if-error` on top of §4.2 — 19-11 f#23. **→ ROADMAP.md (stale-if-error extension on §4.2)**
 40. `Last-Modified`/`If-Modified-Since` as a second validator type — 19-11 f#24.
 41. Client observability hooks `OnHit`/`OnStore`/`OnFreshen`/`OnInvalidate` (mirror server) — 19-11 f#25.
 42. Per-host key partitioning by default (cross-origin KeyFunc safety) — 19-11 f#26.

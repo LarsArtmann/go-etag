@@ -88,7 +88,7 @@ No production code, tests, or docs carry any of these forward. The persistent st
 
 17. ~~Smoke benchmark `-bench=.` to back the no-perf-impact claim~~ done 2026-09-18 (smoke run green; typed-validator pair `reports/bench/2026-09-18_{before,after}-typed-validator.txt`)
 18. ~~Capture `-benchmem -count=6` baselines under `reports/bench/` per discipline~~ done 2026-09-18 (`reports/bench/2026-09-18_baseline-typed-code-stored-validator.txt`)
-19. godoclint/pkg.go.dev rendering check of new doc comments post-publish
+19. ~~godoclint/pkg.go.dev rendering check of new doc comments post-publish~~ done — verified at v0.5.0 (commit `af2b6d1`, pkg.go.dev rendering checked within the hour); the recurring post-publish check now lives in `docs/release-playbook.md`
 20. Record in `deprecated_test.go` docs that the typed surface is deliberately NOT shimmed
 21. gosec sanity note: `Code`/`Domain` accept arbitrary strings; confirm no template-injection surface in errorfamily rendering
 22. Check CI pins the same golangci-lint version used locally (version drift)

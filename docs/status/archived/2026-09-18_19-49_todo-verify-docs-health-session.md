@@ -198,7 +198,7 @@ items verified by this session are marked ✅-verified where the verification WA
 
 43. `Domain()` table-driven test for multi-dot codes `a.b.c` → `a` (Low, S)
 44. Assert `newInvalidConfig()` freshness (two calls → distinct instances) in errors_test (Low, S)
-45. Godoclint/pkg.go.dev rendering check of new doc comments post-publish (Low, S)
+45. ~~Godoclint/pkg.go.dev rendering check of new doc comments post-publish (Low, S)~~ done — verified at v0.5.0 (commit `af2b6d1`, pkg.go.dev rendering checked within the hour); the recurring post-publish check now lives in `docs/release-playbook.md`
 46. Cross-link AGENTS.md error sections of go-etag ↔ httputil (parity is bidirectional) (Low, S)
 47. ROADMAP: per-component domain-constants idea — already seeded this session; revisit on demand signal (Low, S)
 48. Comparison table vs other Go ETag/caching libraries; website launch; OTEL recipe (Theme 4, demand-gated) (Low, M)
