@@ -89,7 +89,7 @@ Nothing destructive: no reverts, no lost work, no broken builds, tree clean. The
 11. **Local fuzz smoke habit** — add a one-line note to AGENTS.md Testing Conventions (when parser code changes, run a 10s fuzz smoke before the race suite).
 12. **Audit remaining exported-helper GoDoc coverage** (e.g. does `MatchesIfMatch` have an example? verify before adding).
 13. **Deprecated-shim type audit** — confirm `ErrInvalidConfig` was the only exported var whose declared type needed widening; nothing else in `deprecated.go` re-exports a typed value.
-14. ~~**Consumer bump sweep after release** (go-ecosystem-upgrade) — trivial this time: zero consumers reference the sentinel.~~ still open for v0.4.0 — now TODO_LIST #3 (the min-Go bump makes the sweep non-trivial this cycle)
+14. ~~**Consumer bump sweep after release** (go-ecosystem-upgrade) — trivial this time: zero consumers reference the sentinel.~~ **→ carried: consumer bump recipe in AGENTS.md Repo Workflow Notes**
 15. **Consider** a `docs/decisions/` ADR for the nolint-posture (documented deliberate ignores vs zero-finding sweeps) if the owner confirms the adopted default.
 
 ## g) Questions I cannot answer myself

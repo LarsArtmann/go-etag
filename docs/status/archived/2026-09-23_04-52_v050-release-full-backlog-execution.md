@@ -50,8 +50,8 @@ The entire TODO_LIST was executed end-to-end: the go-floor decision was made and
 
 1. ~~Six consumer repos hold unpushed sweep commits (httputil +2, go-github-kit +1, nsfw-classifier +2, library-policy +4, DiscordSync +1, cqrs-htmx sweep+css commits) — push on owner go.~~ resolved — swept again to v0.6.0 and landed with the same-day staircase session (report 16:40 a4)
 2. ~~ROADMAP OQ2–OQ8 decision batch — TODO_LIST #1, gates the roadmap epics.~~ done — `ab1bcec` (resolutions in `ROADMAP.md` Open Questions)
-3. ~~Plan M10–M27 (benchstat, erraudit-CI, coverage floor, fuzz expansion, README sections, Theme 1/3 docs, v1.0.0 criteria) — TODO_LIST #3.~~ carried — `TODO_LIST.md` #1–#4 (2026-09-23 docs-health pass)
-4. ~~The pre-existing consumer findings in §c — handed to each repo.~~ carried — consumer-repo leftovers tracked in `TODO_LIST.md` #4 (M27)
+3. ~~Plan M10–M27 (benchstat, erraudit-CI, coverage floor, fuzz expansion, README sections, Theme 1/3 docs, v1.0.0 criteria) — TODO_LIST #3.~~ **→ carried: `TODO_LIST.md` #1–#4 (2026-09-23 docs-health pass)**
+4. ~~The pre-existing consumer findings in §c — handed to each repo.~~ **→ carried: consumer-repo leftovers tracked in `TODO_LIST.md` #4 (M27)**
 
 ## f. Gate evidence
 
@@ -63,6 +63,6 @@ The entire TODO_LIST was executed end-to-end: the go-floor decision was made and
 
 ## g. Questions for the owner
 
-1. ~~**Push the six consumer repos?** All sweep commits are verified and local; one `git push` each (cqrs-htmx's pre-push release-train hook will run strict — its toolchain-check pre-existing red does not gate pushes).~~ answered — pushes landed with the v0.6.0 re-sweep (report 16:40 a4)
-2. ~~**Fleet hygiene for dead go-etag requires (~35 repos at v0.3.1, never imported):** a one-shot tidy sweep (removes the requires), or leave each repo to its own devices?~~ answered — owner chose batch-BUMP; executed in `ab1bcec` (54 manifests, 38 repos, to v0.6.0)
-3. ~~**The v0.5-cycle's owner decisions (OQ2–OQ8)** still await the structured prompt (TODO_LIST #1) — say the word and it ships.~~ answered — delivered and resolved same-day via `ab1bcec`
+1. ~~**Push the six consumer repos?** All sweep commits are verified and local; one `git push` each (cqrs-htmx's pre-push release-train hook will run strict — its toolchain-check pre-existing red does not gate pushes).~~ **→ answered: pushes landed with the v0.6.0 re-sweep (report 16:40 a4)**
+2. ~~**Fleet hygiene for dead go-etag requires (~35 repos at v0.3.1, never imported):** a one-shot tidy sweep (removes the requires), or leave each repo to its own devices?~~ **→ answered: owner chose batch-BUMP; executed in `ab1bcec` (54 manifests, 38 repos, to v0.6.0)**
+3. ~~**The v0.5-cycle's owner decisions (OQ2–OQ8)** still await the structured prompt (TODO_LIST #1) — say the word and it ships.~~ **→ answered: delivered and resolved same-day via `ab1bcec`**

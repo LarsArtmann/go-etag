@@ -59,8 +59,7 @@ commit + push (`9751388`), the fully red CI run it exposed, and the two fixes
 2. ~~**Plan M3 (post-release proof)** — the CI portion is now pre-proven (green
    runners); the tag-dependent portions (nested-tag frozen runs ×4, pkg.go.dev
    ×5, dependabot on tagged versions) still wait on the staircase.~~ done — report 16:40 a3
-3. ~~**Fresh-clone verification as a habit** — done once for diagnosis, not yet
-   scripted/institutionalized (see e).~~ carried — `TODO_LIST.md` #3 (script)
+3. ~~**Fresh-clone verification as a habit** — done once for diagnosis, not yet scripted/institutionalized (see e).~~ **→ carried: `TODO_LIST.md` #3 (script)**
 
 ## c) NOT STARTED
 
@@ -70,7 +69,7 @@ commit + push (`9751388`), the fully red CI run it exposed, and the two fixes
 3. ~~**Polish cluster M9–M21** (art-dupl re-baseline, CHANGELOG link-lint,
    benchstat + no-drift proof, erraudit-in-CI, coverage floor, httputil parity,
    fuzz expansion, spec pin-ups, README sections, ROADMAP annotations).~~ done/carried — M9/M10/M21 done (16:40 a7/a9; ROADMAP annotations landed same-day); M11–M20 carried in `TODO_LIST.md` #1–#3
-4. ~~**Upstream daemon root-cause (M26)** and consumer-repo leftovers (M27).~~ carried — `TODO_LIST.md` #4
+4. ~~**Upstream daemon root-cause (M26)** and consumer-repo leftovers (M27).~~ **→ carried: `TODO_LIST.md` #4**
 
 ## d) TOTALLY FUCKED UP (all caught and fixed this session)
 
@@ -102,7 +101,7 @@ commit + push (`9751388`), the fully red CI run it exposed, and the two fixes
 2. ~~**Fresh-clone smoke before pushing structural changes:** `git clone . /tmp/x
    && cd /tmp/x && go build ./... ./client/... …` — the cheapest true CI-parity
    check; would have caught the go.work miss pre-push. Candidate for a
-   `scripts/` one-liner or a pre-push habit.~~ carried — `TODO_LIST.md` #3
+   `scripts/` one-liner or a pre-push habit.~~ **→ carried: `TODO_LIST.md` #3**
 3. **Read action sources before feeding them non-trivial input** (govulncheck
    quoting). Same class as "verify the CLI flag exists" — the composite action
    is 3 lines of shell.
@@ -113,7 +112,7 @@ commit + push (`9751388`), the fully red CI run it exposed, and the two fixes
    version == directive version) and jobs are green — but my model of "the YAML
    pins govern" was wrong or incomplete. Worth one focused read of setup-go
    behavior; if GITHUB_ENV really overrides YAML env here, the go-directive
-   relaxation daemon + a future directive bump could interact badly.~~ carried — setup-go mechanism read in `TODO_LIST.md` #3
+   relaxation daemon + a future directive bump could interact badly.~~ **→ carried: setup-go mechanism read in `TODO_LIST.md` #3**
 5. ~~**Plan doc is a snapshot — the two CI fixes are not in it.** Fine by doctrine
    (living state = TODO_LIST/CHANGELOG), but the next HARVEST should fold
    "CI-green precondition" into M1's F-steps explicitly (it now exists as a
@@ -127,9 +126,9 @@ commit + push (`9751388`), the fully red CI run it exposed, and the two fixes
    GitHub Release; train re-sync.~~ done — report 16:40 a1–a2
 3. ~~**M3 post-release proof:** nested-tag frozen CI runs ×4, pkg.go.dev ×5,
    dependabot on tagged versions, `go work sync` idempotency check into gate.~~ done — report 16:40 a3
-4. ~~**NEW: fresh-clone pre-push script/habit** (e2 — one-liner, 15m).~~ carried — `TODO_LIST.md` #3
+4. ~~**NEW: fresh-clone pre-push script/habit** (e2 — one-liner, 15m).~~ **→ carried: `TODO_LIST.md` #3**
 5. ~~**NEW: setup-go GOTOOLCHAIN=local mechanism read** (e4 — 20m, closes an
-   unexplained behavior touching the drift class).~~ carried — `TODO_LIST.md` #3
+   unexplained behavior touching the drift class).~~ **→ carried: `TODO_LIST.md` #3**
 6. ~~**M4/M5 consumer sweep → v0.6.0** (httputil, DiscordSync, go-github-kit,
    library-policy, nsfw-classifier, cqrs-htmx) + residual grep.~~ done — report 16:40 a4–a5
 7. ~~**M6 fleet dead-requires drop-or-bump** (OWNER decision, ~35 repos).~~ done — batch-bumped per owner decision, `ab1bcec`
@@ -138,40 +137,40 @@ commit + push (`9751388`), the fully red CI run it exposed, and the two fixes
    fixtures/email lane).~~ done — `ab1bcec` (resolutions in `ROADMAP.md`)
 10. ~~**M9 art-dupl re-baseline** (AGENTS doc currently lies about "exactly 1 group").~~ done — report 16:40 a7
 11. ~~M10 CHANGELOG casing/link-lint.~~ done — report 16:40 a9
-12. ~~M11 benchstat tables + five-module no-drift baseline proof.~~ carried — `TODO_LIST.md` #1
-13. ~~M12 erraudit-in-CI (OWNER posture).~~ carried — `TODO_LIST.md` #2
-14. ~~M13 coverage floor (OWNER).~~ carried — `TODO_LIST.md` #2
-15. ~~M14 dependency sanity (gosec note, error-family diff read).~~ carried — `TODO_LIST.md` #2
-16. ~~M15 httputil template parity + cross-links.~~ carried — `TODO_LIST.md` #2 (verified unpinned 16:40 a12)
-17. ~~M16 fuzz expansion (StoredValidator, MergeHeader, directive corpus).~~ carried — `TODO_LIST.md` #1
-18. ~~M17 spec pin-ups (§5.2.2.2 no-cache, HEAD × Uncompressed, dual-key edge).~~ carried — `TODO_LIST.md` #1
-19. ~~M18 process hardening + micro-policies.~~ carried — `TODO_LIST.md` #4
-20. ~~M19 README sections + rfc9111 module note + erraudit `--explain` parity.~~ carried — `TODO_LIST.md` #3 (`--explain` resolved same-day: deliberate drop recorded in `AGENTS.md`)
+12. ~~M11 benchstat tables + five-module no-drift baseline proof.~~ **→ carried: `TODO_LIST.md` #1**
+13. ~~M12 erraudit-in-CI (OWNER posture).~~ **→ carried: `TODO_LIST.md` #2**
+14. ~~M13 coverage floor (OWNER).~~ **→ carried: `TODO_LIST.md` #2**
+15. ~~M14 dependency sanity (gosec note, error-family diff read).~~ **→ carried: `TODO_LIST.md` #2**
+16. ~~M15 httputil template parity + cross-links.~~ **→ carried: `TODO_LIST.md` #2 (verified unpinned 16:40 a12)**
+17. ~~M16 fuzz expansion (StoredValidator, MergeHeader, directive corpus).~~ **→ carried: `TODO_LIST.md` #1**
+18. ~~M17 spec pin-ups (§5.2.2.2 no-cache, HEAD × Uncompressed, dual-key edge).~~ **→ carried: `TODO_LIST.md` #1**
+19. ~~M18 process hardening + micro-policies.~~ **→ carried: `TODO_LIST.md` #4**
+20. ~~M19 README sections + rfc9111 module note + erraudit `--explain` parity.~~ **→ carried: `TODO_LIST.md` #3 (`--explain` resolved same-day: deliberate drop recorded in `AGENTS.md`)**
 21. ~~M20 CI polish (workflow_dispatch, LICENSE drift, dprint decision) + OWNER
-    branch protection/homepage.~~ carried — `TODO_LIST.md` #3
+    branch protection/homepage.~~ **→ carried: `TODO_LIST.md` #3**
 22. ~~M21 ROADMAP annotations + v1.0.0 root-deletion runbook seed.~~ done — runbook seed landed (report 16:40 a10, F80); OQ1 history + otel notes landed in `ROADMAP.md` this pass
-23. ~~M22 Theme 1 freshness design doc.~~ carried — `TODO_LIST.md` #4
-24. ~~M23 client hooks spike.~~ carried — `TODO_LIST.md` #4
-25. ~~M24 v1.0.0 criteria + deletion checklist.~~ carried — `TODO_LIST.md` #4
-26. ~~M25 public presence spike.~~ carried — `TODO_LIST.md` #4
-27. ~~M26 daemon go-directive root-cause upstream (pma/buildflow).~~ carried — `TODO_LIST.md` #4
+23. ~~M22 Theme 1 freshness design doc.~~ **→ carried: `TODO_LIST.md` #4**
+24. ~~M23 client hooks spike.~~ **→ carried: `TODO_LIST.md` #4**
+25. ~~M24 v1.0.0 criteria + deletion checklist.~~ **→ carried: `TODO_LIST.md` #4**
+26. ~~M25 public presence spike.~~ **→ carried: `TODO_LIST.md` #4**
+27. ~~M26 daemon go-directive root-cause upstream (pma/buildflow).~~ **→ carried: `TODO_LIST.md` #4**
 28. ~~M27 consumer-repo leftovers (library-policy formatter, cqrs-htmx pin,
-    DiscordSync tests).~~ carried — `TODO_LIST.md` #4
+    DiscordSync tests).~~ **→ carried: `TODO_LIST.md` #4**
 
 ## g) QUESTIONS (cannot be answered from inside this repo)
 
 1. ~~**v0.6.0 GO:** master is publicly green but carries the unreleased train —
    `@master` stays unresolvable for nested-module consumers until the tags
    land. Do I execute staircase M1/M2 now (it pushes five immutable annotated
-   tags), or do you want to drive the tags yourself?~~ answered — GO given; staircase executed (report 16:40 a1)
+   tags), or do you want to drive the tags yourself?~~ **→ answered: GO given; staircase executed (report 16:40 a1)**
 2. ~~**Daemon acceptance vs root-cause:** the daemon has now attacked this repo
    three ways (directive relaxation ×2, gitignore regeneration ×1); all three
    have countermeasures, and the go.work one is machine-guarded. Is
    "contain-and-guard" the accepted end state, or do you want the M26 upstream
-   investigation in pma/buildflow prioritized above the polish tier?~~ carried — containment stands with its guards; M26 upstream root-cause in `TODO_LIST.md` #4
+   investigation in pma/buildflow prioritized above the polish tier?~~ **→ carried: containment stands with its guards; M26 upstream root-cause in `TODO_LIST.md` #4**
 3. ~~**OQ2–OQ8 batch now or post-release?** The structured decision prompt (plan
    M8/F34) is ready to draft on your word — want it before the staircase (some
-   answers, e.g. release workflow OQ3, could shape it) or after?~~ answered — delivered post-release; resolutions recorded via `ab1bcec`
+   answers, e.g. release workflow OQ3, could shape it) or after?~~ **→ answered: delivered post-release; resolutions recorded via `ab1bcec`**
 
 ---
 

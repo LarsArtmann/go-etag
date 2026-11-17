@@ -120,7 +120,7 @@ Nothing is partially done. All items are either complete or not started.
 | #     | Task                                                                                                                                                                                                                                                                                  | Effort  |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
 | ~~1~~ | ~~Write integration test using `httptest.NewServer` to verify real HTTP behavior (client landed at `9204885`; server still open — TODO_LIST #15)~~ (Content-Length, chunked, HEAD body suppression through actual TCP) — server side done at `a5de386` (`server/integration_test.go`) | ~~M~~   |
-| ~~2~~ | ~~Generate coverage HTML report~~ coverage now 99.0%/94.3% (`go test -coverprofile=cover.out -covermode=atomic ./... && go tool cover -html=cover.out`) and identify the uncovered 7.9%                                                                                | ~~S~~   |
+| ~~2~~ | ~~Generate coverage HTML report~~ **→ superseded: coverage now 99.0%/94.3%** (was (`go test -coverprofile=cover.out -covermode=atomic ./... && go tool cover -html=cover.out`) and identify the uncovered 7.9%                                                                                | ~~S~~   |
 | ~~3~~ | ~~Add tests for every uncovered branch identified by the coverage report~~ done at `a5de386`, `5eb226b` (branch-coverage suites; client 97.7%, gaps documented-intentional)                                                                                                           | ~~S-M~~ |
 
 ### P1 — Performance
@@ -185,7 +185,7 @@ Nothing is partially done. All items are either complete or not started.
 | ~~34~~                                                           | ~~Set up CI pipeline~~ done at `37b68b3`                                                          | ~~M~~  |
 | ~~35~~                                                           | ~~Add `toolchain` directive~~ done at `0e8ac6d` (go 1.26.7)                                       | ~~XS~~ |
 | ~~36~~                                                           | ~~golangci-lint version pinning~~ done at `cf98ab5` (CI installs v2.12.2 from the v2 module path) | ~~XS~~ |
-| ~~37~~ carried — `TODO_LIST.md` #2 (M13 coverage-floor decision) | ~~Add `codecov.yml` or coverage gating — open (low)~~                                               | ~~S~~  |
+| ~~37~~ **→ carried: `TODO_LIST.md` #2 (M13 coverage-floor decision) | ~~Add `codecov.yml` or coverage gating — open (low)~~                                               | ~~S~~  |**
 | ~~38~~                                                           | ~~goreleaser~~ **Won't implement — library, not binary; go-release flow suffices**                | ~~M~~  |
 
 ### P7 — Code Quality
@@ -211,8 +211,8 @@ Nothing is partially done. All items are either complete or not started.
 
 | #                                                         | Task                                                                                            | Effort |
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------ |
-| ~~48~~ carried — `TODO_LIST.md` #4 (M25 comparison table) | ~~Comparison table — open (ROADMAP Theme 4)~~                                                   | ~~S~~  |
-| ~~49~~ carried — `TODO_LIST.md` #4 (M25 awesome-go draft) | ~~awesome-go listing — open (ROADMAP Theme 4)~~                                                 | ~~XS~~ |
+| ~~48~~ **→ carried: `TODO_LIST.md` #4 (M25 comparison table) | ~~Comparison table — open (ROADMAP Theme 4)~~                                                   | ~~S~~  |**
+| ~~49~~ **→ carried: `TODO_LIST.md` #4 (M25 awesome-go draft) | ~~awesome-go listing — open (ROADMAP Theme 4)~~                                                 | ~~XS~~ |**
 | ~~50~~                                                    | ~~Blog post for v0.2~~ **Won't implement — no blog channel; GitHub releases carry the notes** | ~~M~~  |
 
 ---
