@@ -8,25 +8,25 @@ The standard library, sibling modules in this repo, and `github.com/larsartmann/
 
 ### Linter Rules (golangci-lint, all enforced)
 
-| Linter              | Rule                                                                                                                                          |
-| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `exhaustruct_v5`    | Every struct-literal field set; `//nolint:exhaustruct_v5` only for intentional zero-value returns. Relaxed in test files.                     |
-| `err113`            | No inline `errors.New()`/`fmt.Errorf()` where a package-level sentinel fits.                                                                  |
-| `wsl_v5`            | Blank lines before `return`, after declarations, around control flow. Run `golangci-lint fmt` after editing.                                  |
-| `nonamedreturns`    | No named return values.                                                                                                                       |
-| `noctx`             | `http.NewRequest` banned; use `http.NewRequestWithContext`.                                                                                   |
-| `godot`             | Comments end with periods (bites comment-only edits too).                                                                                     |
-| `mnd`               | No magic numbers; extract named constants.                                                                                                    |
-| `gosec`             | G705 excluded globally — `ResponseWriter.Write` is this library's intentional output.                                                         |
-| `paralleltest`      | Every test calls `t.Parallel()` first.                                                                                                        |
-| `noinlineerr`       | No `if err := foo(); err != nil`; assign, then check.                                                                                         |
-| `canonicalheader`   | Header keys in Go's canonical MIME form (see the runtime-vs-linter note under Client gotchas).                                                |
-| `testableexamples`  | Every `Example*` has an `// Output:` directive.                                                                                               |
-| `thelper`           | Helpers taking `*testing.T` that fail start with `t.Helper()`.                                                                                |
+| Linter             | Rule                                                                                                                      |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+| `exhaustruct_v5`   | Every struct-literal field set; `//nolint:exhaustruct_v5` only for intentional zero-value returns. Relaxed in test files. |
+| `err113`           | No inline `errors.New()`/`fmt.Errorf()` where a package-level sentinel fits.                                              |
+| `wsl_v5`           | Blank lines before `return`, after declarations, around control flow. Run `golangci-lint fmt` after editing.              |
+| `nonamedreturns`   | No named return values.                                                                                                   |
+| `noctx`            | `http.NewRequest` banned; use `http.NewRequestWithContext`.                                                               |
+| `godot`            | Comments end with periods (bites comment-only edits too).                                                                 |
+| `mnd`              | No magic numbers; extract named constants.                                                                                |
+| `gosec`            | G705 excluded globally — `ResponseWriter.Write` is this library's intentional output.                                     |
+| `paralleltest`     | Every test calls `t.Parallel()` first.                                                                                    |
+| `noinlineerr`      | No `if err := foo(); err != nil`; assign, then check.                                                                     |
+| `canonicalheader`  | Header keys in Go's canonical MIME form (see the runtime-vs-linter note under Client gotchas).                            |
+| `testableexamples` | Every `Example*` has an `// Output:` directive.                                                                           |
+| `thelper`          | Helpers taking `*testing.T` that fail start with `t.Helper()`.                                                            |
 
 ## Commands
 
-Local go is 1.26.7 with `GOTOOLCHAIN=local` persisted, so prefix every go command — and every golangci-lint invocation (it shells out to go) — with `GOTOOLCHAIN=auto`. Do not change the persisted go env. All five go.mod files pin `go 1.27.1`; the auto-commit daemon has twice relaxed the directive (`969d077`, `6f15f81`), and the 2026-09-23 module split re-pinned it and made the pre-release-check parity check exact-match, so that drift class now fails loudly. The LSP already injects `GOTOOLCHAIN=auto`; the CLI prefix is still required.
+Local go is 1.26.7 with `GOTOOLCHAIN=local` persisted, so prefix every go command — and every golangci-lint invocation (it shells out to go) — with `GOTOOLCHAIN=auto`. Do not change the persisted go env. All five go.mod files pin `go 1.27.1` (go.work too — the daemon relaxed all six on 2026-11-17, caught by the parity gate and restored); the auto-commit daemon has relaxed the directive three times (`969d077`, `6f15f81`, 2026-11-17). The pre-release-check parity gate (generalized 2026-11-17 from exact-match) requires the directive patch-anchored (X.Y.Z), CI GOTOOLCHAIN pins uniform, ≥3 of them, and never below the directive — pins MAY run ahead (the deliberate go1.27.4 GO-2026-6859 closure while the floor bump waits on TODO_LIST #9), so that drift class still fails loudly. The LSP already injects `GOTOOLCHAIN=auto`; the CLI prefix is still required.
 
 **Multi-module repo (since the 2026-09-23 split):** five modules — root tombstone, `entitytag/`, `server/`, `client/`, `metrics/` — joined by the committed `go.work`. From the repo root, `./...` spans ONLY the root module; carry the full pattern set, or cd into a module and run plain `./...`:
 
@@ -41,8 +41,8 @@ for m in client entitytag metrics server; do (cd $m && GOTOOLCHAIN=auto golangci
 GOTOOLCHAIN=auto golangci-lint fmt              # Format (gofumpt + golines@120 + gci; root module — run per module too)
 # Error audit is module-scoped (erraudit refuses to cross nested go.mod boundaries; run per module):
 for m in . client entitytag metrics server; do (cd $m && GOTOOLCHAIN=auto GOEXPERIMENT=jsonv2 erraudit ./... --type-aware --enforce-go-error-family --enforce-samber-oops --enforce-generic-return); done
-# nolint audit: per module, from the module root (a repo-root scan misjudges nested-module directives as stale; the root module has no nolint directives):
-for m in client entitytag metrics server; do (cd $m && GOTOOLCHAIN=auto GOEXPERIMENT=jsonv2 erraudit nolint-audit .); done
+# nolint audit: per module WITH the error audit's strictness flags — without them the auditor judges enforce-flag suppressions (e.g. scripts/doc-snippet-refs' stdlib-only fmt.Errorf) stale; the root module carries directives in scripts/:
+for m in . client entitytag metrics server; do (cd $m && GOTOOLCHAIN=auto GOEXPERIMENT=jsonv2 erraudit nolint-audit . --type-aware --enforce-samber-oops --enforce-generic-return); done
 # Doc snippet symbol check (ported from httputil 2026-10-15; wired into ci.yml):
 GOTOOLCHAIN=auto go run ./scripts/doc-snippet-refs README.md docs/*.md
 ```
@@ -78,7 +78,7 @@ Five Go modules in one repo, released on a shared version train (all modules tag
 | `server/hex.go`           | (unexported `hexEncodeUint64`, `hexDigitsLower`)                                                                                                                                    | Zero-alloc stack-allocated hex encoding for uint64 FNV hashes                                                                                                        |
 | `client/options.go`       | `Options` (KeyFunc / MaxEntries / MaxBodyBytes / FreshenOn304 / FromCacheHeader), `FreshenPolicy` + `FreshenPerRFC` / `FreshenFields` / `FreshenNone`                               | Client transport options with defaults (256 entries / 1 MiB / zero policy = RFC 9111 §4.3.4 freshening)                                                              |
 | `client/cache.go`         | `Stats` (Hits/Stored/Entries); unexported `storedResponse` + `storedValidator` (wire string + parsed `entitytag.ETag`), `responseCache` (map + order-slice FIFO under a mutex)      | Bounded concurrency-safe cache with counters; validator parsed once at store time                                                                                    |
-| `client/transport.go`     | `NewTransport`, `Transport` (`RoundTrip`, `Stats`)                                                                                                                                  | Conditional GET transport core: If-None-Match replay, §4.4 invalidation, §4.3.5 HEAD confirmation, method/status classification                                     |
+| `client/transport.go`     | `NewTransport`, `Transport` (`RoundTrip`, `Stats`)                                                                                                                                  | Conditional GET transport core: If-None-Match replay, §4.4 invalidation, §4.3.5 HEAD confirmation, method/status classification                                      |
 | `client/rebuild.go`       | (unexported)                                                                                                                                                                        | 304→200 rebuild, §4.3.4 freshening persistence, store path (split 2026-11-17)                                                                                        |
 | `client/header.go`        | (unexported)                                                                                                                                                                        | Header-field semantics: clone/merge, freshening exceptions (§3.1/§3.2), hop-by-hop stripping, no-store directive parsing                                             |
 | `client/body.go`          | (unexported `chainedBody`)                                                                                                                                                          | Chained buffered-prefix bodies for oversized/read-error streams; 304 drain-and-close                                                                                 |
@@ -133,7 +133,7 @@ The `ETag` struct holds an opaque string and a `Strength` (Strong/Weak). It prov
 - **Oversized bodies keep streaming** — the buffered prefix is chained to the unread remainder; Close still reaches the original body.
 - **Go 1.26 canonical header form of `ETag` is `Etag`** — map literals with `"ETag"` keys are invisible to `Header.Get/Set` (Get canonicalizes on read). Build stub headers via `Header.Set` in tests; real transports canonicalize on both sides.
 - **Runtime canonicalization vs the `canonicalheader` linter are different authorities** — the linter demands the literal `ETag` spelling in source (our `headerETag = "ETag"` constant); the runtime canonicalizes whatever you pass into `Etag` on the wire. Do not "fix" one to match the other.
-- **`drainAndClose` deliberately ignores drain/Close errors** — the 304 is discarded either way, and net/http closes an undrained connection, so the worst case is lost connection reuse. Suppressed with documented `//nolint:erraudit` directives (validate with `erraudit nolint-audit .` from INSIDE `client/` — it takes a path, not `./...`, and a repo-root scan misjudges nested-module directives as stale); `--no-suppress` audit mode surfaces them by design.
+- **`drainAndClose` deliberately ignores drain/Close errors** — the 304 is discarded either way, and net/http closes an undrained connection, so the worst case is lost connection reuse. Suppressed with documented `//nolint:erraudit` directives (validate with `erraudit nolint-audit .` — it takes a path, not `./...`, and it MUST carry the error audit's `--type-aware --enforce-*` flags: a flagless run judges enforce-flag suppressions stale, the failure mode behind the 2026-11-17 root-module fix); `--no-suppress` audit mode surfaces them by design.
 
 ## Error Classification
 

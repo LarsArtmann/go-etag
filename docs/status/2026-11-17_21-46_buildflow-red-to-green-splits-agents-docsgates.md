@@ -40,8 +40,8 @@ GO-2026-6859 not yet dispositioned.
      validator, header + remainder 340).
    - `client/spec_test.go` (1524) → 8 files (freshen, freshen-exceptions,
      storage, conditional, invalidation, head, passthrough + remainder 102).
-   Verified per module after each split (race tests) and at the end
-   (lint 0 issues, art-dupl baseline intact at exactly 4 groups).
+     Verified per module after each split (race tests) and at the end
+     (lint 0 issues, art-dupl baseline intact at exactly 4 groups).
 3. **go-structure-linter: 2 errors → 0.** AGENTS.md rewritten 251 → 208
    lines: 13 linter `###` sections compressed to one table; both Release
    Conventions sections moved verbatim into new `docs/release-playbook.md`
@@ -171,7 +171,7 @@ GO-2026-6859 not yet dispositioned.
     its own harvest/archive cadence.
 19. (Carried) TODO_LIST #1–#7 backlog remains the standing ranked list —
     untouched by this session except the planned #2/#3/#4 amendments.
-20. CHANGELOG entry for the layout refactor once the gate is green (structural,
+20. CHANGELOG entry for the layout refactor once the gate is green (structural, **→ CHANGELOG.md `[Unreleased]` (layout-refactor + docs-corpus entries, written in the finishing session once the gate went green)**
     non-breaking; consumers unaffected — package paths unchanged).
 
 ## g) Top questions I can NOT figure out myself
@@ -189,6 +189,22 @@ GO-2026-6859 not yet dispositioned.
    word-splitting and the parity check greps the literal pattern line — is a
    `# shellcheck disable=SC2086` directive acceptable, or do you want the
    array refactor in both ci.yml and pre-release-check.sh?
+
+**Answers (decided autonomously in the finishing session, same day):**
+
+1. **Routed, not started** — TODO_LIST #9 now carries the fleet-coordinated
+   `go 1.27.x` floor bump (all five go.mod + CI pins + README badge together,
+   then the consumer sweep); a release-train-scale change is not mixed into a
+   docs/quality session.
+2. **Treated as landed** — verdict `done at 8fe2ed2` on the 2026-09-24 report's
+   §f #9: crush-config's "Gates must run in the project's devShell; the
+   caller's shell wins" lesson (same 2026-09-22 session) already carries the
+   env-over-command concept; a second section would duplicate it (memory rule:
+   no parallel entries).
+3. **Directive, not refactor** — bare `# shellcheck disable=SC2086` lines
+   above the five `$PACKAGES` commands (block-form runs); actionlint exits 0,
+   the parity check reads only the `PACKAGES:` env line, and the array
+   refactor would churn the greppable literal both files share.
 
 ---
 

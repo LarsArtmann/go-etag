@@ -26,11 +26,11 @@
 
 ## b) PARTIALLY DONE
 
-| Item              | What's missing                                                                                                                                                                                                |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Doc hygiene       | `TODO_LIST.md` not harvested from section (f); dprint markdown formatting not run on the edited `.md` files                                                                                                   |
+| Item              | What's missing                                                                                                                                                                                                  |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Doc hygiene       | `TODO_LIST.md` not harvested from section (f); dprint markdown formatting not run on the edited `.md` files                                                                                                     |
 | LSP hygiene       | Stale gopls/golangci-ls diagnostics (`indexByte`, err113, golines) kept firing all session; verified stale via real CLI runs each time (AGENTS rule followed), but never ran `lsp_restart` to silence the noise |
-| Performance claim | "No perf impact (compile-time constants, error paths only)" is reasoned but not benchmark-backed; no smoke `-bench=.` run, no `reports/bench/` baseline                                                       |
+| Performance claim | "No perf impact (compile-time constants, error paths only)" is reasoned but not benchmark-backed; no smoke `-bench=.` run, no `reports/bench/` baseline                                                         |
 
 ## c) NOT STARTED
 
@@ -68,7 +68,7 @@ No production code, tests, or docs carry any of these forward. The persistent st
 2. ~~Add `allETagErrorCodes` single-source var for the completeness test~~ done at `16369cc`
 3. ~~GoDoc examples for `Code` constructors / `DomainOf` / `InDomain` with `// Output:`~~ done at `fb6efab`
 4. Assert `writer_type` context survives on hijack errors (Contextual smoke test)
-5. README: document typed `Code`/`Domain` error routing for consumers
+5. ~~README: document typed `Code`/`Domain` error routing for consumers~~ done — documented in `README.md` (six family constructors + `etag.DomainOf`/`etag.InDomain`, with `ExampleCode`/`ExampleDomainOf`/`ExampleInDomain` pointers to the server GoDoc)
 6. Decide: exported `Domain("http")` constant vs leave literal (YAGNI call)
 7. Decide: keep all-6 families or trim to the 4 go-etag uses (parity vs YAGNI)
 8. Verify httputil's test suite pins go-etag template VALUES verbatim; if not, upstream a mirror test (verify-before-filing first)

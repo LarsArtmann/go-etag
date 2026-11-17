@@ -45,16 +45,23 @@ jobs:
       # Multi-module workspace: the committed go.work joins all five modules
       # into one workspace build; $PACKAGES spans all of them.
       - name: Build
-        run: go build $PACKAGES
+        run: |
+          # shellcheck disable=SC2086
+          go build $PACKAGES
 
       - name: Vet
-        run: go vet $PACKAGES
+        run: |
+          # shellcheck disable=SC2086
+          go vet $PACKAGES
 
       - name: Test with race detector
-        run: go test -race -count=1 $PACKAGES
+        run: |
+          # shellcheck disable=SC2086
+          go test -race -count=1 $PACKAGES
 
       - name: Coverage
         run: |
+          # shellcheck disable=SC2086
           go test -cover -coverprofile=coverage.out $PACKAGES
           go tool cover -func=coverage.out | tail -1
 
@@ -153,7 +160,9 @@ jobs:
         run: go install golang.org/x/vuln/cmd/govulncheck@latest
 
       - name: Vulnerabilities
-        run: govulncheck $PACKAGES
+        run: |
+          # shellcheck disable=SC2086
+          govulncheck $PACKAGES
 
   # Fleet workflow policy (adopted 2026-11-02, cue-policy docs/
   # 2026-11-02_adoption-memo.md): external cue schemas vet the workflow

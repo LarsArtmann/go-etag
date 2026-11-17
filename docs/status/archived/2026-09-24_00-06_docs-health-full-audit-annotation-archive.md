@@ -1,5 +1,12 @@
 # Status Report: Docs-Health Full Audit — Annotation-to-Archive Sweep of All 2026-0* Docs
 
+> **Live remainder:** §f items 1–2 → `TODO_LIST.md` #1; item 3 → `ROADMAP.md`
+> OQ11–OQ13; items 11–39 → `TODO_LIST.md` #2–#7 (rows verified by the
+> freshness replay); items 6–8 + 10 (render-check, HTML-snapshot fact-check,
+> second-opinion review of the archive move, owner skim of borderline verdicts)
+> are owner-optional reviews, never exercised in 54 days — ask the owner or let
+> them die at the next full audit. Everything else carries an inline verdict.
+
 **Date:** 2026-09-24 00:06 CEST
 **Session phase covered:** ~22:15 → 00:06 — the docs-health AUDIT run the owner
 ordered ("view ALL \*\*/2026-0\* files, execute the skill properly"): every dated
@@ -107,8 +114,7 @@ pair, and 33 older snapshots back to 2026-08-07.
    15:22 brutal-self-review HTML claims resolution states "updated to fact"
    (per 16:40 a11); this pass verified the file exists and renders a link
    target but did not diff its claims against the session's findings.
-3. **The archive reorganization is unreviewed by anyone but me.** 39 `git
-   `mv` operations in one pass, including same-day reports (22:07 archived ~2h after it
+3. **The archive reorganization is unreviewed by anyone but me.** 39 `git mv` operations in one pass, including same-day reports (22:07 archived ~2h after it
    was written). The gates pass and the doctrine supports it (living state =
    TODO_LIST/CHANGELOG; snapshots die resolved), but no second set of eyes
    has looked at whether any archived file still owed annotations.
@@ -210,17 +216,17 @@ pair, and 33 older snapshots back to 2026-08-07.
    each) — TODO_LIST #1.
 3. Owner answers to OQ11 (prove release.yml with a trivial v0.6.1 vs wait),
    OQ12 (kit nix pattern), OQ13 (cqrs-htmx red lint ownership).
-4. Run `scripts/pre-release-check.sh` once over the current tree so the
-   docs-only session's gate subset (fmt/lint/vet/race/cover) is upgraded to
-   the full loop (erraudit, nolint-audit, `go mod verify`) on record.
-5. Sample-audit prose items in 3 of the 17 older archived reports (the b1 of
-   this report) to size whether a full prose pass is worth a session.
+4. ~~Run `scripts/pre-release-check.sh` once over the current tree so the~~ done — run in workspace mode for the v0.6.0 staircase (2026-09-23, exit 0 per AGENTS release conventions)
+   ~~docs-only session's gate subset (fmt/lint/vet/race/cover) is upgraded to~~
+   ~~the full loop (erraudit, nolint-audit, `go mod verify`) on record.~~
+5. ~~Sample-audit prose items in 3 of the 17 older archived reports (the b1 of~~ **Superseded — the 2026-11-17 audit-all pass — all 41 reports replayed, every unharvested item resolved.**
+   ~~this report) to size whether a full prose pass is worth a session.~~
 6. Read + fact-check the two HTML snapshots against this session's findings.
 7. Render-check one archived file (GFM strikethrough across wrapped list
    items) — cheap confidence the archive is readable, not just gate-clean.
 8. Second-opinion review of the 39-file archive move (b3) — one `git diff
    --find-renames` pass by another session or the owner.
-9. ~~Move the golangci/GOTOOLCHAIN cross-project lesson (22:36 #50) into the~~ done — lesson landed in crush-config `references/lessons.md` at `8fe2ed2` ("Gates must run in the project's devShell; the caller's shell wins" — the env-over-command concept, committed 2026-09-22)
+9. ~~Move the golangci/GOTOOLCHAIN cross-project lesson (22:36 #50) into the~~ done — lesson landed in the crush-config repo's references/lessons.md at `8fe2ed2` ("Gates must run in the project's devShell; the caller's shell wins" — the env-over-command concept, committed 2026-09-22)
    ~~crush-config repo's `references/lessons.md` (foreign repo, owner go).~~
 10. Decide the "dies per OQ5" borderline calls: ~12 verdicts this pass
     killed low items that could arguably have been TODO rows (boundary

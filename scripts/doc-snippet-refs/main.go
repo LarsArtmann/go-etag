@@ -85,12 +85,18 @@ func main() {
 
 // exportedNames returns the exported package-level names of pkgPath, resolved
 // from source so the check sees the real API rather than a copy-pasted list.
-func exportedNames(pkgPath string) (map[string]bool, error) {
+func exportedNames(
+	pkgPath string,
+) (map[string]bool, error) { //nolint:erraudit // bare error return is idiomatic here and the advisory is accepted per erraudit's own suggestion; callers classify via errors.Is on the %w wrap
 	fset := token.NewFileSet()
 
 	pkg, err := importer.ForCompiler(fset, "source", nil).Import(pkgPath)
 	if err != nil {
-		return nil, fmt.Errorf("import %s: %w", pkgPath, err)
+		return nil, fmt.Errorf(
+			"import %s: %w",
+			pkgPath,
+			err,
+		) //nolint:erraudit // root module is stdlib-only by policy, so the samber/oops enforcement cannot apply here; %w wrapping keeps errors.Is classification
 	}
 
 	names := make(map[string]bool, len(pkg.Scope().Names()))

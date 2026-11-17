@@ -22,7 +22,7 @@ value:
 
 ### 2. Typed client cache — COMPLETE (2026-09-18)
 
-Delivered: the shared [`entitytag/`](../entitytag/README.md) package (moved
+Delivered: the shared [`entitytag/`](entitytag/README.md) package (moved
 out of `server/`), typed validator comparison in the client, and the
 `cacheEntry` → `storedResponse` evolution (`storedValidator`: the wire string
 replayed verbatim plus the parsed `entitytag.ETag`, parsed once at store time

@@ -90,11 +90,11 @@ for mod in "${MODULES[@]}"; do
 	rm -f "$erraudit_out"
 done
 
-step "nolint audit (nested modules only: the root module has no nolint directives, and a root-level scan misjudges nested-module directives as stale)"
-for mod in client entitytag metrics server; do
+step "nolint audit (per module, with the same strictness flags as the error audit: without them the auditor judges enforce-flag suppressions stale; the root module carries directives in scripts/doc-snippet-refs)"
+for mod in "${MODULES[@]}"; do
 	(
 		cd "$mod"
-		GOEXPERIMENT=jsonv2 erraudit nolint-audit .
+		GOEXPERIMENT=jsonv2 erraudit nolint-audit . --type-aware --enforce-samber-oops --enforce-generic-return
 	) || fail "erraudit nolint-audit in $mod"
 done
 
@@ -124,19 +124,28 @@ for gomod in "${GOMODS[@]}"; do
 	fi
 done
 
-step "toolchain pin parity (every go.mod vs CI, exact match)"
+step "toolchain pin parity (go.mod directive patch-anchored; CI GOTOOLCHAIN pins uniform and never below it)"
 go_directives="$(for gomod in "${GOMODS[@]}"; do
 	awk '$1 == "go" { print $2; exit }' "$gomod"
 done | sort -u)"
 [ "$(printf '%s\n' "$go_directives" | wc -l)" -eq 1 ] ||
 	fail "go directives differ across go.mod files: $(echo "$go_directives" | tr '\n' ' ')"
 go_directive="${go_directives//$'\n'/}"
-pin_count="$(grep -cE "GOTOOLCHAIN: go${go_directive//./\\.}$" .github/workflows/ci.yml || true)"
-[ -n "$pin_count" ] || fail "GOTOOLCHAIN pin count unresolvable (CI workflow missing or unreadable) - this check cannot run against a broken tree"
-if [ "$pin_count" -lt 3 ]; then
-	found="$(grep -h 'GOTOOLCHAIN:' .github/workflows/ci.yml | sort -u | tr '\n' ' ')"
-	fail "CI GOTOOLCHAIN pins do not exactly match the go directive ${go_directive} (found: ${found}) - the daemon-relaxation class of drift"
-fi
+[[ "$go_directive" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
+	fail "go directive ${go_directive} is not patch-anchored (X.Y.Z) - the daemon-relaxation class of drift"
+pin_lines="$(grep -hE 'GOTOOLCHAIN: go[0-9]+\.[0-9]+\.[0-9]+$' .github/workflows/ci.yml || true)"
+pin_line_count="$(printf '%s\n' "$pin_lines" | grep -c . || true)"
+[ "$pin_line_count" -ge 3 ] ||
+	fail "fewer than 3 version-shaped GOTOOLCHAIN pins in CI (found: $(echo "$pin_lines" | sort -u | tr '\n' ' '))"
+pin_versions="$(printf '%s\n' "$pin_lines" | awk '{ print $2 }' | sort -u)"
+[ "$(printf '%s\n' "$pin_versions" | grep -c . || true)" -eq 1 ] ||
+	fail "CI GOTOOLCHAIN pins are not uniform: $(echo "$pin_versions" | tr '\n' ' ')"
+pin_version="${pin_versions//go/}"
+lowest="$(printf '%s\n%s\n' "$go_directive" "$pin_version" | sort -V | head -1)"
+[ "$lowest" = "$go_directive" ] ||
+	fail "CI GOTOOLCHAIN pin ${pin_version} is below the go directive ${go_directive} - a pinned toolchain older than the modules' floor"
+# Pins MAY run ahead of the directive: the GO-2026-6859 closure pinned go1.27.4
+# while the five go.mod floors wait on the TODO_LIST #9 fleet-coordinated bump.
 
 step "internal version train in sync (go.mod requires == go.work replaces)"
 train_versions="$(grep -hE '^[[:space:]]*github\.com/larsartmann/go-etag' "${GOMODS[@]}" |
