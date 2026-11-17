@@ -122,15 +122,15 @@ six-repo consumer sweep, verification-gap closure (M7), the art-dupl re-baseline
 
 1. ~~**M11 benchstat** — not run (install + count=6 across five modules
    deliberately deferred behind the owner batch; the no-drift proof needs
-   go-release-grade quiet on the machine).~~ **→ carried: `TODO_LIST.md` #1 (2026-09-23 docs-health pass)**
-2. ~~**M15** — verified unpinned (above); the mirror-test upstream is not written.~~ **→ carried: `TODO_LIST.md` #2 (F56/F57)**
+   go-release-grade quiet on the machine).~~ **→ superseded — now `TODO_LIST.md` #1 (2026-09-23 docs-health pass)**
+2. ~~**M15** — verified unpinned (above); the mirror-test upstream is not written.~~ **→ superseded — now `TODO_LIST.md` #2 (F56/F57)**
 
 ## c) NOT STARTED (rest tier, unchanged except numbers)
 
 ~~M16/M17 fuzz expansion + spec pin-ups, M12/M13 owner postures, M14 dependency
 sanity, M18 process micro-policies, M19 README sections, M20 CI polish,
 M21 ROADMAP annotations, M22–M25 epics, M26 daemon root-cause, M27 consumer-repo
-leftovers (their backlogs). TODO_LIST is rewritten to carry all of it.~~ **→ carried: `TODO_LIST.md` #1–#4 (2026-09-23 docs-health pass; M21's ROADMAP annotations landed same-day in `ROADMAP.md`)**
+leftovers (their backlogs). TODO_LIST is rewritten to carry all of it.~~ **→ superseded — now `TODO_LIST.md` #1–#4 (2026-09-23 docs-health pass; M21's ROADMAP annotations landed same-day in `ROADMAP.md`)**
 
 ## d) TOTALLY FUCKED UP (all caught, all recovered)
 
@@ -174,7 +174,7 @@ leftovers (their backlogs). TODO_LIST is rewritten to carry all of it.~~ **→ c
 3. **AGENTS amended accordingly** (both the recipe line and the drift family).
 4. ~~**Two parallel lanes in one tree worked this time** because the other lane
    chose docs-only while the release ran; the 15:35 lane's RELEASE-IN-FLIGHT
-   marker proposal (its §f.28) remains the right machine guard.~~ **→ carried: RELEASE-IN-FLIGHT proposal in `TODO_LIST.md` #4 (M18); the docs-only lane discipline is now in `AGENTS.md` Repo Workflow Notes**
+   marker proposal (its §f.28) remains the right machine guard.~~ **→ superseded — now RELEASE-IN-FLIGHT proposal in `TODO_LIST.md` #4 (M18); the docs-only lane discipline is now in `AGENTS.md` Repo Workflow Notes**
 
 ## f) NEXT
 
@@ -191,15 +191,15 @@ leftovers (their backlogs). TODO_LIST is rewritten to carry all of it.~~ **→ c
    github-local-sync, go-localsync{/provider/github}, InboxClean, RollRoyce-mtuGoHelpCenter-golang,
    standup-killer, testing, timesheets, + remainder in the grep).~~ done — `ab1bcec` resolved OQ2–OQ10 and batch-bumped the dead-requires fleet; resolutions recorded in `ROADMAP.md` Open Questions
 2. ~~M11/M16/M17 (benchstat, fuzz expansion, spec pin-ups) — first autonomous
-   slice after the batch.~~ **→ carried: `TODO_LIST.md` #1**
-3. ~~M12–M15 as owner postures resolve; M19–M21 docs tier; M22+ epics.~~ **→ carried: `TODO_LIST.md` #2–#4 (M21's annotations landed same-day in `ROADMAP.md`)**
+   slice after the batch.~~ **→ superseded — now `TODO_LIST.md` #1**
+3. ~~M12–M15 as owner postures resolve; M19–M21 docs tier; M22+ epics.~~ **→ superseded — now `TODO_LIST.md` #2–#4 (M21's annotations landed same-day in `ROADMAP.md`)**
 
 ## g) QUESTIONS
 
 ~~Delivered interactively as the structured owner batch (top 4 blocking:
 release-workflow automation, art-dupl enforcement posture, Validate semantics,
 fleet drop-or-bump) — full OQ2–OQ10 in ROADMAP's Open Questions with the two
-new entries from the 15:35 lane folded in.~~ **→ answered: `ab1bcec` recorded the resolutions in `ROADMAP.md`**
+new entries from the 15:35 lane folded in.~~ **→ decided: `ab1bcec` recorded the resolutions in `ROADMAP.md`**
 
 ---
 

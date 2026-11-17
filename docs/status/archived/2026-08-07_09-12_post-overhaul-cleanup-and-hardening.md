@@ -185,7 +185,7 @@ Nothing is partially done. All items are either complete or not started.
 | ~~34~~                                                           | ~~Set up CI pipeline~~ done at `37b68b3`                                                          | ~~M~~  |
 | ~~35~~                                                           | ~~Add `toolchain` directive~~ done at `0e8ac6d` (go 1.26.7)                                       | ~~XS~~ |
 | ~~36~~                                                           | ~~golangci-lint version pinning~~ done at `cf98ab5` (CI installs v2.12.2 from the v2 module path) | ~~XS~~ |
-| ~~37~~ **→ carried: `TODO_LIST.md` #2 (M13 coverage-floor decision) | ~~Add `codecov.yml` or coverage gating — open (low)~~                                               | ~~S~~  |**
+| ~~37~~ **→ superseded — now `TODO_LIST.md` #2 (M13 coverage-floor decision) | ~~Add `codecov.yml` or coverage gating — open (low)~~                                               | ~~S~~  |**
 | ~~38~~                                                           | ~~goreleaser~~ **Won't implement — library, not binary; go-release flow suffices**                | ~~M~~  |
 
 ### P7 — Code Quality
@@ -211,8 +211,8 @@ Nothing is partially done. All items are either complete or not started.
 
 | #                                                         | Task                                                                                            | Effort |
 | --------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------ |
-| ~~48~~ **→ carried: `TODO_LIST.md` #4 (M25 comparison table) | ~~Comparison table — open (ROADMAP Theme 4)~~                                                   | ~~S~~  |**
-| ~~49~~ **→ carried: `TODO_LIST.md` #4 (M25 awesome-go draft) | ~~awesome-go listing — open (ROADMAP Theme 4)~~                                                 | ~~XS~~ |**
+| ~~48~~ **→ superseded — now `TODO_LIST.md` #4 (M25 comparison table) | ~~Comparison table — open (ROADMAP Theme 4)~~                                                   | ~~S~~  |**
+| ~~49~~ **→ superseded — now `TODO_LIST.md` #4 (M25 awesome-go draft) | ~~awesome-go listing — open (ROADMAP Theme 4)~~                                                 | ~~XS~~ |**
 | ~~50~~                                                    | ~~Blog post for v0.2~~ **Won't implement — no blog channel; GitHub releases carry the notes** | ~~M~~  |
 
 ---

@@ -133,18 +133,18 @@ this review watched).
    `server/go.sum` window (15:18:38 → `609bf83`) was closed by the parallel
    session's awareness, not by a guard. The fresh-clone pre-push check
    (15:06 e2) would have caught it mechanically — it should outrank polish
-   work.~~ **→ carried: fresh-clone pre-push script in `TODO_LIST.md` #3; the go.work class got its machine guard (`git ls-files go.work` gate assertion, report 15:06 a7)**
+   work.~~ **→ superseded — now fresh-clone pre-push script in `TODO_LIST.md` #3; the go.work class got its machine guard (`git ls-files go.work` gate assertion, report 15:06 a7)**
 3. ~~**Todos discipline** for multi-phase skill runs — cheap, prevents exactly
    the drift in d2.~~ done — adopted (this pass and the 16:40 lane both run explicit todo lists)
 4. ~~**An ownership signal for concurrent sessions** (e.g., a
    RELEASE-IN-FLIGHT marker file honored by sessions and ideally the
-   daemon) would have prevented today's blind spot class entirely.~~ **→ carried: `TODO_LIST.md` #4 (M18 micro-policies)**
+   daemon) would have prevented today's blind spot class entirely.~~ **→ superseded — now `TODO_LIST.md` #4 (M18 micro-policies)**
 
 ## f) NEXT (top slice; full backlog in `docs/planning/2026-09-23_14-07_v060-staircase-and-full-backlog.md`)
 
 1. ~~**NOW:** finish the brutal-self-review HTML report → `docs/reviews/2026-09-23_15-22_brutal-self-review.html`; clean up `/tmp` splice files.~~ done — landed by the 16:40 lane (report 16:40 a11)
 2. ~~**Owner GO:** let the staircase finish (server → client → metrics → root; M1/M2 remainder) — parallel lane, do not interfere.~~ done — staircase completed same-day (report 16:40 a1)
-3. ~~Fresh-clone pre-push script (`scripts/`): `git clone . /tmp/x && go build` over the five-pattern set — kills the go.work AND go.sum untracked classes (15:06 e2).~~ **→ carried: `TODO_LIST.md` #3**
+3. ~~Fresh-clone pre-push script (`scripts/`): `git clone . /tmp/x && go build` over the five-pattern set — kills the go.work AND go.sum untracked classes (15:06 e2).~~ **→ superseded — now `TODO_LIST.md` #3**
 4. ~~server↔entitytag parity test (go/doc-based, stdlib-only) — kills new split brain #2 AND covers the 0% `ParseETagList` wrapper.~~ done — `server/entity_parity_test.go` (report 16:40 a8)
 5. ~~`entitytag`: own-module unit specs for `Strength.IsValid` (true + false arms).~~ done — `TestStrength_IsValid` (report 16:40 a8)
 6. ~~`Validate()` doc reconciliation (document clamp-vs-reject divergence on `Validate`/`ETagConfig`) — the non-breaking half of new split brain #1.~~ done — divergence documented on `Validate` (report 16:40 a8; OQ9)
@@ -156,21 +156,21 @@ this review watched).
 12. ~~M7 F31: hoist PACKAGES env in ci.yml (×7 → 1).~~ done — `1bf30c9` (report 16:40 a6)
 13. ~~M7 F32: workflow↔script pattern-agreement check.~~ done — `1bf30c9` (report 16:40 a6)
 14. ~~M7 F33: actionlint on both workflow files.~~ done — actionlint clean (report 16:40 a6); both files' YAML validity verified 05:56 a8
-15. ~~M17 spec pin-ups (request `no-cache` §5.2.2.2; HEAD × `Uncompressed`; `restoreMismatchedValidator` restricted-mode; dual-key edge).~~ **→ carried: `TODO_LIST.md` #1**
-16. ~~M16 fuzz expansion (`FuzzStoredValidatorWeaklyMatches`, `FuzzMergeHeader`, directive corpus).~~ **→ carried: `TODO_LIST.md` #1**
-17. ~~M11 benchstat tables + five-module no-drift baseline.~~ **→ carried: `TODO_LIST.md` #1**
-18. ~~M12 erraudit-in-CI (owner posture).~~ **→ carried: `TODO_LIST.md` #2**
-19. ~~M13 coverage floor (owner; with reconciled numbers).~~ **→ carried: `TODO_LIST.md` #2**
+15. ~~M17 spec pin-ups (request `no-cache` §5.2.2.2; HEAD × `Uncompressed`; `restoreMismatchedValidator` restricted-mode; dual-key edge).~~ **→ superseded — now `TODO_LIST.md` #1**
+16. ~~M16 fuzz expansion (`FuzzStoredValidatorWeaklyMatches`, `FuzzMergeHeader`, directive corpus).~~ **→ superseded — now `TODO_LIST.md` #1**
+17. ~~M11 benchstat tables + five-module no-drift baseline.~~ **→ superseded — now `TODO_LIST.md` #1**
+18. ~~M12 erraudit-in-CI (owner posture).~~ **→ superseded — now `TODO_LIST.md` #2**
+19. ~~M13 coverage floor (owner; with reconciled numbers).~~ **→ superseded — now `TODO_LIST.md` #2**
 20. ~~M8 OQ2–OQ8 owner batch (+ OQ9/OQ10 from item 7).~~ done — `ab1bcec` (resolutions in `ROADMAP.md`)
 21. ~~M3 post-release proof (nested-tag CI runs ×4, pkg.go.dev ×5, dependabot recovery, `go work sync` idempotency).~~ done — report 16:40 a3
 22. ~~M4/M5 consumer sweeps to v0.6.0; M6 dead-requires fleet decision.~~ done — report 16:40 a4–a5; fleet batch-bumped in `ab1bcec`
-23. ~~M26 daemon root-cause upstream — today's go.sum near-miss is the fourth incident in the "daemon vs release state" family.~~ **→ carried: `TODO_LIST.md` #4**
+23. ~~M26 daemon root-cause upstream — today's go.sum near-miss is the fourth incident in the "daemon vs release state" family.~~ **→ superseded — now `TODO_LIST.md` #4**
 24. ~~docs-health HARVEST of this report + the review (after user GO).~~ done — this pass (`TODO_LIST.md` #1–#4, ROADMAP Parked entry)
-25. ~~BDD follow-through (post-release): keep house `t.Run` style; naming pass on `spec_test.go` for one-behavior-per-It consistency.~~ **→ carried: `TODO_LIST.md` #3**
-26. ~~`NewETag("")` doc note (empty opaque ⇒ `IsValid()==false`; intentional zero-value doctrine, asymmetric with `ParseETag`).~~ **→ carried: `TODO_LIST.md` #3**
+25. ~~BDD follow-through (post-release): keep house `t.Run` style; naming pass on `spec_test.go` for one-behavior-per-It consistency.~~ **→ superseded — now `TODO_LIST.md` #3**
+26. ~~`NewETag("")` doc note (empty opaque ⇒ `IsValid()==false`; intentional zero-value doctrine, asymmetric with `ParseETag`).~~ **→ superseded — now `TODO_LIST.md` #3**
 27. ~~Document-as-accepted: `Stats` int64/int mix, `Counters` exported atomic fields, wrapper 2-bool+int state encoding — revisit only at the v1.0.0 design pass.~~ done 2026-09-23 docs-health pass — `ROADMAP.md` Parked, "Data-model accepted-as-is items"
-28. ~~RELEASE-IN-FLIGHT convention proposal (marker file honored by sessions/daemon).~~ **→ carried: `TODO_LIST.md` #4**
-29. ~~M24 v1.0.0 criteria doc — include the two new split brains' endgames.~~ **→ carried: `TODO_LIST.md` #4**
+28. ~~RELEASE-IN-FLIGHT convention proposal (marker file honored by sessions/daemon).~~ **→ superseded — now `TODO_LIST.md` #4**
+29. ~~M24 v1.0.0 criteria doc — include the two new split brains' endgames.~~ **→ superseded — now `TODO_LIST.md` #4**
 30. ~~Watch CI on the remaining staircase commits (the habit that saved the morning).~~ done — master CI watched to completion 4× plus four frozen tag runs (report 16:40 a1)
 
 ## g) QUESTIONS (cannot be answered from inside this repo)
@@ -178,10 +178,10 @@ this review watched).
 1. ~~**Who is driving the staircase?** The parallel lane committed `609bf83`
    with a release-aware message while this review ran — another agent
    session, or you manually? Should I stay completely hands-off until the
-   root tag lands (current mode), or take over stairs if the lane stalls?~~ **→ answered: the parallel lane completed the staircase same-day (report 16:40 a1–a3)**
+   root tag lands (current mode), or take over stairs if the lane stalls?~~ **→ decided: the parallel lane completed the staircase same-day (report 16:40 a1–a3)**
 2. ~~**May the brutal-self-review HTML report land as a docs-only commit
    mid-staircase**, or should it wait until after the root tag so the
-   staircase commits stay pristine? I default to waiting for your GO.~~ **→ answered: it landed after the root tag as the 16:40 lane's artifact (report 16:40 a11)**
+   staircase commits stay pristine? I default to waiting for your GO.~~ **→ decided: it landed after the root tag as the 16:40 lane's artifact (report 16:40 a11)**
 3. ~~**For the two NEW split brains:** fold the decision halves into the M8
    owner batch as OQ9 (Validate semantics) and OQ10 (shim parity), with
    only the non-breaking halves (doc fix + parity test) executed
