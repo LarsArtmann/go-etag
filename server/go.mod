@@ -4,5 +4,5 @@ go 1.27
 
 require (
 	github.com/larsartmann/go-error-family v0.12.0
-	github.com/larsartmann/go-etag/entitytag v0.6.1
+	github.com/larsartmann/go-etag/entitytag v0.6.2
 )

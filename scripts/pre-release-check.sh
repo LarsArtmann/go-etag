@@ -178,7 +178,26 @@ sync_backup="$(mktemp -d)"
 for f in go.work go.mod client/go.mod entitytag/go.mod metrics/go.mod server/go.mod; do
 	cp "$f" "$sync_backup/$(echo "$f" | tr / _)"
 done
-go work sync || fail "go work sync failed - the workspace does not resolve"
+sync_out="$(mktemp)"
+sync_status=0
+go work sync >"$sync_out" 2>&1 || sync_status=$?
+# Pre-tag bootstrap window (release playbook step 1): before the staircase
+# pushes the train tags, `go work sync` insists on reading the sibling go.mod
+# files from VCS and fails with "unknown revision" for exactly the internal
+# train versions - the same resolution the version-qualified go.work replaces
+# already divert for builds. The train-sync step above pinned requires ==
+# replaces == use, so tolerate ONLY that failure shape and demand a
+# post-staircase re-run; any other sync error still fails the gate.
+if [ "$sync_status" -ne 0 ]; then
+	non_bootstrap="$(grep -vE '^(go: version constraints conflict:|[[:space:]]+github\.com/larsartmann/go-etag(/[a-z]+)?@v[0-9]+\.[0-9]+\.[0-9]+: reading .* at revision [a-z]+/v[0-9]+\.[0-9]+\.[0-9]+: unknown revision .*)$' "$sync_out" | grep -c . || true)"
+	if [ "$non_bootstrap" -ne 0 ]; then
+		cat "$sync_out"
+		rm -f "$sync_out"
+		fail "go work sync failed - the workspace does not resolve (and not in the pre-tag bootstrap shape)"
+	fi
+	printf 'NOTICE: go work sync deferred - pre-tag bootstrap window (train tags not pushed yet).\nThe staircase pushes them next; re-run this gate after the staircase completes.\n'
+fi
+rm -f "$sync_out"
 sync_drift=""
 for f in go.work go.mod client/go.mod entitytag/go.mod metrics/go.mod server/go.mod; do
 	if ! diff -u "$sync_backup/$(echo "$f" | tr / _)" "$f" >"$sync_backup/diff.out"; then

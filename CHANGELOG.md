@@ -9,6 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Nothing yet.
+
+### Fixed
+
+- Nothing yet.
+
+## [0.7.1] - 2026-11-18
+
+Released in one bottom-up staircase with the nested-module train **v0.6.2** (`entitytag/`, `server/`, `client/`, `metrics/` — see [0.6.2] below); the root tag is the release commit and fires `release.yml` for the first time end to end.
+
+### Added
+
 - `scripts/doc-snippet-refs`: a README/docs symbol checker (ported from httputil) verifying that every Go code fence in markdown references only exported symbols that actually exist in the workspace packages — markdown snippets are never compiled, so renamed or removed APIs used to ship silently. Wired into CI as the `doc-snippets` job; all current README and `docs/*.md` fences verified resolving, and the checker's failure path mutation-tested.
 - DOMAIN_LANGUAGE glossary entries for the metrics vocabulary: "Hit ratio" (`NotModified / Generated`, exact denominator, 0 before any tag is computed) and "Adopted tag" (handler-provided ETag respected via `SkipIfPresent`; its 304s fire `On304` without `OnETagGenerated` and can push the ratio above 1).
 
@@ -17,12 +29,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - File layout refactor: every oversized Go file split along cohesive domain seams — `server/etag.go` gained `server/config.go`; `client/transport.go` gained `client/rebuild.go`, `client/header.go`, and `client/body.go`; the largest test files (`server/etag_test.go`, `server/etag_bdd_test.go`, `client/transport_test.go`, `client/spec_test.go`, `entitytag/entity_tag_test.go`) split into per-topic suites. All Go files now sit under the 350-line file-size gate; declaration conservation was parser-audited against the pre-split tree (`d992d94`); package paths and the public API are unchanged, so consumers are unaffected.
 - CI pins raised: the golangci-lint install moved v2.14.0 → v2.15.0 and the four pinned-job `GOTOOLCHAIN` values moved go1.27.1 → go1.27.4. The lint bump follows httputil's 2026-11-14 triage of v2.15's signature-based wrapcheck detection: the errorfamily clone call sites in this repo (`WithContext`/`WithCause`) are classified wrapped errors, and the four matching `ignore-sigs` entries in `.golangci.yml` cover them — verified green locally with the v2.15.0 binary across all five modules. The toolchain bump closes the GO-2026-6859 / CVE-2026-97054 exposure (HTTP/1 crash in `http.MaxBytesReader`, fixed in go1.27.4) the same way httputil's CI pins were raised.
 - Dedup pass: the two duplicated `err != nil` fail-and-exit blocks in `scripts/doc-snippet-refs` collapsed into a `fail(stage, err)` helper with named exit codes, and the art-dupl release gate re-baselined from 4 to 3 accepted groups — now pinned per file (2 arms each in `server/etag.go`, `client/transport.go`, `client/rebuild.go`) instead of count-only, because a count-only gate had silently masked a composition swap: the new scripts pair slipped into the report while the retired switch-default pair dropped below the tool's actionability bar, count unchanged. The baseline lives at `reports/dupl/2026-11-17_art-dupl-baseline.txt`.
+- Dependency bump: `go-error-family` v0.11.0 → v0.12.0 (server directly; metrics and the root shim transitively) — v0.12.0 makes `(*Error).Unwrap` nil-receiver safe, so typed-nil unwrap panics can no longer reach callers that forward concrete pointers into `error` interfaces. No API changes.
+- Go-directive policy settled: all six directives (five `go.mod` + `go.work`) stay deliberately minor-form `go 1.27` — a patch-form floor re-poisons every consumer's `go` directive through MVS (the v0.6.1 de-poisoning; owner ruling 2026-11-18). The 2026-11-17 patch-raise to 1.27.1 was the mistake, not the daemon's relaxing rewrites it tried to "restore"; README badge/upgrade note, AGENTS.md, and TODO_LIST #9 now state the same truth.
+- Root module: `require` moved to `server` v0.6.2 (the deprecated shim rides the nested train and stays one minor ahead of it until v1.0.0 deletes it).
 
 ### Fixed
 
+- `scripts/pre-release-check.sh`'s `go work sync` idempotency step had a latent chicken-and-egg: it was added mid-cycle (2026-11-17, when the train tags existed) and had never faced a pre-tag tree — `go work sync` insists on reading the sibling `go.mod` files from VCS even though the version-qualified `go.work` replaces divert every build/test/lint step. The gate now tolerates exactly the pre-tag "unknown revision" failure shape for the internal train modules and demands a post-staircase re-run to full green; any other sync error still fails. The release playbook's "never needs the sibling tags" promise was corrected to match (validated by the v0.6.2/v0.7.1 staircase).
 - Root-module error audit: `scripts/doc-snippet-refs` carried an unsuppressed `fmt.Errorf` under `--enforce-samber-oops` — a policy that cannot apply to the stdlib-only root module — plus a bare-error-return advisory; both sites now carry documented `//nolint:erraudit` directives. `scripts/pre-release-check.sh`'s nolint audit now covers the root module and runs with the error audit's strictness flags: a flagless `nolint-audit` judges enforce-flag suppressions stale, the exact failure mode this fix closed before the next release hit it.
 - `ci.yml`: the five intentional unquoted `$PACKAGES` expansions (multi-module pattern sets need word-splitting) now carry `shellcheck disable=SC2086` directives — actionlint exits 0 with them and the PACKAGES parity check still reads the literal env line. `ROADMAP.md`: the entitytag package link pointed outside the repo (`../entitytag/README.md`); now repo-relative.
-- `scripts/pre-release-check.sh` toolchain parity gate generalized from exact-match: the 2026-11-14 CI pin raise (go1.27.4, GO-2026-6859 closure) had left the gate unsatisfiable against the still-1.27.1 go.mod floors — a latent red no release had hit yet. The gate now requires the go directive patch-anchored (X.Y.Z, catching the daemon-relaxation drift class, which also struck all six directives on 2026-11-17 and was restored), CI `GOTOOLCHAIN` pins uniform, at least three of them, and never below the directive; pins may legitimately run ahead while the fleet-coordinated floor bump waits on `TODO_LIST.md` #9.
+- `scripts/pre-release-check.sh` toolchain parity gate rewritten twice in one cycle, ending at the settled policy: the 2026-11-14 CI pin raise (go1.27.4, GO-2026-6859 closure) had left the old exact-match gate unsatisfiable — a latent red no release had hit yet; the first generalization (2026-11-17) required the directive patch-anchored (X.Y.Z) and "restored" 1.27.1, misreading minor form as daemon drift; the owner ruling of 2026-11-18 inverted that, and the gate now encodes it: the six go directives (five go.mod + go.work) uniform, CI `GOTOOLCHAIN` pins uniform, at least three of them, and never below the directive — pins may legitimately run ahead (TODO_LIST #9 owns the local-toolchain follow-up).
 
 ### Documented
 
@@ -30,6 +46,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The "no fuzz target for `metrics/`" decision in AGENTS.md testing conventions: the package is pure atomic counters with no parsing or input-dependent branching, so fuzzing has no oracle to violate; the counter invariants are pinned by behavior tests. Recorded to preempt future fuzz-coverage audits re-flagging it.
 - A dated drift banner on `docs/review-and-roadmap.md`: the 2026-08-07 audit predates the five-module split, its file-layout table and flat-package phrasing are frozen as of the audit date, Open Question 3 was answered by the split, and Open Question 1 evolved (the `client/` module took the repo into RFC 9111 stored-response caching).
 - `reports/bench/2026-10-15_metrics-hook-overhead-count6.txt`: the `-benchmem -count=6` metrics benchmark baseline the repo's benchmark discipline asks for (hook overhead vs plain no-hooks ETag generation).
+
+## [0.7.0] - 2026-11-04
+
+Root-module-only release, recorded retroactively: it was tagged with no CHANGELOG section, which also made `release.yml`'s notes extraction fail (the GitHub Release page was created manually afterwards, as a pre-release with a bare compare link). Content: the deprecated root shim's dependency graph refreshed at `89a6bf3` — entitytag indirect v0.6.0 → v0.6.1, go-error-family indirect v0.11.0 → v0.12.0; no code changes. The nested modules were not re-tagged (they stayed at v0.6.1), breaking the one-staircase-one-train convention; the 2026-11-18 v0.6.2 + v0.7.1 staircase restores it, with root remaining one minor ahead until v1.0.0 deletes it.
+
+## [0.6.2] - 2026-11-18
+
+The nested-module train, released in the same staircase as root [0.7.1] — full notes above. Module-level deltas: `server` and `metrics` pick up `go-error-family` v0.11.0 → v0.12.0 (nil-receiver-safe `Unwrap`); `entitytag` and `client` are internal-layout re-tags (per-topic test suites; `client/transport.go` split into `rebuild.go`/`header.go`/`body.go`) with zero public-API change, cut to keep the shared train moving.
 
 ## [0.6.1] - 2026-10-03
 
@@ -195,7 +219,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - BDD-style spec suite (`etag_bdd_test.go`) mapping RFC 7232 sections to behavioral expectations.
 - Fuzz tests for `ParseETag` and `ParseETagList` verifying no panics and round-trip integrity on arbitrary input.
 
-[Unreleased]: https://github.com/larsartmann/go-etag/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/LarsArtmann/go-etag/compare/v0.7.1...HEAD
+[0.7.1]: https://github.com/LarsArtmann/go-etag/compare/v0.7.0...v0.7.1
+[0.7.0]: https://github.com/LarsArtmann/go-etag/compare/v0.6.1...v0.7.0
+[0.6.2]: https://github.com/LarsArtmann/go-etag/compare/v0.6.1...v0.6.2
 [0.6.0]: https://github.com/larsartmann/go-etag/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/larsartmann/go-etag/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/larsartmann/go-etag/compare/v0.3.1...v0.4.0

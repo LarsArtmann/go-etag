@@ -46,8 +46,12 @@ commit where its own go.mod/go.sum finalized; subtree content is identical
 across the staircase, which is all consumers ever see.
 
 1. **Prepare:** land all code changes; run `scripts/pre-release-check.sh`
-   (workspace mode — it never needs the sibling tags). Cut the CHANGELOG as
-   usual (`chore(release): cut CHANGELOG vX.Y.Z`).
+   (workspace mode — every step runs without the sibling tags except
+   `go work sync`, which defers in the pre-tag bootstrap window: before the
+   staircase pushes the train tags it cannot read the sibling go.mod files
+   from VCS and fails with "unknown revision", so the gate tolerates exactly
+   that failure shape and MUST be re-run to full green after the staircase).
+   Cut the CHANGELOG as usual (`chore(release): cut CHANGELOG vX.Y.Z`).
 2. **Staircase, dependency-first — entitytag → server → client → metrics →
    root.** For each module in order, from its directory:
    `GOTOOLCHAIN=auto go mod tidy && GOTOOLCHAIN=auto go mod verify &&
