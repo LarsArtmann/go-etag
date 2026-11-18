@@ -194,16 +194,22 @@ workflow_packages="$(awk '/^  PACKAGES:/ { sub(/^  PACKAGES:[[:space:]]*/, ""); 
 [ "$workflow_packages" = "$PACKAGES" ] ||
 	fail "ci.yml PACKAGES ('$workflow_packages') != pre-release-check.sh PACKAGES ('$PACKAGES') - the two pattern sets must stay identical"
 
-step "art-dupl baseline (OQ8: exactly the 4 accepted groups, fail on drift)"
+step "art-dupl baseline (OQ8: exactly the 3 accepted groups, pinned by file, fail on drift)"
 dupl_out="$(mktemp)"
 art-dupl -t 1 --type-aware . >"$dupl_out" 2>&1 || {
 	cat "$dupl_out"
 	fail "art-dupl run failed"
 }
 shown="$(grep -oE '[0-9]+ shown' "$dupl_out" | awk '{ print $1 }')"
+locations="$(sed -n 's/^  \([^:]*\):[0-9][0-9]*-[0-9][0-9]*  *.*/\1/p' "$dupl_out" | sort | uniq -c | awk '{ print $2, $1 }')"
 rm -f "$dupl_out"
-if [ "$shown" != "4" ]; then
-	fail "art-dupl shows $shown clone groups (baseline: 4 accepted - see reports/dupl/2026-09-23_art-dupl-baseline.txt and AGENTS.md Non-Obvious Behaviors). Either extract the new duplication or update the accepted baseline deliberately."
+expected_locations="$(printf '%s\n' 'client/rebuild.go 2' 'client/transport.go 2' 'server/etag.go 2')"
+if [ "$shown" != "3" ] || [ "$locations" != "$expected_locations" ]; then
+	fail "art-dupl drift: $shown groups shown, arms per file:
+$locations
+Baseline (3 accepted groups, 2 arms each; see reports/dupl/2026-11-17_art-dupl-baseline.txt and AGENTS.md Non-Obvious Behaviors):
+$expected_locations
+Either extract the new duplication or update the accepted baseline deliberately."
 fi
 
 printf '\nALL LOCAL GATES GREEN.\n'
