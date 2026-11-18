@@ -60,7 +60,7 @@ gate runs exposed).
    annotate` → clean, twice. Root-caused one dprint↔annotate fight: the
    2026-08-07 §45 verdict cell had an ambiguous nested code span (`since` sat
    INSIDE the first span, making the hash bare text) — restructured to clean
-   spans; also repaired a `git`mv` mangle in the archived 2026-09-24 file.
+   spans; also repaired a mangled `git mv` code span in the archived 2026-09-24 file.
 8. **CHANGELOG `[Unreleased]` entries written** (completing §f #20 of the 21-46
    report, whose condition — gate green — this session met): layout refactor,
    root-module erraudit fix, parity-gate generalization, docs corpus, SC2086,
