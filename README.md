@@ -2,7 +2,7 @@
 
 > Two-sided RFC 7232 HTTP ETag library for Go — server middleware that generates entity-tags and answers `If-None-Match` with `304 Not Modified`, plus a client transport that caches conditional GETs for any `http.Client`.
 
-[![Go Version](https://img.shields.io/badge/Go-1.27.1+-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![Go Version](https://img.shields.io/badge/Go-1.27+-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![License](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 [![Go Reference](https://pkg.go.dev/badge/github.com/larsartmann/go-etag/server.svg)](https://pkg.go.dev/github.com/larsartmann/go-etag/server)
 
@@ -464,8 +464,10 @@ All modules release together under one version (e.g. `server@v0.6.0` and `client
 
 > Two changes in v0.4.0 can touch existing code:
 >
-> - **Minimum Go is now 1.27.1** — bump your toolchain and (if pinned) your
->   `GOTOOLCHAIN`/CI `go-version` before bumping the dependency.
+> - **Minimum Go is 1.27** — the modules pin the floor in minor form
+>   (`go 1.27` in go.mod, deliberate MVS de-poisoning policy); bump your
+>   toolchain and (if pinned) your `GOTOOLCHAIN`/CI `go-version` before
+>   bumping the dependency.
 > - **`ErrInvalidConfig` is declared as the `error` interface**, not
 >   `*errorfamily.Error`. `errors.Is(err, ErrInvalidConfig)` is unchanged
 >   (matching is by code and family, never identity); only variables declared

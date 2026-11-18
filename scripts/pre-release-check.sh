@@ -124,15 +124,18 @@ for gomod in "${GOMODS[@]}"; do
 	fi
 done
 
-step "toolchain pin parity (go.mod directive patch-anchored; CI GOTOOLCHAIN pins uniform and never below it)"
-go_directives="$(for gomod in "${GOMODS[@]}"; do
+step "toolchain pin parity (go directives uniform across go.mod + go.work; CI GOTOOLCHAIN pins uniform and never below them)"
+# The directive floor is DELIBERATELY minor-form (`go 1.27`): a patch-form
+# floor re-poisons every consumer's go directive through MVS (the v0.6.1
+# de-poisoning; owner directive 2026-11-18 - do NOT re-anchor to X.Y.Z).
+go_directives="$(for gomod in "${GOMODS[@]}" go.work; do
 	awk '$1 == "go" { print $2; exit }' "$gomod"
 done | sort -u)"
 [ "$(printf '%s\n' "$go_directives" | wc -l)" -eq 1 ] ||
-	fail "go directives differ across go.mod files: $(echo "$go_directives" | tr '\n' ' ')"
+	fail "go directives differ across go.mod/go.work files: $(echo "$go_directives" | tr '\n' ' ')"
 go_directive="${go_directives//$'\n'/}"
-[[ "$go_directive" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] ||
-	fail "go directive ${go_directive} is not patch-anchored (X.Y.Z) - the daemon-relaxation class of drift"
+[[ "$go_directive" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] ||
+	fail "go directive ${go_directive} is not a plain version - toolchain suffixes do not belong in the go line"
 pin_lines="$(grep -hE 'GOTOOLCHAIN: go[0-9]+\.[0-9]+\.[0-9]+$' .github/workflows/ci.yml || true)"
 pin_line_count="$(printf '%s\n' "$pin_lines" | grep -c . || true)"
 [ "$pin_line_count" -ge 3 ] ||
