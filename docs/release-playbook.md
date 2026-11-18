@@ -85,13 +85,24 @@ page is automated since OQ3 (2026-09-23): pushing the ROOT `v*` tag triggers
 as the notes (it fails loudly if the section was not cut) and creates the
 Release as Latest, idempotently; nested tags get no Release pages. Keep the
 CHANGELOG section format stable — the extractor matches the section heading by
-prefix, so restructured headings break notes extraction. The workflow has NOT
-fired live yet (verified locally only: extraction, missing-section failure
-path, actionlint); its first real run is the next root tag — watch it end to
-end (untested-by-default honesty per report 22:07 b4/e4). The proposal doc
+prefix, so restructured headings break notes extraction. Validated live by
+v0.7.1 (2026-11-18, run 44318110155): the root tag fired release.yml end to
+end — notes extracted from the `[0.7.1]` section, Release created Latest in
+19s. The v0.7.0 failure (run 41773058677, missing section) is the loud
+failure path working as designed. The proposal doc
 `docs/modularization/2026-09-23_modularization-proposal.html` records why
 metrics got a module (tombstone purity, not composability) and why go.mod
 replace directives stay banned (proxy-published repo).
+
+- **v0.6.2 + v0.7.1 (2026-11-18) validated the divergent-train staircase:**
+  the nested train tagged v0.6.2 bottom-up (entitytag `b2aaa4b` → server
+  `3c6dd8e` → client `1010a00` → metrics `0a50ff0`), the root rode it one
+  minor ahead at v0.7.1 (`24ae842`) — the divergence created by the anomalous
+  root-only v0.7.0, persisting until v1.0.0 deletes the root. The go-work-sync
+  bootstrap deferral behaved exactly as designed (deferred pre-tag, full green
+  on the post-staircase re-run), all five proxy `.info` hashes matched their
+  tag commits, sum.golang.org recorded all five, and the clean-room `go get`
+  of the divergent pair (root@v0.7.1 + nested@v0.6.2) resolved and built.
 
 ## v1.0.0 root-module deletion mini-staircase (seed, executed at the major)
 
