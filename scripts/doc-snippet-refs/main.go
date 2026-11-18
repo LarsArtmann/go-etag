@@ -32,20 +32,26 @@ var checkedPackages = map[string]string{
 
 var fencePattern = regexp.MustCompile("(?s)```go\n(.*?)```")
 
+// exitFindings reports that the checked docs reference symbols that do not
+// exist; exitUsageFailure reports an invoker-side problem (wrong arguments,
+// unreadable input, unresolvable API).
+const (
+	exitFindings     = 1
+	exitUsageFailure = 2
+)
+
 func main() {
 	if len(os.Args) < 2 {
 		fmt.Fprintln(os.Stderr, "usage: doc-snippet-refs <markdown files...>")
 
-		os.Exit(2)
+		os.Exit(exitUsageFailure)
 	}
 
 	apis := make(map[string]map[string]bool, len(checkedPackages))
 	for alias, pkgPath := range checkedPackages {
 		names, err := exportedNames(pkgPath)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "doc-snippet-refs: loading API: %v\n", err)
-
-			os.Exit(2)
+			fail("loading API", err)
 		}
 
 		apis[alias] = names
@@ -56,9 +62,7 @@ func main() {
 	for _, path := range os.Args[1:] {
 		content, err := os.ReadFile(path) //nolint:gosec // paths come from the invoker
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "doc-snippet-refs: %v\n", err)
-
-			os.Exit(2)
+			fail("reading input", err)
 		}
 
 		for _, match := range fencePattern.FindAllSubmatch(content, -1) {
@@ -77,10 +81,19 @@ func main() {
 	if findings > 0 {
 		fmt.Fprintf(os.Stderr, "doc-snippet-refs: %d unknown symbol reference(s)\n", findings)
 
-		os.Exit(1)
+		os.Exit(exitFindings)
 	}
 
 	fmt.Fprintln(os.Stdout, "doc-snippet-refs: all snippet references resolve")
+}
+
+// fail reports an invoker-side failure (the stage that broke plus its cause)
+// under the tool's prefix on stderr and terminates with exitUsageFailure; it
+// never returns.
+func fail(stage string, err error) {
+	fmt.Fprintf(os.Stderr, "doc-snippet-refs: %s: %v\n", stage, err)
+
+	os.Exit(exitUsageFailure)
 }
 
 // exportedNames returns the exported package-level names of pkgPath, resolved
